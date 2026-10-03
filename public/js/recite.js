@@ -277,15 +277,18 @@
       tip.hidden = true;
       document.body.appendChild(tip);
     }
+    /* The word under the pointer first, then the marked one: reading along by
+       mouse is asking what each word says. */
+    var word = overWord && overWord.isConnected ? overWord
+           : lit.el && lit.el.isConnected ? lit.el : null;
     var said = null;
-    if (latinOn && surah && lit.el && lit.el.isConnected && lit.word) {
-      var parts = lit.word.split('/');
-      var key = parts[0].split(':');
+    if (latinOn && word && word.dataset.a && word.dataset.w !== undefined) {
+      var key = word.dataset.a.split(':');
       var list = latin[+key[0]];
       var ayah = Array.isArray(list) ? list[+key[1] - 1] : null;
-      said = ayah ? ayah[+parts[1]] : null;
+      said = ayah ? ayah[+word.dataset.w] : null;
     }
-    var r = said ? lit.el.getBoundingClientRect() : null;
+    var r = said ? word.getBoundingClientRect() : null;
     /* A word turned off the screen takes its label with it. */
     if (!r || r.bottom < 0 || r.top > window.innerHeight || !r.width) { tip.hidden = true; return; }
 
@@ -1379,7 +1382,7 @@
 
   /** Let go of whatever the pointer was on. */
   function clearHover() {
-    if (overWord) { overWord.classList.remove('r-hover-word'); overWord = null; }
+    if (overWord) { overWord.classList.remove('r-hover-word'); overWord = null; sayLatin(); }
   }
 
   function hover() {
@@ -1414,6 +1417,9 @@
         if (overWord) overWord.classList.remove('r-hover-word');
         overWord = w;
         overWord.classList.add('r-hover-word');
+        /* A word from a surah not yet opened has no list loaded; fetch it. */
+        loadLatin(+String(w.dataset.a).split(':')[0]);
+        sayLatin();
       }
     });
 
