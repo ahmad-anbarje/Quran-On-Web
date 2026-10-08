@@ -269,6 +269,19 @@ function juzList() {
   });
 }
 
+const arNum = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
+
+/* buildJuz()'s rows, so the thirty juz pages are linked from every page and not
+   only from the sitemap. The app replaces this when the tab opens. */
+function juzListHtml(juz) {
+  return juz.map((j) =>
+    `<a class="surah-item juz-item" href="/juz/${j.id}/" data-juz="${j.id}" data-page="${j.from}">` +
+    `<span class="surah-num">${j.id}</span><span class="surah-names"><span class="juz-head">` +
+    `<span class="juz-title"><span class="lang-ar">الجزء ${arNum(j.id)}</span><span class="lang-en">Juz ${j.id}</span></span>` +
+    `</span><span class="juz-where"><span class="lang-ar">صفحة ${arNum(j.from)}</span>` +
+    `<span class="lang-en">Page ${j.from}</span></span></span></a>`).join('');
+}
+
 function juzPageFor(shell, j) {
   const nameAr = JUZ_NAMES[j.id] || `الجزء ${JUZ_ORDINALS[j.id - 1]} من القرآن`;
   const title = `${nameAr} مكتوب مع التلاوة · Juz ${j.id} | القرآن الكريم`;
@@ -388,6 +401,10 @@ function main() {
   const close = index.indexOf(LIST_CLOSE, open);
 
   index = index.slice(0, open + LIST_OPEN.length) + surahListHtml() + index.slice(close);
+  const juz = juzList();
+  if (!/<nav id="juz-list" hidden>[\s\S]*?<\/nav>/.test(index)) throw new Error('no <nav id="juz-list" hidden> in index.html');
+  index = index.replace(/<nav id="juz-list" hidden>[\s\S]*?<\/nav>/,
+    () => `<nav id="juz-list" hidden>${juzListHtml(juz)}</nav>`);
   index = named(index);
   fs.writeFileSync(indexPath, index);
   console.log('index.html    surah list filled in, %d surahs; head names %s', surahs.length, SITE);
@@ -402,7 +419,6 @@ function main() {
   });
   console.log('surah/*/      %d pages written', surahs.length);
 
-  const juz = juzList();
   juz.forEach((j) => {
     const dir = path.join(PUBLIC, 'juz', String(j.id));
     fs.mkdirSync(dir, { recursive: true });
