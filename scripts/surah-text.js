@@ -20,6 +20,7 @@ const PUBLIC = path.join(ROOT, 'public');
    something the site serves: the reader never asks for it, and the pages it
    makes are what ships. */
 const TEXT = path.join(ROOT, 'data', 'quran-uthmani.txt');
+const PLAY = 'https://play.google.com/store/apps/details?id=com.readqurantoday.quran';
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
   .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -142,7 +143,8 @@ ${said(s, lines, basmala).map((t, i) => `    <li id="v${i + 1}"><span class="n">
 
   <p class="foot">
     <a href="/surah/${s.id}/">اقرأ هذه السورة بمصحف المدينة مع التلاوة</a><br />
-    <a href="/surah/${s.id}/">Read this surah in the Madinah Mushaf, with recitation</a>
+    <a href="/surah/${s.id}/">Read this surah in the Madinah Mushaf, with recitation</a><br />
+    <a href="${PLAY}">تطبيق أندرويد على Google Play · Android app on Google Play</a>
   </p>
 </main>
 </body>

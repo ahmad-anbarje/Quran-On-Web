@@ -8,6 +8,10 @@
   "theme_color": "#1a6fa3",
   "lang": "ar",
   "dir": "rtl",
+  "related_applications": [
+    { "platform": "play", "url": "https://play.google.com/store/apps/details?id=com.readqurantoday.quran", "id": "com.readqurantoday.quran" }
+  ],
+  "prefer_related_applications": false,
   "icons": [
     { "src": "/favicon.svg?v=2026-09-22", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
     { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" }

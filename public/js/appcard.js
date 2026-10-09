@@ -18,8 +18,6 @@
   try { last = +localStorage.getItem(KEY) || 0; } catch (e) {}
   if (Date.now() - last < QUIET_FOR) return;
 
-  // Fetched now, so the badge is there when the card rises; no one else downloads it
-  ['ar', 'en'].forEach(function (l) { new Image().src = '/badges/google-play-' + l + '.png'; });
 
   function remember() {
     try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {}
@@ -53,6 +51,32 @@
       track('app-card-skip');
       hide(card);
     });
+
+    // A sheet is put away the way it is shown: pulled down past a third of itself
+    var from = null, dy = 0;
+    card.addEventListener('touchstart', function (e) {
+      from = e.touches[0].clientY;
+      dy = 0;
+      card.classList.add('held');
+    }, { passive: true });
+    card.addEventListener('touchmove', function (e) {
+      if (from === null) return;
+      dy = Math.max(0, e.touches[0].clientY - from);
+      card.style.transform = 'translateY(' + dy + 'px)';
+    }, { passive: true });
+    function letGo() {
+      if (from === null) return;
+      from = null;
+      card.classList.remove('held');
+      card.style.transform = '';
+      if (dy > card.offsetHeight / 3) {
+        remember();
+        track('app-card-swipe');
+        hide(card);
+      }
+    }
+    card.addEventListener('touchend', letGo);
+    card.addEventListener('touchcancel', letGo);
   }
 
   // A beat after the page is up, not after every font and file: on a phone that was seconds

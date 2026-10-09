@@ -51,7 +51,7 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v2/ -->
   <link rel="stylesheet" href="/css/fonts.css?v=2026-08-24" />
-  <link rel="stylesheet" href="/css/style.css?v=2026-10-09c" />
+  <link rel="stylesheet" href="/css/style.css?v=2026-10-09f" />
   <link rel="stylesheet" href="/css/recite.css?v=2026-09-26" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
@@ -108,6 +108,7 @@
     <defs>
       <g id="i-code"><path d="M8.5 7.5 4 12l4.5 4.5M15.5 7.5 20 12l-4.5 4.5M13.5 5l-3 14"/></g>
       <g id="i-box"><path d="M12 3 4 7v10l8 4 8-4V7z"/><path d="M4 7l8 4 8-4M12 11v10"/></g>
+      <g id="i-phone"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M12 7v6.5M9.3 11 12 13.7l2.7-2.7M10.5 18.5h3"/></g>
       <g id="i-shield"><path d="M12 3l7 3v5.5c0 4.3-2.9 7.6-7 8.5-4.1-.9-7-4.2-7-8.5V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/></g>
       <g id="i-book"><path d="M12 6.5C10.6 5.2 8.8 4.5 6.5 4.5c-1 0-2 .1-3 .4v13c1-.3 2-.4 3-.4 2.3 0 4.1.7 5.5 2 1.4-1.3 3.2-2 5.5-2 1 0 2 .1 3 .4v-13c-1-.3-2-.4-3-.4-2.3 0-4.1.7-5.5 2z"/><path d="M12 6.5v13"/></g>
       <g id="i-listen"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14h2.5a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M20 14h-2.5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1H19a1 1 0 0 0 1-1z"/></g>
@@ -291,6 +292,13 @@
 
         <!-- About the app rather than the reading: held at the foot of the pane -->
         <div class="set-sep set-foot"></div>
+
+        <!-- Every device, so a reader on a computer learns the app exists; hidden inside the app -->
+        <a id="btn-app" class="set-row" href="https://play.google.com/store/apps/details?id=com.readqurantoday.quran&amp;referrer=utm_source%3Dwebsite%26utm_medium%3Dsettings" target="_blank" rel="noopener" data-umami-event="settings-app">
+          <svg class="ic set-ico" viewBox="0 0 24 24"><use href="#i-phone"/></svg>
+          <span class="set-label"><span class="lang-ar">تطبيق أندرويد</span><span class="lang-en">Android app</span></span>
+          <span class="set-badge"><img class="lang-ar" src="/badges/google-play-ar.png" alt="احصل عليه من Google Play" width="646" height="250" loading="lazy" /><img class="lang-en" src="/badges/google-play-en.png" alt="Get it on Google Play" width="646" height="250" loading="lazy" /></span>
+        </a>
 
         <button id="btn-lang" class="set-row">
           <svg class="ic set-ico" viewBox="0 0 24 24"><use href="#i-globe"/></svg>
@@ -574,14 +582,21 @@
 
   <!-- Offered to Android browsers only (appcard.js): over the foot of the page, never in front of it -->
   <div id="app-card" role="dialog" aria-labelledby="ac-title" hidden>
+    <span class="ac-grip" aria-hidden="true"></span>
     <div class="ac-head">
-      <img class="ac-icon" src="/favicon.svg?v=2026-09-22" alt="" width="48" height="48" loading="lazy" />
+      <img class="ac-icon" src="/favicon.svg?v=2026-09-22" alt="" width="60" height="60" loading="lazy" />
       <div>
         <p class="ac-title" id="ac-title"><span class="lang-ar">تطبيق القرآن العظيم</span><span class="lang-en">The Great Quran app</span></p>
-        <p class="ac-note"><span class="lang-ar">اقرأ بلا إنترنت، أسرع، مع التلاوة</span><span class="lang-en">Read offline, faster, with recitation</span></p>
+        <p class="ac-note"><span class="lang-ar">مصحف المدينة على هاتفك</span><span class="lang-en">The Madinah Mushaf on your phone</span></p>
       </div>
     </div>
-    <a class="ac-get" href="https://play.google.com/store/apps/details?id=com.readqurantoday.quran&amp;referrer=utm_source%3Dwebsite%26utm_medium%3Dapp_card" rel="noopener"><img class="lang-ar" src="/badges/google-play-ar.png" alt="احصل عليه من Google Play" width="646" height="250" loading="lazy" /><img class="lang-en" src="/badges/google-play-en.png" alt="Get it on Google Play" width="646" height="250" loading="lazy" /></a>
+    <ul class="ac-perks">
+      <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-offline"/></svg><span class="lang-ar">بلا إنترنت</span><span class="lang-en">Offline</span></li>
+      <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-listen"/></svg><span class="lang-ar">مع التلاوة</span><span class="lang-en">Recitation</span></li>
+      <li><svg class="ic" viewBox="0 0 24 24"><use href="#i-bookmark"/></svg><span class="lang-ar">حفظ الصفحات</span><span class="lang-en">Saved pages</span></li>
+    </ul>
+    <a class="ac-get" href="https://play.google.com/store/apps/details?id=com.readqurantoday.quran&amp;referrer=utm_source%3Dwebsite%26utm_medium%3Dapp_card" rel="noopener"><svg class="ic" viewBox="0 0 24 24"><use href="#i-phone"/></svg><span class="lang-ar">ثبّت التطبيق</span><span class="lang-en">Install the app</span></a>
+    <p class="ac-store"><span class="lang-ar">على Google Play</span><span class="lang-en">on Google Play</span></p>
     <button class="ac-skip" type="button"><span class="lang-ar">المتابعة على الموقع</span><span class="lang-en">Continue on the website</span></button>
   </div>
 
@@ -594,7 +609,7 @@
   <script defer src="/js/offline.js?v=2026-09-20"></script>
   <script defer src="/js/leaves.js?v=2026-09-25"></script>
   <script defer src="/js/app.js?v=2026-09-29"></script>
-  <script defer src="/js/appcard.js?v=2026-10-09c"></script>
+  <script defer src="/js/appcard.js?v=2026-10-09e"></script>
   <article class="sr-only" lang="ar" dir="rtl" aria-label="نص سورة التوبة">
     <h1>سورة التوبة · Surah At-Tawbah</h1>
     <p>سُورَةُ التَّوۡبَةِ — 129 آية · 129 verses · الصفحات 187–207 · pages 187–207</p>

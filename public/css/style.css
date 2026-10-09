@@ -2050,7 +2050,8 @@ label.panel-section { display: block; }
    is in the package — there is no network to be without, no first run to wait
    through and nothing to switch on, so a row offering it can only confuse. On
    the site it stays, where it means something. */
-body[data-shell="android"] #btn-offline { display: none; }
+body[data-shell="android"] #btn-offline,
+body[data-shell="android"] #btn-app { display: none; }
 
 /* The phone's reading chrome. It has a size and a place only inside the phone
    query below; everywhere else the index is a drawer with a handle of its own
@@ -2731,8 +2732,8 @@ body[data-mode="spread"] .spread-right .page-ribbon {
 
 
 /* --- the app card ---
-   Android browsers only (appcard.js). It rises over the foot of the page and
-   leaves the reading above it alone, so it is not a screen in front of it. */
+   Android browsers only (appcard.js). A bottom sheet over the foot of the page,
+   never a screen in front of it: the reading above stays in view. */
 #app-card {
   position: fixed;
   inset-inline: 0;
@@ -2740,52 +2741,116 @@ body[data-mode="spread"] .spread-right .page-ribbon {
   z-index: 300;
   max-width: 520px;
   margin-inline: auto;
-  padding: 18px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  padding: 10px 18px calc(12px + env(safe-area-inset-bottom, 0px));
   background: var(--surface);
   border: 1px solid var(--line);
   border-bottom: 0;
-  border-radius: 18px 18px 0 0;
-  box-shadow: var(--sh-3);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -8px 32px rgba(15, 55, 90, 0.16);
   color: var(--text);
   font-family: var(--ui-font);
-  transition: transform 0.32s var(--ease);
+  touch-action: none;   /* the sheet is pulled down by hand, not the page under it */
+  transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1);
 }
 #app-card[hidden] { display: none; }
+#app-card.out { transform: translateY(110%); }
+#app-card.held { transition: none; }
+body[data-lang="ar"] #app-card { direction: rtl; }
 /* Dark's surface is the page's own colour; lifted and tinted so the card reads as apart from it */
 body.dark-mode #app-card {
   background: color-mix(in srgb, var(--primary) 12%, #232a31);
   border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
 }
-#app-card.out { transform: translateY(110%); }
-body[data-lang="ar"] #app-card { direction: rtl; }
 
-.ac-head { display: flex; align-items: center; gap: 12px; }
-.ac-icon { width: 48px; height: 48px; border-radius: 22%; flex-shrink: 0; }
-.ac-title { font-size: 1rem; font-weight: 700; line-height: 1.4; }
+.ac-grip {
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto 14px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text) 30%, transparent);
+}
+
+.ac-head { display: flex; align-items: center; gap: 14px; }
+.ac-icon {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 22%;
+  box-shadow: 0 4px 12px rgba(15, 55, 90, 0.25);
+}
+.ac-title { font-size: 1.05rem; font-weight: 700; line-height: 1.4; }
 .ac-note { font-size: 0.85rem; line-height: 1.5; color: var(--text-mute); }
 
-/* Google's own badge, as their brand rules ask: unaltered, its clear space is in the image */
-.ac-get {
-  display: block;
-  width: 230px;
-  max-width: 100%;
-  margin: 10px auto 0;
+.ac-perks {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
 }
-.ac-get img { display: block; width: 100%; height: auto; }
+.ac-perks li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.ac-perks .ic { width: 15px; height: 15px; }
+
+/* Our own button, not Google's badge: their rules keep the badge black and unaltered */
+.ac-get {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--primary) 35%, transparent);
+  color: var(--on-dark);
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform var(--t), box-shadow var(--t);
+}
+.ac-get .ic { width: 20px; height: 20px; }
+.ac-get:active { transform: scale(0.98); box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 30%, transparent); }
+/* Dark's primary is too light behind white type; the same deeper blue as the chosen surah */
+body.dark-mode .ac-get { background: linear-gradient(135deg, #1f6a9a, #18557c); }
+
+.ac-store {
+  margin-top: 6px;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-mute);
+}
 
 .ac-skip {
   display: block;
   width: 100%;
-  margin-top: 6px;
-  padding: 10px;
+  padding: 8px;
   border: 0;
   background: none;
-  color: var(--primary);
+  color: var(--text-mute);
   font: inherit;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
 }
 
+/* The badge on the settings row: the same official artwork, row height */
+.set-badge { display: flex; margin-inline-start: auto; }
+.set-badge img { display: block; height: 36px; width: auto; }
+
 @media (prefers-reduced-motion: reduce) {
-  #app-card { transition: none; }
+  #app-card, .ac-get { transition: none; }
 }
