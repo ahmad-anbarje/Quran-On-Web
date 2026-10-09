@@ -52,8 +52,6 @@
     });
   }
 
-  // Well after the page is up, so it costs the first paint nothing
-  function later() { setTimeout(show, 3000); }
-  if (document.readyState === 'complete') later();
-  else window.addEventListener('load', later);
+  // A beat after the page is up, not after every font and file: on a phone that was seconds
+  setTimeout(show, 1000);
 }());

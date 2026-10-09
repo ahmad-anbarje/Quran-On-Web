@@ -2751,6 +2751,11 @@ body[data-mode="spread"] .spread-right .page-ribbon {
   transition: transform 0.32s var(--ease);
 }
 #app-card[hidden] { display: none; }
+/* Dark's surface is the page's own colour; lifted and tinted so the card reads as apart from it */
+body.dark-mode #app-card {
+  background: color-mix(in srgb, var(--primary) 12%, #232a31);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
+}
 #app-card.out { transform: translateY(110%); }
 body[data-lang="ar"] #app-card { direction: rtl; }
 
