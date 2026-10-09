@@ -18,6 +18,9 @@
   try { last = +localStorage.getItem(KEY) || 0; } catch (e) {}
   if (Date.now() - last < QUIET_FOR) return;
 
+  // Fetched now, so the badge is there when the card rises; no one else downloads it
+  ['ar', 'en'].forEach(function (l) { new Image().src = '/badges/google-play-' + l + '.png'; });
+
   function remember() {
     try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {}
   }

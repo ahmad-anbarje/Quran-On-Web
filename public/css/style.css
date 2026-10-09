@@ -2764,19 +2764,14 @@ body[data-lang="ar"] #app-card { direction: rtl; }
 .ac-title { font-size: 1rem; font-weight: 700; line-height: 1.4; }
 .ac-note { font-size: 0.85rem; line-height: 1.5; color: var(--text-mute); }
 
+/* Google's own badge, as their brand rules ask: unaltered, its clear space is in the image */
 .ac-get {
   display: block;
-  margin-top: 16px;
-  padding: 12px;
-  border-radius: var(--r-md);
-  background: var(--primary);
-  color: var(--on-dark);
-  font-weight: 700;
-  text-align: center;
-  text-decoration: none;
+  width: 230px;
+  max-width: 100%;
+  margin: 10px auto 0;
 }
-/* The same deeper blue as the chosen surah: white on dark's primary is 3:1 */
-body.dark-mode .ac-get { background: #1f6a9a; }
+.ac-get img { display: block; width: 100%; height: auto; }
 
 .ac-skip {
   display: block;
