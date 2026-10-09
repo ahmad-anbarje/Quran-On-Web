@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.png" width="100%" alt="القرآن العظيم — The Great Quran: Madinah Mushaf and recitation">
+  <img src="docs/banner.png" width="520" alt="القرآن العظيم — The Great Quran: Madinah Mushaf and recitation">
 </p>
 
 <p align="center">
