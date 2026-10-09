@@ -1,22 +1,22 @@
 <p align="center">
-  <img src="public/icon-512.png" width="110" alt="">
+  <img src="public/icon-512.png" width="96" alt="">
 </p>
 
-<h1 align="center">القرآن الكريم — Read Quran Today</h1>
+<h1 align="center">القرآن الكريم</h1>
 
 <p align="center">
-  The Madinah Mushaf on the web, page for page, with recitation that highlights each word as it is read.
-</p>
-
-<p align="center">
-  <a href="https://play.google.com/store/apps/details?id=com.readqurantoday.quran"><img src="public/badges/google-play-en.png" alt="Get it on Google Play" height="60"></a>
+  <b>Read Quran Today</b> — the Madinah Mushaf on the web, page for page,<br>
+  with recitation that highlights each word as it is read.
 </p>
 
 <p align="center">
-  <a href="https://readqurantoday.com"><img src="https://img.shields.io/badge/Website-readqurantoday.com-1a6fa3?style=for-the-badge&amp;logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPSd3aGl0ZScgc3Ryb2tlLXdpZHRoPScyJyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjkiLz48cGF0aCBkPSJNMyAxMmgxOE0xMiAzYzIuNSAyLjYgMi41IDE1LjQgMCAxOE0xMiAzYy0yLjUgMi42LTIuNSAxNS40IDAgMTgiLz48L3N2Zz4=" alt="Website: readqurantoday.com"></a>
-  <a href="https://hub.docker.com/r/ahmadanbarje/quran"><img src="https://img.shields.io/badge/Docker%20Hub-ahmadanbarje%2Fquran-2496ED?style=for-the-badge&amp;logo=docker&amp;logoColor=white" alt="Docker Hub: ahmadanbarje/quran"></a>
-  <a href="https://hub.docker.com/r/ahmadanbarje/quran"><img src="https://img.shields.io/docker/pulls/ahmadanbarje/quran?style=for-the-badge&amp;logo=docker&amp;logoColor=white&amp;label=pulls" alt="Docker pulls"></a>
+  <a href="https://readqurantoday.com"><img src="https://img.shields.io/badge/-readqurantoday.com-1a6fa3?style=for-the-badge&amp;logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPSd3aGl0ZScgc3Ryb2tlLXdpZHRoPScyJyBzdHJva2UtbGluZWNhcD0ncm91bmQnIHN0cm9rZS1saW5lam9pbj0ncm91bmQnPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjkiLz48cGF0aCBkPSJNMyAxMmgxOE0xMiAzYzIuNSAyLjYgMi41IDE1LjQgMCAxOE0xMiAzYy0yLjUgMi42LTIuNSAxNS40IDAgMTgiLz48L3N2Zz4=" alt="readqurantoday.com"></a>
+  <a href="https://hub.docker.com/r/ahmadanbarje/quran"><img src="https://img.shields.io/docker/pulls/ahmadanbarje/quran?style=for-the-badge&amp;logo=docker&amp;logoColor=white&amp;label=Docker%20pulls&amp;color=2496ED" alt="Docker pulls"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-555555?style=for-the-badge" alt="MIT licence"></a>
+</p>
+
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.readqurantoday.quran"><img src="public/badges/google-play-en.png" alt="Get it on Google Play" height="56"></a>
 </p>
 
 ## Features
