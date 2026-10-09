@@ -2805,6 +2805,17 @@ body.dark-mode #app-card {
 }
 .ac-perks .ic { width: 15px; height: 15px; }
 
+/* Google's own badge, as their brand rules ask: unaltered, its clear space is in the image */
+.ac-get {
+  display: block;
+  width: 220px;
+  max-width: 100%;
+  margin: 14px auto 0;
+  transition: transform var(--t);
+}
+.ac-get:active { transform: scale(0.97); }
+.ac-get img { display: block; width: 100%; height: auto; }
+
 .ac-skip {
   display: block;
   width: 100%;
