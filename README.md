@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="public/icon-512.png" width="96" alt="">
+  <img src="docs/banner.png" width="100%" alt="القرآن العظيم — The Great Quran: Madinah Mushaf and recitation">
 </p>
-
-<h1 align="center">القرآن الكريم</h1>
 
 <p align="center">
   <b>Read Quran Today</b> — the Madinah Mushaf on the web, page for page,<br>
