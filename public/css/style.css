@@ -2805,35 +2805,6 @@ body.dark-mode #app-card {
 }
 .ac-perks .ic { width: 15px; height: 15px; }
 
-/* Our own button, not Google's badge: their rules keep the badge black and unaltered */
-.ac-get {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 16px;
-  padding: 14px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--primary) 35%, transparent);
-  color: var(--on-dark);
-  font-size: 1rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: transform var(--t), box-shadow var(--t);
-}
-.ac-get .ic { width: 20px; height: 20px; }
-.ac-get:active { transform: scale(0.98); box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 30%, transparent); }
-/* Dark's primary is too light behind white type; the same deeper blue as the chosen surah */
-body.dark-mode .ac-get { background: linear-gradient(135deg, #1f6a9a, #18557c); }
-
-.ac-store {
-  margin-top: 6px;
-  text-align: center;
-  font-size: 0.78rem;
-  color: var(--text-mute);
-}
-
 .ac-skip {
   display: block;
   width: 100%;
@@ -2847,10 +2818,47 @@ body.dark-mode .ac-get { background: linear-gradient(135deg, #1f6a9a, #18557c); 
   cursor: pointer;
 }
 
-/* The badge on the settings row: the same official artwork, row height */
-.set-badge { display: flex; margin-inline-start: auto; }
-.set-badge img { display: block; height: 36px; width: auto; }
 
 @media (prefers-reduced-motion: reduce) {
   #app-card, .ac-get { transition: none; }
 }
+
+/* The foot of Settings: the app, the code and the image on one row, all one size.
+   --bw is each badge's width, from the room the row has: 95px, Google's badge at 28px tall,
+   where it fits, and all three smaller together where it does not.
+   Google's badge carries its clear space inside the image (the badge is 563x168 of 646x250),
+   so the image is sized and trimmed to put exactly --bw of badge on screen. */
+.set-links { container-type: inline-size; padding: 12px 10px 16px; }
+.set-links-row { display: flex; align-items: center; justify-content: center; gap: 6px; direction: ltr; }
+.set-links-row > * { --bw: min(88px, calc((100cqw - 12px) / 3)); }
+/* The image is wider than the badge it holds; clipped, its clear space cannot push the pane wide */
+#btn-app { display: block; flex-shrink: 0; overflow: hidden; border-radius: calc(var(--bw) * 0.07); transition: transform var(--t); }
+#btn-app img {
+  display: block;
+  width: calc(var(--bw) * 1.1474);
+  height: auto;
+  margin: calc(var(--bw) * -0.0728) calc(var(--bw) * -0.0737);
+}
+
+.icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--bw) * 0.06);
+  box-sizing: border-box;
+  width: var(--bw);
+  height: calc(var(--bw) * 0.2984);
+  border: 1px solid #a6a6a6;
+  border-radius: calc(var(--bw) * 0.07);
+  background: #000;
+  color: #fff;
+  font-family: var(--ui-font);
+  font-size: calc(var(--bw) * 0.135);
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: transform var(--t);
+}
+#btn-app:active, .icon-badge:active { transform: scale(0.96); }
+.icon-badge svg { width: calc(var(--bw) * 0.17); height: calc(var(--bw) * 0.17); flex-shrink: 0; fill: #fff; }
+.icon-badge .mb-docker { fill: #2496ed; }
