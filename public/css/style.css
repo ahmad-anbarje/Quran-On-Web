@@ -2729,3 +2729,63 @@ body[data-mode="spread"] .spread-right .page-ribbon {
   #sidebar.hidden { transform: none; opacity: 0; }
 }
 
+
+/* --- the app card ---
+   Android browsers only (appcard.js). It rises over the foot of the page and
+   leaves the reading above it alone, so it is not a screen in front of it. */
+#app-card {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 300;
+  max-width: 520px;
+  margin-inline: auto;
+  padding: 18px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+  box-shadow: var(--sh-3);
+  color: var(--text);
+  font-family: var(--ui-font);
+  transition: transform 0.32s var(--ease);
+}
+#app-card[hidden] { display: none; }
+#app-card.out { transform: translateY(110%); }
+body[data-lang="ar"] #app-card { direction: rtl; }
+
+.ac-head { display: flex; align-items: center; gap: 12px; }
+.ac-icon { width: 48px; height: 48px; border-radius: 22%; flex-shrink: 0; }
+.ac-title { font-size: 1rem; font-weight: 700; line-height: 1.4; }
+.ac-note { font-size: 0.85rem; line-height: 1.5; color: var(--text-mute); }
+
+.ac-get {
+  display: block;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--primary);
+  color: var(--on-dark);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+/* The same deeper blue as the chosen surah: white on dark's primary is 3:1 */
+body.dark-mode .ac-get { background: #1f6a9a; }
+
+.ac-skip {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app-card { transition: none; }
+}

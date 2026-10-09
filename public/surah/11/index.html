@@ -51,7 +51,7 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v2/ -->
   <link rel="stylesheet" href="/css/fonts.css?v=2026-08-24" />
-  <link rel="stylesheet" href="/css/style.css?v=2026-09-29e" />
+  <link rel="stylesheet" href="/css/style.css?v=2026-10-09" />
   <link rel="stylesheet" href="/css/recite.css?v=2026-09-26" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
@@ -572,6 +572,19 @@
 
   <div id="overlay" hidden></div>
 
+  <!-- Offered to Android browsers only (appcard.js): over the foot of the page, never in front of it -->
+  <div id="app-card" role="dialog" aria-labelledby="ac-title" hidden>
+    <div class="ac-head">
+      <img class="ac-icon" src="/favicon.svg?v=2026-09-22" alt="" width="48" height="48" loading="lazy" />
+      <div>
+        <p class="ac-title" id="ac-title"><span class="lang-ar">تطبيق القرآن العظيم</span><span class="lang-en">The Great Quran app</span></p>
+        <p class="ac-note"><span class="lang-ar">اقرأ بلا إنترنت، أسرع، مع التلاوة</span><span class="lang-en">Read offline, faster, with recitation</span></p>
+      </div>
+    </div>
+    <a class="ac-get" href="https://play.google.com/store/apps/details?id=com.readqurantoday.quran&amp;referrer=utm_source%3Dwebsite%26utm_medium%3Dapp_card" rel="noopener"><span class="lang-ar">حمّل التطبيق من Google Play</span><span class="lang-en">Get it on Google Play</span></a>
+    <button class="ac-skip" type="button"><span class="lang-ar">المتابعة على الموقع</span><span class="lang-en">Continue on the website</span></button>
+  </div>
+
   <script defer src="/js/vendor/jquery-3.7.1.min.js?v=2026-08-24"></script>
   <script defer src="/js/mushaf.js?v=2026-09-26"></script>
   <script defer src="/js/recite.js?v=2026-09-17"></script>
@@ -581,6 +594,7 @@
   <script defer src="/js/offline.js?v=2026-09-20"></script>
   <script defer src="/js/leaves.js?v=2026-09-25"></script>
   <script defer src="/js/app.js?v=2026-09-29"></script>
+  <script defer src="/js/appcard.js?v=2026-10-09"></script>
   <article class="sr-only" lang="ar" dir="rtl" aria-label="نص سورة هود">
     <h1>سورة هود · Surah Hud</h1>
     <p>سُورَةُ هُودٍ — 123 آية · 123 verses · الصفحات 221–235 · pages 221–235</p>
