@@ -123,7 +123,9 @@ function recitationOf(s) {
   const file = rec.timingFile(s.id, DEFAULT_RECITATION);
   if (!fs.existsSync(file)) return null;
   const t = JSON.parse(fs.readFileSync(file, 'utf8'));
-  return { reciter: t.reciter, reciterAr: t.reciterAr,
+  // The catalogue's spelling: the timing exports write المعيقلى with a final alef maqsura
+  const listed = rec.catalogue().recitations.find((r) => r.id === DEFAULT_RECITATION);
+  return { reciter: t.reciter, reciterAr: (listed && listed.nameAr) || t.reciterAr,
            seconds: Math.round(t.duration),
            /* The path the timing file states, so the schema names the file the
               reader will really fetch. */
@@ -192,7 +194,7 @@ function pageFor(shell, s) {
     .replace('</body>', wordsOf(s) + '</body>')
     /* and the schema says which chapter, rather than repeating the site. */
     .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/,
-      schemaScript(schemaFor(shell, s)));
+      schemaScript([schemaFor(shell, s), crumbs(`سورة ${s.name} · Surah ${s.en}`, `${SITE}/surah/${s.id}/`)]));
 }
 
 /* Built once: every surah page reads from it */
@@ -282,6 +284,28 @@ function juzListHtml(juz) {
     `<span class="lang-en">Page ${j.from}</span></span></span></a>`).join('');
 }
 
+/* The trail Google shows above a result in place of the bare address: the site, then the page. */
+function crumbs(name, url) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'القرآن الكريم', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name, item: url },
+    ],
+  };
+}
+
+/* What a juz holds, in words a crawler can read: the mushaf itself is glyphs. */
+function surahsOfJuz(j) {
+  const inIt = surahs.filter((s) => s.from <= j.to && s.to >= j.from);
+  return '    <ul>\n' + inIt.map((s) => {
+    const a = Math.max(s.from, j.from), b = Math.min(s.to, j.to);
+    const pages = a === b ? `صفحة ${a} · page ${a}` : `الصفحات ${a}–${b} · pages ${a}–${b}`;
+    return `      <li><a href="/surah/${s.id}/">سورة ${esc(s.name)} · Surah ${esc(s.en)}</a> — ${pages}</li>`;
+  }).join('\n') + '\n    </ul>\n';
+}
+
 function juzPageFor(shell, j) {
   const nameAr = JUZ_NAMES[j.id] || `الجزء ${JUZ_ORDINALS[j.id - 1]} من القرآن`;
   const title = `${nameAr} مكتوب مع التلاوة · Juz ${j.id} | القرآن الكريم`;
@@ -302,8 +326,9 @@ function juzPageFor(shell, j) {
       `  <article class="sr-only" lang="ar" dir="rtl">\n` +
       `    <h1>${esc(nameAr)} · Juz ${j.id}</h1>\n` +
       `    <p>${esc(span)} · ${esc(spanEn)} · الصفحات ${j.from}–${j.to} · pages ${j.from}–${j.to}</p>\n` +
+      surahsOfJuz(j) +
       '  </article>\n</body>')
-    .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, schemaScript({
+    .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, schemaScript([{
       '@context': 'https://schema.org',
       '@type': 'CreativeWork',
       name: `${nameAr} · Juz ${j.id}`,
@@ -318,7 +343,7 @@ function juzPageFor(shell, j) {
         numberOfPages: 604,
         url: `${SITE}/`,
       },
-    }));
+    }, crumbs(`${nameAr} · Juz ${j.id}`, url)]));
 }
 
 /**
