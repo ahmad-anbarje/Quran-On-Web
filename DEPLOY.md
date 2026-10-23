@@ -538,6 +538,20 @@ year because a given page's font never changes.
 
 To roll back, `git checkout <previous-sha>`.
 
+### When the site's own nginx file changes
+
+A deploy copies the snippets, never `sites-available/readqurantoday.com.conf`,
+because certbot has written the certificate into it. A change to that file (the
+www and doubled-slash redirects, the 404 page) is copied in by hand, once:
+open both and carry the new lines over, keeping the `listen 443` and
+`ssl_certificate` lines certbot added, then
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+curl -sI https://www.readqurantoday.com/surah/3/ | grep -i location   # https://readqurantoday.com/surah/3/
+curl -sI https://readqurantoday.com/surah/3// | grep -i location      # /surah/3/
+```
+
 ### Doing it on push instead
 
 Push to main, and within a minute the site is serving it. There is no image and
