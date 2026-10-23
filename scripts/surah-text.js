@@ -115,6 +115,7 @@ function page(s, lines, site, basmala) {
 <!-- Readable for the crawler, but the mushaf page is the one to rank -->
 <meta name="robots" content="noindex, follow" />
 <link rel="canonical" href="${url}" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="${url}" />
 <meta property="og:title" content="${esc(title)}" />

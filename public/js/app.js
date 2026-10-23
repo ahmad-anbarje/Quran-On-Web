@@ -672,10 +672,12 @@ $(function () {
         '<span class="page-label ph-juz">' +
           (lang === 'ar' ? 'الجزء ' + ar(j) : 'Juz ' + j) + '</span>' +
         /* The name in the mushaf's own ornamental face. Named for a screen
-           reader, since the glyphs are private-use and read as nothing. */
-        '<span class="page-label ph-surah" role="img" aria-label="' +
-          esc(ps ? ps.full : '') + '">' +
-          (ps ? Mushaf.surahTitle(ps.id) : '') + '</span>' +
+           reader, since the glyphs are private-use and read as nothing. A page
+           that opens on its surah's own title has no name in the head. */
+        (ps
+          ? '<span class="page-label ph-surah" role="img" aria-label="' +
+              esc(ps.full) + '">' + Mushaf.surahTitle(ps.id) + '</span>'
+          : '<span class="page-label ph-surah"></span>') +
         '<span class="page-label ph-page">' +
           (lang === 'ar' ? 'الصفحة ' + ar(p) : 'Page ' + p) + '</span>';
       section.appendChild(head);

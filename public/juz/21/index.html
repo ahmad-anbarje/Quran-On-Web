@@ -51,7 +51,7 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v2/ -->
   <link rel="stylesheet" href="/css/fonts.css?v=2026-08-24" />
-  <link rel="stylesheet" href="/css/style.css?v=2026-10-09s" />
+  <link rel="stylesheet" href="/css/style.css?v=2026-10-23" />
   <link rel="stylesheet" href="/css/recite.css?v=2026-09-26" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
@@ -318,17 +318,19 @@
       <svg class="ic ic-fs-enter" viewBox="0 0 24 24"><use href="#i-expand"/></svg>
       <svg class="ic ic-fs-exit" viewBox="0 0 24 24"><use href="#i-collapse"/></svg>
     </button>
-    <!-- The magnifier's slider: drag up to come closer; the level below goes back to 100% -->
+    <!-- The magnifier's slider: drag up to come closer; the level below goes back to 100%.
+         The steps and the level are for the pointer, so they are not buttons:
+         a control inside a slider is one a screen reader cannot reach. -->
     <div id="zoom-rail" role="slider" tabindex="0" aria-orientation="vertical"
          aria-valuemin="100" aria-valuemax="400" aria-valuenow="100" aria-label="التكبير | Magnify">
-      <button class="zr-step" data-step="1" tabindex="-1" aria-hidden="true">
+      <span class="zr-step" data-step="1" aria-hidden="true">
         <svg class="ic" viewBox="0 0 24 24"><use href="#i-plus"/></svg>
-      </button>
+      </span>
       <div class="zr-track"><div class="zr-fill"></div><div class="zr-thumb"></div></div>
-      <button class="zr-step" data-step="-1" tabindex="-1" aria-hidden="true">
+      <span class="zr-step" data-step="-1" aria-hidden="true">
         <svg class="ic" viewBox="0 0 24 24"><use href="#i-minus"/></svg>
-      </button>
-      <button class="zr-level" tabindex="-1">100%</button>
+      </span>
+      <span class="zr-level" aria-hidden="true">100%</span>
       <span class="tip" aria-hidden="true"><svg class="ic tip-ic" viewBox="0 0 24 24"><use href="#i-mouse"/></svg><svg class="ic tip-ic" viewBox="0 0 24 24"><use href="#i-pinch"/></svg><span class="lang-ar">كبّر بالعجلة أو بإصبعين</span><span class="lang-en">Zoom with the wheel or two fingers</span></span>
     </div>
 
@@ -586,7 +588,7 @@
   <script defer src="/js/pager.js?v=2026-09-28"></script>
   <script defer src="/js/offline.js?v=2026-09-20"></script>
   <script defer src="/js/leaves.js?v=2026-09-25"></script>
-  <script defer src="/js/app.js?v=2026-09-29"></script>
+  <script defer src="/js/app.js?v=2026-10-23"></script>
   <script defer src="/js/appcard.js?v=2026-10-09e"></script>
   <article class="sr-only" lang="ar" dir="rtl">
     <h1>الجزء الحادي والعشرون من القرآن · Juz 21</h1>

@@ -352,6 +352,7 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
   background: none;
   color: var(--text-mute);
   cursor: pointer;
+  user-select: none;
   transition: background var(--t), color var(--t);
 }
 .zr-step:hover { background: color-mix(in srgb, var(--primary) 14%, var(--surface)); color: var(--primary); }
@@ -404,6 +405,7 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
   font: 600 0.64rem var(--ui-font);
   font-variant-numeric: tabular-nums;
   cursor: default;
+  user-select: none;
 }
 /* Magnified, the number is the way back */
 #zoom-rail.zoomed .zr-level { color: var(--primary); cursor: pointer; }
@@ -790,7 +792,7 @@ body.dark-mode .surah-item.active { background: #1f6a9a; }
 }
 
 .surah-item.active .surah-num {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.15);
   border-color: transparent;
   color: var(--on-dark);
 }
