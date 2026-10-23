@@ -27,7 +27,10 @@
 
 **Listening**
 - Four reciters in five recordings, with each word highlighted as it is recited
-- The word being recited spelled out in Latin letters (transliteration)
+- The word being recited spelled out in Latin letters (transliteration), with its
+  English meaning beneath
+- The meaning of each ayah in a window that keeps up with the recitation: the
+  Saheeh International translation and the Tafsir al-Muyassar
 - Start from any word, change the speed, and repeat an ayah, a range or the
   whole surah, a set number of times or without end
 - Download a recitation to keep
@@ -85,6 +88,9 @@ docker run -p 8080:80 ahmadanbarje/quran
 | `public/data/recitations.json` | The reciters, and where their recordings are |
 | `public/surah/N/NNN.<reciter>.timing.json` | When each word is recited, per surah and reciter |
 | `public/data/quran-simple.txt` | The plain text the search runs on |
+| `public/data/translit/N.json`, `meaning/N.json` | Each word's Latin reading and its English, per surah |
+| `public/data/translation/sahih/N.json` | Saheeh International, ayah by ayah |
+| `public/data/tafsir/muyassar/N.json` | Tafsir al-Muyassar, ayah by ayah |
 
 The layout comes from [api.quran.com](https://api.quran.com) and is checked
 against [Tanzil](https://tanzil.net) and [alquran.cloud](https://alquran.cloud);
@@ -97,6 +103,7 @@ pages, headers and Basmalahs are laid out.
 | Command | What it does |
 |---|---|
 | `npm run build:pages` | Regenerates the surah and juz pages, the sitemap and `robots.txt` from `public/index.html` |
+| `npm run fetch:translations` | Downloads the translation, the tafsir and the words' English (one-off; checks the words line up with the Latin) |
 | `npm run fetch:reference` | Downloads the reference texts the data checks compare against (one-off) |
 | `npm test` | All checks: data, fonts, speed and pages |
 | `npm run sync:android` | Copies the reader's data into the native Android app |
@@ -124,4 +131,6 @@ the setup.
 
 The mushaf typefaces are by the King Fahd Glorious Quran Printing Complex. Page
 layout from Quran.com; reference texts from Tanzil and alquran.cloud; word
-timings from QUL by Tarteel. The code is [MIT](LICENSE).
+timings from QUL by Tarteel. The English translation is Saheeh International and
+the tafsir is Al-Muyassar from the King Fahd Complex, both by way of Tanzil; the
+words' English is Quran.com's word-by-word data. The code is [MIT](LICENSE).

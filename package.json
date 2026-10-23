@@ -10,6 +10,7 @@
     "fetch:fonts": "node scripts/fetch-fonts.js",
     "build:mushaf": "node scripts/build-mushaf.js",
     "fetch:reference": "node tests/fetch-reference.js",
+    "fetch:translations": "node scripts/fetch-translations.js",
     "test": "npm run test:data && npm run test:fonts && npm run test:perf && npm run test:pages",
     "test:data": "node tests/check-data.js",
     "test:fonts": "python tests/check-fonts.py",

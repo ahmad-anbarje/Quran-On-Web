@@ -38,6 +38,7 @@ const SHELL_FILES = [
   '/js/pager.js',
   '/js/mushaf.js',
   '/js/recite.js',
+  '/js/tafsir.js',
   '/data/surahs.json',
   '/data/recitations.json',
 ];

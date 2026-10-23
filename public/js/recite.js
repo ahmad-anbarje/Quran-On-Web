@@ -79,6 +79,7 @@
   var LATIN_KEY = 'quran-latin';
   var latinOn = stored(LATIN_KEY) !== '0';
   var latin = {};               // surah id -> its ayahs' words, or the fetch for them
+  var meaning = {};             // the same, each word's English, under the Latin
   var tip = null;               // the label over the marked word
 
   /* The word-by-word recordings: one short file a word, named by surah, ayah
@@ -260,11 +261,24 @@
   /* ---------- the Latin reading over the marked word ---------------------- */
 
   function loadLatin(id) {
-    if (latin[id]) return;
-    latin[id] = fetch('/data/translit/' + id + '.json')
+    fetchWords(latin, '/data/translit/', id);
+    /* The words' English, from one index with the Latin: the same ayah and
+       word numbers find both. */
+    fetchWords(meaning, '/data/meaning/', id);
+  }
+
+  function fetchWords(into, base, id) {
+    if (into[id]) return;
+    into[id] = fetch(base + id + '.json')
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function (list) { latin[id] = list; sayLatin(); })
-      .catch(function () { delete latin[id]; });
+      .then(function (list) { into[id] = list; sayLatin(); })
+      .catch(function () { delete into[id]; });
+  }
+
+  function wordOf(into, key, w) {
+    var list = into[+key[0]];
+    var ayah = Array.isArray(list) ? list[+key[1] - 1] : null;
+    return ayah ? ayah[w] || null : null;
   }
 
   /* Placed by measuring the word, not inside it: the word's own font is the
@@ -275,24 +289,29 @@
       tip.id = 'r-latin';
       tip.setAttribute('aria-hidden', 'true');
       tip.hidden = true;
+      /* Two lines: how the word sounds, and under a rule, what it means. Set
+         as text, never markup, since both come out of data files. */
+      tip.innerHTML = '<span class="r-say"></span><span class="r-mean"></span>';
       document.body.appendChild(tip);
     }
     /* The word under the pointer first, then the marked one: reading along by
        mouse is asking what each word says. */
     var word = overWord && overWord.isConnected ? overWord
            : lit.el && lit.el.isConnected ? lit.el : null;
-    var said = null;
+    var said = null, means = null;
     if (latinOn && word && word.dataset.a && word.dataset.w !== undefined) {
       var key = word.dataset.a.split(':');
-      var list = latin[+key[0]];
-      var ayah = Array.isArray(list) ? list[+key[1] - 1] : null;
-      said = ayah ? ayah[+word.dataset.w] : null;
+      said = wordOf(latin, key, +word.dataset.w);
+      means = wordOf(meaning, key, +word.dataset.w);
     }
-    var r = said ? word.getBoundingClientRect() : null;
+    var r = said || means ? word.getBoundingClientRect() : null;
     /* A word turned off the screen takes its label with it. */
     if (!r || r.bottom < 0 || r.top > window.innerHeight || !r.width) { tip.hidden = true; return; }
 
-    tip.textContent = said;
+    tip.firstChild.textContent = said || '';
+    tip.firstChild.hidden = !said;
+    tip.lastChild.textContent = means || '';
+    tip.lastChild.hidden = !means;
     tip.hidden = false;
     var t = tip.getBoundingClientRect();
     /* Clear of the marks above the letters; below the word where there is no room above. */
@@ -348,7 +367,11 @@
     var t = audio.currentTime * 1000;
     var v = ayahAt(t);
 
-    if (v !== at) { at = v; follow(v); }
+    if (v !== at) {
+      at = v;
+      follow(v);
+      if (global.Meaning) Meaning.follow(surah, v);
+    }
     light(surah.id + ':' + v, wordAt(v, t));
     progress(t);
 
@@ -596,6 +619,12 @@
           '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M2.8 18.5 7.5 5.5l4.7 13M4.5 14h6"/><path d="M17 15.2m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0M20.2 11.6v6.9"/></svg>' +
           '<span class="lang-ar">النطق بالحروف اللاتينية</span><span class="lang-en">Transliteration</span>' +
         '</button>' +
+        /* What the ayah means: the translation and the tafsir, in a window of
+           their own that keeps up with the recitation. */
+        '<button data-act="meaning" class="r-meaning">' +
+          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M12 6.5C10.3 5.2 7.9 4.6 4 4.6v13.2c3.9 0 6.3.6 8 1.9 1.7-1.3 4.1-1.9 8-1.9V4.6c-3.9 0-6.3.6-8 1.9zM12 6.5v13.2"/></svg>' +
+          '<span class="lang-ar">الترجمة والتفسير</span><span class="lang-en">Translation &amp; tafsir</span>' +
+        '</button>' +
         '<button data-act="speed" class="r-speed">' +
           '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M5.07 18A8 8 0 1 1 18.93 18"/><path d="M12 14l3.6-4.4M12 14m-1.3 0a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0-2.6 0"/></svg>' +
           '<span class="lang-ar">سرعة التلاوة</span><span class="lang-en">Speed</span>' +
@@ -678,6 +707,10 @@
         '<button data-act="latin" class="r-dock-latin">' +
           '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M2.8 18.5 7.5 5.5l4.7 13M4.5 14h6"/><path d="M17 15.2m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0M20.2 11.6v6.9"/></svg>' +
           '<span class="lang-ar">النطق</span><span class="lang-en">Phonetic</span>' +
+        '</button>' +
+        '<button data-act="meaning" class="r-dock-meaning">' +
+          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M12 6.5C10.3 5.2 7.9 4.6 4 4.6v13.2c3.9 0 6.3.6 8 1.9 1.7-1.3 4.1-1.9 8-1.9V4.6c-3.9 0-6.3.6-8 1.9zM12 6.5v13.2"/></svg>' +
+          '<span class="lang-ar">التفسير</span><span class="lang-en">Meaning</span>' +
         '</button>' +
         '<button data-act="play" class="r-dock-play">' +
           '<span class="r-dock-disc">' +
@@ -962,6 +995,11 @@
     menu.querySelectorAll('[data-act="latin"]').forEach(function (b) {
       b.classList.toggle('on', latinOn);
     });
+    var meaningUp = !!(global.Meaning && Meaning.open());
+    menu.querySelectorAll('[data-act="meaning"]').forEach(function (b) {
+      b.classList.toggle('on', meaningUp);
+      b.setAttribute('aria-pressed', meaningUp ? 'true' : 'false');
+    });
     var paced = lang() === 'ar' ? ar(String(speed)).replace('.', '٫') + '×' : speed + '×';
     menu.querySelectorAll('[data-act="speed"]').forEach(function (b) {
       b.classList.toggle('on', speed !== 1);
@@ -1069,10 +1107,13 @@
        the word only while the pointer was on it. The same band and ink the
        recitation uses, since it means the same thing. */
     light(surah.id + ':' + v, k);
+    /* A word in another ayah, with the meaning up, is asking what that one means. */
+    if (global.Meaning) Meaning.follow(surah, v);
 
     menu.hidden = false;
     // On a phone the player shows only with the page's chrome, so opening it asks for the chrome too
     document.dispatchEvent(new CustomEvent('recite:opened'));
+    if (global.Meaning) Meaning.settle();
 
     /* Folded away, a word being clicked is a request for the window back.
        Everything the click is asking about — play this ayah, this word, set a
@@ -1115,6 +1156,8 @@
     moved = false;
     minimized = false;
     menu.style.left = menu.style.top = '';
+    /* On a phone the meaning stood on the player; it comes down to the foot. */
+    if (global.Meaning) Meaning.settle();
   }
 
   /**
@@ -1206,6 +1249,15 @@
     /* Folding the menu away is about the menu, not about the recitation, so it
        works whether or not this surah has one. */
     if (what === 'minimize') { setMinimized(!minimized); return; }
+    /* Meaning needs no recording either: the text is there for every surah. */
+    if (what === 'meaning') {
+      if (global.Meaning) {
+        if (Meaning.open()) Meaning.close();
+        else Meaning.show(surah, (playing && at) || menuAt.v || at || 1);
+      }
+      sync();
+      return;
+    }
     if (!timing) return;
 
     if (what === 'toggle') { toggle(); return; }
@@ -1628,6 +1680,8 @@
     pause();
     stopWordAudio();
     clear();
+    /* The meaning on show belongs to the surah being left. */
+    if (global.Meaning) Meaning.close();
     if (menu) {
       menu.hidden = true;
       if (el.panel) el.panel.hidden = true;
@@ -1651,8 +1705,14 @@
 
   hover();
 
+  /* The meaning window's own close button changes what the player's says. */
+  document.addEventListener('meaning:state', function () { if (menu && !menu.hidden) sync(); });
+
+  /* Escape puts away what is on top: the meaning first, then the player. */
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeMenu();
+    if (e.key !== 'Escape') return;
+    if (global.Meaning && Meaning.open()) { Meaning.close(); if (menu && !menu.hidden) sync(); return; }
+    closeMenu();
   });
 
   /* Frames stop in a hidden tab and start again on return; the loop has to be
