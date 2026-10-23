@@ -151,9 +151,22 @@
     bar.addEventListener('pointercancel', end);
   }
 
+  /* The span the window may use: the screen, less the index where it is open, which stands above it. */
+  function room() {
+    var from = 0, to = window.innerWidth;
+    var side = document.getElementById('sidebar');
+    if (side && !side.classList.contains('hidden')) {
+      var s = side.getBoundingClientRect();
+      if (s.width && s.width < to) {
+        if (s.left > to / 2) to = s.left; else from = s.right;
+      }
+    }
+    return { from: from, to: to };
+  }
+
   function place(left, top) {
-    var pad = 8, r = box.getBoundingClientRect();
-    box.style.left = Math.max(pad, Math.min(window.innerWidth - r.width - pad, left)) + 'px';
+    var pad = 8, r = box.getBoundingClientRect(), span = room();
+    box.style.left = Math.max(span.from + pad, Math.min(span.to - r.width - pad, left)) + 'px';
     box.style.top = Math.max(pad, Math.min(window.innerHeight - r.height - pad, top)) + 'px';
   }
 
@@ -175,10 +188,14 @@
     var w = box.getBoundingClientRect().width;
     if (at && at.width) {
       /* Beside the player, on whichever side has the room. */
-      var left = at.left - w - 12 >= 8 ? at.left - w - 12 : at.right + 12;
-      place(left, at.top);
+      var span = room();
+      if (at.left - w - 12 >= span.from + 8) place(at.left - w - 12, at.top);
+      else if (at.right + 12 + w <= span.to - 8) place(at.right + 12, at.top);
+      // Room on neither side: above it all, clear of the player and the index
+      else place((span.from + span.to - w) / 2, 72);
     } else {
-      place(window.innerWidth / 2 - w / 2, 72);
+      var free = room();
+      place((free.from + free.to - w) / 2, 72);
     }
   }
 
