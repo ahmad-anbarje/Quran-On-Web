@@ -431,6 +431,11 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   /* The title bar runs out to the panel's edge, so the panel clips it back to
      its own rounded corner. */
   overflow: hidden;
+  /* Never taller than the screen: with the reciter list open on a short one,
+     the menu scrolls inside rather than running off the bottom. */
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 #r-menu[hidden] { display: none; }

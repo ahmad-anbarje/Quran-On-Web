@@ -123,6 +123,17 @@
 
     draggable(el.bar);
 
+    /* A longer tafsir, or the other tab, changes its height where it stands;
+       kept inside the screen as the player is. On a phone the sheet is
+       anchored to the foot and grows upwards by itself. */
+    if (global.ResizeObserver) {
+      new ResizeObserver(function () {
+        if (box.hidden || phone()) return;
+        var r = box.getBoundingClientRect();
+        if (r.top < 8 || r.bottom > window.innerHeight - 8) place(r.left, r.top);
+      }).observe(box);
+    }
+
     new MutationObserver(function () { if (!box.hidden) render(); })
       .observe(document.body, { attributes: true, attributeFilter: ['data-lang'] });
 
