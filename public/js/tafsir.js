@@ -3,11 +3,12 @@
  *
  * Opened from the player, on the ayah the player is about, and it then keeps
  * up with the recitation: while an ayah is being read, its meaning is the one
- * on show. Two tabs, an English translation and the Arabic of the Tafsir
- * al-Muyassar, one ayah at a time, with steps to the ayah either side. The
- * translation is the King Fahd Complex's own, Hilali and Muhsin Khan, the same
- * house as the mushaf and the tafsir; Saheeh International is the other
- * choice, for plainer English.
+ * on show. Two tabs, a translation and the Arabic of the Tafsir al-Muyassar,
+ * one ayah at a time, with steps to the ayah either side. The translations
+ * are the King Fahd Complex's, the same house as the mushaf and the tafsir, in
+ * every language listed in data/translations.json; its English, Hilali and
+ * Muhsin Khan, is the first, and Saheeh International stands beside it for
+ * plainer English.
  *
  * A window rather than a column beside the page, because the page is the
  * mushaf and keeps its size: on a wide screen it can be carried wherever it
@@ -21,17 +22,12 @@
 (function (global) {
   'use strict';
 
-  /* The texts, by the name each is kept under. */
+  /* The texts, by the name each is kept under. The translations join from
+     data/translations.json; until it arrives, the Complex's English stands in. */
   var TEXTS = {
     hilali: {
       base: '/data/translation/hilali/', lang: 'en', dir: 'ltr',
-      ar: 'مجمع الملك فهد', en: 'King Fahd Complex',
-      by: { ar: 'الهلالي وخان · مجمع الملك فهد · الإنجليزية', en: 'Hilali & Muhsin Khan · King Fahd Complex' },
-    },
-    sahih: {
-      base: '/data/translation/sahih/', lang: 'en', dir: 'ltr',
-      ar: 'صحيح إنترناشيونال', en: 'Saheeh International',
-      by: { ar: 'Saheeh International · الإنجليزية', en: 'Saheeh International' },
+      by: { ar: 'الهلالي ومحسن خان · مجمع الملك فهد · الإنجليزية', en: 'Hilali & Muhsin Khan · King Fahd Complex · English' },
     },
     muyassar: {
       base: '/data/tafsir/muyassar/', lang: 'ar', dir: 'rtl',
@@ -42,9 +38,42 @@
   /* The tabs. The translation tab holds a choice of translations, the
      Complex's first; the tafsir tab holds one. */
   var TABS = {
-    translation: { ar: 'الترجمة', en: 'Translation', choices: ['hilali', 'sahih'] },
-    tafsir: { ar: 'التفسير', en: 'Tafsir', choices: ['muyassar'] },
+    translation: { ar: 'الترجمة', en: 'Translation' },
+    tafsir: { ar: 'التفسير', en: 'Tafsir' },
   };
+
+  var CATALOGUE_URL = '/data/translations.json';
+  var catalogue = null;       // the list, once fetched; its fetch before that
+  var offered = [];           // the list's entries, in its order
+
+  /* "King Fahd Complex" after the translator's name, unless that is the name. */
+  var COMPLEX = { ar: 'مجمع الملك فهد', en: 'King Fahd Complex' };
+  function house(t, l) { return t.complex && t.name[l] !== COMPLEX[l] ? COMPLEX[l] : ''; }
+
+  function loadCatalogue() {
+    if (catalogue) return catalogue;
+    catalogue = fetch(CATALOGUE_URL)
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (list) {
+        offered = list;
+        list.forEach(function (t) {
+          texts[t.id] = texts[t.id] || {};
+          TEXTS[t.id] = {
+            base: '/data/translation/' + t.id + '/', lang: t.lang, dir: t.dir || 'ltr',
+            by: {
+              ar: [t.name.ar, house(t, 'ar'), t.language.ar].filter(Boolean).join(' · '),
+              en: [t.name.en, house(t, 'en'), t.language.en].filter(Boolean).join(' · '),
+            },
+          };
+        });
+        /* A choice remembered from a list that has since lost it falls back. */
+        if (!TEXTS[translation]) translation = 'hilali';
+        fillChoices();
+        render();
+      })
+      .catch(function () { catalogue = null; });
+    return catalogue;
+  }
 
   var TAB_KEY = 'quran-meaning-tab';
   var TRANSLATION_KEY = 'quran-translation';
@@ -53,9 +82,9 @@
   var surah = null;           // { id, en, full, v }
   var ayah = 1;
   var tab = null;
-  var translation = TEXTS[stored(TRANSLATION_KEY)] && TEXTS[stored(TRANSLATION_KEY)].lang === 'en'
-    ? stored(TRANSLATION_KEY) : 'hilali';
-  var texts = { hilali: {}, sahih: {}, muyassar: {} };   // text -> surah id -> list, or its fetch
+  /* Trusted only once the list confirms it; see loadCatalogue. */
+  var translation = stored(TRANSLATION_KEY) || 'hilali';
+  var texts = { hilali: {}, muyassar: {} };   // text -> surah id -> list, or its fetch
   var moved = false;
 
   function stored(key) {
@@ -89,11 +118,12 @@
         '<button role="tab" class="mn-tab" data-tab="translation" id="mn-tab-translation" aria-controls="mn-body"></button>' +
         '<button role="tab" class="mn-tab" data-tab="tafsir" id="mn-tab-tafsir" aria-controls="mn-body"></button>' +
       '</div>' +
-      /* Which translation, under its tab; only where there is a choice. */
-      '<div class="mn-choices" role="radiogroup" hidden>' +
-        '<button class="mn-choice" role="radio" data-text="hilali"></button>' +
-        '<button class="mn-choice" role="radio" data-text="sahih"></button>' +
-      '</div>' +
+      /* Which translation, under its tab: a list, since there are many, in
+         groups by language. */
+      '<label class="mn-choices" hidden>' +
+        '<span class="mn-choices-label"></span>' +
+        '<select class="mn-select"></select>' +
+      '</label>' +
       '<div class="mn-body" id="mn-body" role="tabpanel" tabindex="0" aria-live="polite">' +
         '<p class="mn-text"></p>' +
         '<p class="mn-by"></p>' +
@@ -111,6 +141,8 @@
       close: box.querySelector('.mn-close'),
       body: box.querySelector('.mn-body'),
       choices: box.querySelector('.mn-choices'),
+      choicesLabel: box.querySelector('.mn-choices-label'),
+      select: box.querySelector('.mn-select'),
       text: box.querySelector('.mn-text'),
       by: box.querySelector('.mn-by'),
     };
@@ -119,7 +151,6 @@
       var b = e.target.closest('button');
       if (b) {
         if (b.dataset.tab) { tab = b.dataset.tab; store(TAB_KEY, tab); render(); }
-        else if (b.dataset.text) { translation = b.dataset.text; store(TRANSLATION_KEY, translation); render(); }
         else if (b.dataset.step) step(+b.dataset.step);
         else if (b === el.close) close();
       }
@@ -132,12 +163,9 @@
     box.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') { close(); e.stopPropagation(); return; }
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-      if (e.target.closest('.mn-choices')) {
-        translation = translation === 'hilali' ? 'sahih' : 'hilali';
-        store(TRANSLATION_KEY, translation);
-        render();
-        box.querySelector('[data-text="' + translation + '"]').focus();
-      } else if (e.target.closest('.mn-tabs')) {
+      /* The list's own arrows are the list's, and not a page turn either. */
+      if (e.target === el.select) { e.stopPropagation(); return; }
+      if (e.target.closest('.mn-tabs')) {
         tab = tab === 'translation' ? 'tafsir' : 'translation';
         store(TAB_KEY, tab);
         render();
@@ -149,6 +177,12 @@
       }
       e.preventDefault();
       e.stopPropagation();
+    });
+
+    el.select.addEventListener('change', function () {
+      translation = el.select.value;
+      store(TRANSLATION_KEY, translation);
+      render();
     });
 
     draggable(el.bar);
@@ -241,7 +275,35 @@
   }
 
   /* The text a tab is showing: the chosen translation, or the tafsir. */
-  function textOf(t) { return t === 'translation' ? translation : 'muyassar'; }
+  function textOf(t) {
+    if (t !== 'translation') return 'muyassar';
+    return TEXTS[translation] ? translation : 'hilali';
+  }
+
+  /* The list, in the reader's language: a group a language, English first
+     as the catalogue has it, each translation by its translator. */
+  function fillChoices() {
+    if (!box || !offered.length) return;
+    var l = lang(), groups = [], by = {};
+    offered.forEach(function (t) {
+      var key = t.language.en;
+      if (!by[key]) { by[key] = { name: t.language[l], list: [] }; groups.push(by[key]); }
+      by[key].list.push(t);
+    });
+    el.select.textContent = '';
+    groups.forEach(function (g) {
+      var og = document.createElement('optgroup');
+      og.label = g.name;
+      g.list.forEach(function (t) {
+        var o = document.createElement('option');
+        o.value = t.id;
+        o.textContent = [t.name[l], house(t, l)].filter(Boolean).join(' — ');
+        og.appendChild(o);
+      });
+      el.select.appendChild(og);
+    });
+    el.select.dataset.lang = l;
+  }
 
   function load(source, id) {
     var have = texts[source][id];
@@ -285,19 +347,14 @@
     });
     el.body.setAttribute('aria-labelledby', 'mn-tab-' + tab);
 
-    el.choices.hidden = TABS[tab].choices.length < 2;
-    el.choices.setAttribute('aria-label', l === 'ar' ? 'الترجمة' : 'Translation');
-    box.querySelectorAll('.mn-choice').forEach(function (b) {
-      var on = b.dataset.text === translation;
-      b.textContent = TEXTS[b.dataset.text][l];
-      b.classList.toggle('on', on);
-      b.setAttribute('aria-checked', on ? 'true' : 'false');
-      b.tabIndex = on ? 0 : -1;
-    });
+    el.choices.hidden = tab !== 'translation' || offered.length < 2;
+    el.choicesLabel.textContent = l === 'ar' ? 'اللغة والمترجم' : 'Language and translator';
+    if (offered.length && el.select.dataset.lang !== l) fillChoices();
+    if (offered.length) el.select.value = textOf('translation');
 
     el.text.setAttribute('lang', src.lang);
     el.text.setAttribute('dir', src.dir);
-    el.text.className = 'mn-text mn-' + src.lang;
+    el.text.className = 'mn-text ' + (src.lang === 'ar' ? 'mn-ar' : 'mn-ltr');
     el.by.textContent = src.by[l];
 
     var want = { id: surah.id, ayah: ayah, which: which };
@@ -328,6 +385,7 @@
     surah = s;
     ayah = Math.max(1, Math.min(s.v, v || 1));
     if (!tab) tab = firstTab();
+    loadCatalogue();
     box.hidden = false;
     document.body.classList.add('has-meaning');
     render();

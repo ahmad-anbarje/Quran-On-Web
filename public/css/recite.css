@@ -940,30 +940,29 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
 }
 body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a; }
 
-/* Which translation: quieter than the tabs above it, a choice inside one */
+/* Which translation: a list under the tabs, quieter than they are */
 #meaning .mn-choices {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   padding: 8px 10px 0;
+  font-size: 0.74rem;
 }
 #meaning .mn-choices[hidden] { display: none; }
-#meaning .mn-choice {
-  padding: 3px 10px;
+#meaning .mn-choices-label { flex: 0 0 auto; opacity: 0.8; }
+#meaning .mn-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 5px 8px;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  background: none;
+  border-radius: var(--r-sm);
+  background: var(--surface);
   color: var(--text);
   font: inherit;
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   cursor: pointer;
 }
-#meaning .mn-choice.on {
-  border-color: var(--primary);
-  background: var(--primary-soft);
-  color: var(--primary);
-  font-weight: 700;
-}
+#meaning .mn-select:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
 
 #meaning .mn-body {
   flex: 1 1 auto;
@@ -974,7 +973,7 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
 }
 #meaning .mn-body:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 #meaning .mn-text { margin: 0; white-space: pre-line; }
-#meaning .mn-en {
+#meaning .mn-ltr {
   font: 400 1rem/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   text-align: left;
 }

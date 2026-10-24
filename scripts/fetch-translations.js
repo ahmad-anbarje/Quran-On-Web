@@ -1,17 +1,21 @@
 /**
- * The meaning beside the text: an English translation of each ayah, the
- * Tafsir al-Muyassar, and the English of each word.
+ * The meaning beside the text: translations of each ayah, the Tafsir
+ * al-Muyassar, and the English of each word.
  *
  *   node scripts/fetch-translations.js
  *
  * Writes, one file a surah, each an array with one entry an ayah:
  *
- *   public/data/translation/hilali/<n>.json  The Noble Quran, Hilali and Muhsin
- *                                            Khan, King Fahd Complex: the default
- *   public/data/translation/sahih/<n>.json   Saheeh International, the other choice
+ *   public/data/translation/<id>/<n>.json    each translation in TRANSLATIONS
+ *   public/data/translations.json            the list of them, for the picker
  *   public/data/tafsir/muyassar/<n>.json     التفسير الميسر, King Fahd Complex
  *   public/data/meaning/<n>.json             each word's English, as an array
  *                                            a word, lined up with translit/
+ *
+ * The translations are the King Fahd Complex's own, in every language they
+ * could be found in, with Saheeh International beside the Complex's English
+ * for plainer reading. A translation is listed here only where its source
+ * names the Complex as its publisher. Adding one is adding a line below.
  *
  * Run once; the result is committed and served from here, so nothing at
  * runtime asks anyone else for anything.
@@ -34,6 +38,59 @@ const DATA = path.join(ROOT, 'public', 'data');
 const EDITIONS = 'https://raw.githubusercontent.com/fawazahmed0/quran-api/1/editions/';
 const WORDS = { name: '@kmaslesa/holy-quran-word-by-word-full-data', version: '1.0.6' };
 
+/* In the order the picker offers them: English first, then by language. */
+const TRANSLATIONS = [
+  { id: 'hilali', edition: 'eng-muhammadtaqiudd', lang: 'en', complex: true,
+    language: { en: 'English', ar: 'الإنجليزية' },
+    name: { en: 'Hilali & Muhsin Khan', ar: 'الهلالي ومحسن خان' } },
+  { id: 'sahih', edition: 'eng-ummmuhammad', lang: 'en', complex: false,
+    language: { en: 'English', ar: 'الإنجليزية' },
+    name: { en: 'Saheeh International', ar: 'صحيح إنترناشيونال' } },
+  { id: 'aa-hamza', edition: 'aar-sheikhmahmoudab', lang: 'aa', complex: true,
+    language: { en: 'Afar', ar: 'العفرية' },
+    name: { en: 'Mahmoud Abdel Qader Hamza and scholars', ar: 'محمود عبد القادر حمزة وجماعة من العلماء' } },
+  { id: 'bn-zakaria', edition: 'ben-abubakrzakaria', lang: 'bn', complex: true, footnotes: true,
+    language: { en: 'Bengali', ar: 'البنغالية' },
+    name: { en: 'Abu Bakr Zakaria', ar: 'أبو بكر زكريا' } },
+  { id: 'fr-hamidullah', edition: 'fra-muhammadhamidul', lang: 'fr', complex: true,
+    language: { en: 'French', ar: 'الفرنسية' },
+    name: { en: 'Muhammad Hamidullah', ar: 'محمد حميد الله' } },
+  { id: 'hu-abdelrahman', edition: 'hun-drahmedabdelrah', lang: 'hu', complex: true,
+    language: { en: 'Hungarian', ar: 'المجرية' },
+    name: { en: 'Ahmed Abdel Rahman', ar: 'أحمد عبد الرحمن' } },
+  { id: 'id-complex', edition: 'ind-kingfahdcomplex', lang: 'id', complex: true,
+    language: { en: 'Indonesian', ar: 'الإندونيسية' },
+    name: { en: 'King Fahd Complex', ar: 'مجمع الملك فهد' } },
+  { id: 'ilp-saromintang', edition: 'ilp-abdulazizgroaal', lang: 'ilp', complex: true, footnotes: true,
+    language: { en: 'Iranun', ar: 'الإيرانونية' },
+    name: { en: 'Abdul Aziz Gro Aalem Saromintang', ar: 'عبد العزيز غرو عالم سارومنتانغ' } },
+  { id: 'ko-choi', edition: 'kor-hamidchoi', lang: 'ko', complex: true,
+    language: { en: 'Korean', ar: 'الكورية' },
+    name: { en: 'Hamid Choi', ar: 'حامد تشوي' } },
+  { id: 'ky-hakimov', edition: 'kir-shamsaldinhakim', lang: 'ky', complex: true,
+    language: { en: 'Kyrgyz', ar: 'القيرغيزية' },
+    name: { en: 'Shamsaldin Hakimov', ar: 'شمس الدين حكيموف' } },
+  { id: 'ml-madani', edition: 'mal-abdulhameedmada', lang: 'ml', complex: true,
+    language: { en: 'Malayalam', ar: 'المليبارية' },
+    name: { en: 'Abdul Hameed Madani and Kunhi Mohammed', ar: 'عبد الحميد المدني وكونهي محمد' } },
+  { id: 'te-moulana', edition: 'tel-abdulraheemmoha', lang: 'te', complex: true,
+    language: { en: 'Telugu', ar: 'التيلوغوية' },
+    name: { en: 'Abdul Raheem Mohammad Moulana', ar: 'عبد الرحيم محمد مولانا' } },
+  { id: 'th-complex', edition: 'tha-kingfahadquranc', lang: 'th', complex: true,
+    language: { en: 'Thai', ar: 'التايلاندية' },
+    name: { en: 'King Fahd Complex', ar: 'مجمع الملك فهد' } },
+];
+
+/* Footnote numbers whose footnotes are not in the text: [١], [12], [১]. Only
+   for the translations marked as carrying them: elsewhere a number in brackets
+   can be the text's own, as the tafsir's "the ayah before, no. [50]". */
+const FOOTNOTE = /\s*\[\s*[\d\u0660-\u0669\u06f0-\u06f9\u09e6-\u09ef]+\s*\]/g;
+
+function clean(text) {
+  /* and, in two places in the Bengali, the ayah's own number left at its head */
+  return text.replace(FOOTNOTE, '').replace(/^[\d\u09e6-\u09ef]+\.\s*/, '').replace(/\s+([,.;:!?،])/g, '$1').replace(/\s{2,}/g, ' ').trim();
+}
+
 const surahs = JSON.parse(fs.readFileSync(path.join(DATA, 'surahs.json'), 'utf8'));
 
 async function get(url) {
@@ -43,10 +100,10 @@ async function get(url) {
 }
 
 /** One edition, as surah -> its ayahs' texts, checked against the index. */
-async function edition(id) {
+async function edition(id, footnotes) {
   const rows = JSON.parse(await get(EDITIONS + id + '.json')).quran;
   const by = surahs.map(() => []);
-  for (const row of rows) by[row.chapter - 1][row.verse - 1] = row.text.trim();
+  for (const row of rows) by[row.chapter - 1][row.verse - 1] = footnotes ? clean(row.text) : row.text.trim();
   surahs.forEach((s, i) => {
     const got = by[i].filter(Boolean).length;
     if (got !== s.v) throw new Error(`${id}: surah ${s.id} has ${got} ayahs of ${s.v}`);
@@ -109,8 +166,10 @@ function write(dir, by) {
 }
 
 (async () => {
-  write('translation/hilali', await edition('eng-muhammadtaqiudd'));
-  write('translation/sahih', await edition('eng-ummmuhammad'));
+  for (const t of TRANSLATIONS) write('translation/' + t.id, await edition(t.edition, t.footnotes));
+  fs.writeFileSync(path.join(DATA, 'translations.json'), JSON.stringify(TRANSLATIONS.map((t) => ({
+    id: t.id, lang: t.lang, dir: t.dir || 'ltr', complex: t.complex, language: t.language, name: t.name,
+  }))));
   write('tafsir/muyassar', await edition('ara-kingfahadquranc'));
   write('meaning', await words());
 })().catch((e) => { console.error(e.message); process.exit(1); });
