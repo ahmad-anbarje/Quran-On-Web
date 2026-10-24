@@ -3,8 +3,11 @@
  *
  * Opened from the player, on the ayah the player is about, and it then keeps
  * up with the recitation: while an ayah is being read, its meaning is the one
- * on show. Two tabs, the English of Saheeh International and the Arabic of the
- * Tafsir al-Muyassar, one ayah at a time, with steps to the ayah either side.
+ * on show. Two tabs, an English translation and the Arabic of the Tafsir
+ * al-Muyassar, one ayah at a time, with steps to the ayah either side. The
+ * translation is the King Fahd Complex's own, Hilali and Muhsin Khan, the same
+ * house as the mushaf and the tafsir; Saheeh International is the other
+ * choice, for plainer English.
  *
  * A window rather than a column beside the page, because the page is the
  * mushaf and keeps its size: on a wide screen it can be carried wherever it
@@ -18,26 +21,41 @@
 (function (global) {
   'use strict';
 
-  var SOURCES = {
-    translation: {
+  /* The texts, by the name each is kept under. */
+  var TEXTS = {
+    hilali: {
+      base: '/data/translation/hilali/', lang: 'en', dir: 'ltr',
+      ar: 'مجمع الملك فهد', en: 'King Fahd Complex',
+      by: { ar: 'الهلالي وخان · مجمع الملك فهد · الإنجليزية', en: 'Hilali & Muhsin Khan · King Fahd Complex' },
+    },
+    sahih: {
       base: '/data/translation/sahih/', lang: 'en', dir: 'ltr',
-      ar: 'الترجمة', en: 'Translation',
+      ar: 'صحيح إنترناشيونال', en: 'Saheeh International',
       by: { ar: 'Saheeh International · الإنجليزية', en: 'Saheeh International' },
     },
-    tafsir: {
+    muyassar: {
       base: '/data/tafsir/muyassar/', lang: 'ar', dir: 'rtl',
-      ar: 'التفسير', en: 'Tafsir',
       by: { ar: 'التفسير الميسر · مجمع الملك فهد', en: 'Al-Muyassar · King Fahd Complex (Arabic)' },
     },
   };
 
+  /* The tabs. The translation tab holds a choice of translations, the
+     Complex's first; the tafsir tab holds one. */
+  var TABS = {
+    translation: { ar: 'الترجمة', en: 'Translation', choices: ['hilali', 'sahih'] },
+    tafsir: { ar: 'التفسير', en: 'Tafsir', choices: ['muyassar'] },
+  };
+
   var TAB_KEY = 'quran-meaning-tab';
+  var TRANSLATION_KEY = 'quran-translation';
 
   var box = null, el = {};
   var surah = null;           // { id, en, full, v }
   var ayah = 1;
   var tab = null;
-  var texts = { translation: {}, tafsir: {} };   // source -> surah id -> list, or its fetch
+  var translation = TEXTS[stored(TRANSLATION_KEY)] && TEXTS[stored(TRANSLATION_KEY)].lang === 'en'
+    ? stored(TRANSLATION_KEY) : 'hilali';
+  var texts = { hilali: {}, sahih: {}, muyassar: {} };   // text -> surah id -> list, or its fetch
   var moved = false;
 
   function stored(key) {
@@ -54,7 +72,7 @@
   /* Whichever was read last; before that, the one in the reader's language. */
   function firstTab() {
     var was = stored(TAB_KEY);
-    if (SOURCES[was]) return was;
+    if (TABS[was]) return was;
     return lang() === 'en' ? 'translation' : 'tafsir';
   }
 
@@ -70,6 +88,11 @@
       '<div class="mn-tabs" role="tablist">' +
         '<button role="tab" class="mn-tab" data-tab="translation" id="mn-tab-translation" aria-controls="mn-body"></button>' +
         '<button role="tab" class="mn-tab" data-tab="tafsir" id="mn-tab-tafsir" aria-controls="mn-body"></button>' +
+      '</div>' +
+      /* Which translation, under its tab; only where there is a choice. */
+      '<div class="mn-choices" role="radiogroup" hidden>' +
+        '<button class="mn-choice" role="radio" data-text="hilali"></button>' +
+        '<button class="mn-choice" role="radio" data-text="sahih"></button>' +
       '</div>' +
       '<div class="mn-body" id="mn-body" role="tabpanel" tabindex="0" aria-live="polite">' +
         '<p class="mn-text"></p>' +
@@ -87,6 +110,7 @@
       next: box.querySelector('[data-step="1"]'),
       close: box.querySelector('.mn-close'),
       body: box.querySelector('.mn-body'),
+      choices: box.querySelector('.mn-choices'),
       text: box.querySelector('.mn-text'),
       by: box.querySelector('.mn-by'),
     };
@@ -95,6 +119,7 @@
       var b = e.target.closest('button');
       if (b) {
         if (b.dataset.tab) { tab = b.dataset.tab; store(TAB_KEY, tab); render(); }
+        else if (b.dataset.text) { translation = b.dataset.text; store(TRANSLATION_KEY, translation); render(); }
         else if (b.dataset.step) step(+b.dataset.step);
         else if (b === el.close) close();
       }
@@ -107,7 +132,12 @@
     box.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') { close(); e.stopPropagation(); return; }
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-      if (e.target.closest('.mn-tabs')) {
+      if (e.target.closest('.mn-choices')) {
+        translation = translation === 'hilali' ? 'sahih' : 'hilali';
+        store(TRANSLATION_KEY, translation);
+        render();
+        box.querySelector('[data-text="' + translation + '"]').focus();
+      } else if (e.target.closest('.mn-tabs')) {
         tab = tab === 'translation' ? 'tafsir' : 'translation';
         store(TAB_KEY, tab);
         render();
@@ -210,10 +240,13 @@
     }
   }
 
+  /* The text a tab is showing: the chosen translation, or the tafsir. */
+  function textOf(t) { return t === 'translation' ? translation : 'muyassar'; }
+
   function load(source, id) {
     var have = texts[source][id];
     if (have) return Array.isArray(have) ? Promise.resolve(have) : have;
-    var p = fetch(SOURCES[source].base + id + '.json')
+    var p = fetch(TEXTS[source].base + id + '.json')
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then(function (list) { texts[source][id] = list; return list; })
       .catch(function () { delete texts[source][id]; return null; });
@@ -231,7 +264,7 @@
 
   function render() {
     if (!box || !surah) return;
-    var l = lang(), src = SOURCES[tab];
+    var l = lang(), which = textOf(tab), src = TEXTS[which];
 
     el.title.textContent = l === 'ar'
       ? 'الآية ' + ar(ayah) + ' · ' + (surah.full || surah.name || '')
@@ -245,26 +278,36 @@
 
     box.querySelectorAll('.mn-tab').forEach(function (b) {
       var on = b.dataset.tab === tab;
-      b.textContent = SOURCES[b.dataset.tab][l];
+      b.textContent = TABS[b.dataset.tab][l];
       b.classList.toggle('on', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
       b.tabIndex = on ? 0 : -1;
     });
     el.body.setAttribute('aria-labelledby', 'mn-tab-' + tab);
 
+    el.choices.hidden = TABS[tab].choices.length < 2;
+    el.choices.setAttribute('aria-label', l === 'ar' ? 'الترجمة' : 'Translation');
+    box.querySelectorAll('.mn-choice').forEach(function (b) {
+      var on = b.dataset.text === translation;
+      b.textContent = TEXTS[b.dataset.text][l];
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+      b.tabIndex = on ? 0 : -1;
+    });
+
     el.text.setAttribute('lang', src.lang);
     el.text.setAttribute('dir', src.dir);
     el.text.className = 'mn-text mn-' + src.lang;
     el.by.textContent = src.by[l];
 
-    var want = { id: surah.id, ayah: ayah, tab: tab };
-    var list = texts[tab][surah.id];
+    var want = { id: surah.id, ayah: ayah, which: which };
+    var list = texts[which][surah.id];
     if (Array.isArray(list)) { say(list); return; }
     el.text.textContent = l === 'ar' ? 'جارٍ التحميل…' : 'Loading…';
     box.classList.add('mn-loading');
-    load(tab, surah.id).then(function (got) {
+    load(which, surah.id).then(function (got) {
       /* Moved on while this was in the air. */
-      if (!surah || want.id !== surah.id || want.ayah !== ayah || want.tab !== tab) return;
+      if (!surah || want.id !== surah.id || want.ayah !== ayah || want.which !== textOf(tab)) return;
       if (got) { say(got); return; }
       box.classList.remove('mn-loading');
       el.text.textContent = lang() === 'ar' ? 'تعذّر التحميل. تحقق من الاتصال.' : 'Could not load. Check the connection.';
@@ -289,8 +332,8 @@
     document.body.classList.add('has-meaning');
     render();
     if (!was) { settle(); told(); }
-    /* The texts of both tabs, so switching does not wait. */
-    load(tab === 'translation' ? 'tafsir' : 'translation', s.id);
+    /* The other tab's text too, so switching does not wait. */
+    load(textOf(tab === 'translation' ? 'tafsir' : 'translation'), s.id);
   }
 
   /** Keep up with the recitation, if the window is up. */

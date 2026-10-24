@@ -6,7 +6,9 @@
  *
  * Writes, one file a surah, each an array with one entry an ayah:
  *
- *   public/data/translation/sahih/<n>.json   Saheeh International, ayah by ayah
+ *   public/data/translation/hilali/<n>.json  The Noble Quran, Hilali and Muhsin
+ *                                            Khan, King Fahd Complex: the default
+ *   public/data/translation/sahih/<n>.json   Saheeh International, the other choice
  *   public/data/tafsir/muyassar/<n>.json     التفسير الميسر, King Fahd Complex
  *   public/data/meaning/<n>.json             each word's English, as an array
  *                                            a word, lined up with translit/
@@ -107,6 +109,7 @@ function write(dir, by) {
 }
 
 (async () => {
+  write('translation/hilali', await edition('eng-muhammadtaqiudd'));
   write('translation/sahih', await edition('eng-ummmuhammad'));
   write('tafsir/muyassar', await edition('ara-kingfahadquranc'));
   write('meaning', await words());

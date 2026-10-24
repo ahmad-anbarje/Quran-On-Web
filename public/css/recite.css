@@ -940,6 +940,31 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
 }
 body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a; }
 
+/* Which translation: quieter than the tabs above it, a choice inside one */
+#meaning .mn-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 10px 0;
+}
+#meaning .mn-choices[hidden] { display: none; }
+#meaning .mn-choice {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+#meaning .mn-choice.on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 700;
+}
+
 #meaning .mn-body {
   flex: 1 1 auto;
   min-height: 0;

@@ -30,7 +30,8 @@
 - The word being recited spelled out in Latin letters (transliteration), with its
   English meaning beneath
 - The meaning of each ayah in a window that keeps up with the recitation: the
-  Saheeh International translation and the Tafsir al-Muyassar
+  King Fahd Complex's English translation (Hilali and Muhsin Khan) or Saheeh
+  International, and the Tafsir al-Muyassar
 - Start from any word, change the speed, and repeat an ayah, a range or the
   whole surah, a set number of times or without end
 - Download a recitation to keep
@@ -89,7 +90,8 @@ docker run -p 8080:80 ahmadanbarje/quran
 | `public/surah/N/NNN.<reciter>.timing.json` | When each word is recited, per surah and reciter |
 | `public/data/quran-simple.txt` | The plain text the search runs on |
 | `public/data/translit/N.json`, `meaning/N.json` | Each word's Latin reading and its English, per surah |
-| `public/data/translation/sahih/N.json` | Saheeh International, ayah by ayah |
+| `public/data/translation/hilali/N.json` | The King Fahd Complex's English (Hilali and Muhsin Khan), ayah by ayah, the default |
+| `public/data/translation/sahih/N.json` | Saheeh International, ayah by ayah, the other choice |
 | `public/data/tafsir/muyassar/N.json` | Tafsir al-Muyassar, ayah by ayah |
 
 The layout comes from [api.quran.com](https://api.quran.com) and is checked
@@ -131,6 +133,7 @@ the setup.
 
 The mushaf typefaces are by the King Fahd Glorious Quran Printing Complex. Page
 layout from Quran.com; reference texts from Tanzil and alquran.cloud; word
-timings from QUL by Tarteel. The English translation is Saheeh International and
-the tafsir is Al-Muyassar from the King Fahd Complex, both by way of Tanzil; the
+timings from QUL by Tarteel. The English translations are The Noble Quran by
+Hilali and Muhsin Khan (King Fahd Complex) and Saheeh International, and the
+tafsir is Al-Muyassar from the King Fahd Complex, all by way of Tanzil; the
 words' English is Quran.com's word-by-word data. The code is [MIT](LICENSE).
