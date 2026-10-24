@@ -91,8 +91,10 @@ async function main() {
       /* Two of these are the boot payload and are measured above. The third,
          the list of recitations, is fetched once and only when someone asks to
          listen — so it is held to a size rather than to the boot budget, which
-         is what stops it quietly growing into a third thing to download. */
-      const wanted = ['mushaf.json', 'recitations.json', 'surahs.json'];
+         is what stops it quietly growing into a third thing to download. The
+         list of translations is the same kind of thing: fetched only when the
+         meaning window opens, and held to a size of its own. */
+      const wanted = ['mushaf.json', 'recitations.json', 'surahs.json', 'translations.json'];
       const files = fs.readdirSync(path.join(ROOT, 'public', 'data'))
         .filter((f) => f.endsWith('.json')).sort();
       assert(files.join(',') === wanted.join(','),
@@ -102,7 +104,12 @@ async function main() {
       assert(res.ok, `/data/recitations.json returned ${res.status}`);
       const kb = (await res.arrayBuffer()).byteLength / 1024;
       assert(kb <= 8, `the recitation list is ${kb.toFixed(1)} KB — it is a list of names`);
-      return `${files.join(', ')}; the recitation list is ${kb.toFixed(1)} KB`;
+
+      const tr = await get('/data/translations.json');
+      assert(tr.ok, `/data/translations.json returned ${tr.status}`);
+      const trKb = (await tr.arrayBuffer()).byteLength / 1024;
+      assert(trKb <= 12, `the translation list is ${trKb.toFixed(1)} KB — it is a list of names`);
+      return `${files.join(', ')}; the recitation list is ${kb.toFixed(1)} KB, the translation list ${trKb.toFixed(1)} KB`;
     });
 
     await check('text responses are compressed, fonts are not', async () => {
