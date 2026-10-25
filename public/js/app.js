@@ -363,7 +363,8 @@ $(function () {
     $('#v-mode').text(say('mode', mode));
     $('#v-weight').text(say('weight', weight));
     $('#v-turners').text(say('onOff', turners ? 'on' : 'off'));
-    $('#v-offline').text(say('onState', Offline.on() ? 'on' : 'off'));
+    $('#v-offline').text(Offline.complete() ? T('محفوظ · ٩٥ ميغابايت', 'Saved · 95 MB')
+      : say('onState', Offline.on() ? 'on' : 'off'));
     $('#v-fullscreen').text(say('fullscreen', document.fullscreenElement ? 'on' : 'off'));
     $('#v-lang').text(I18n.name());
   }
@@ -1243,7 +1244,15 @@ $(function () {
 
   $('#btn-turners').on('click', function () { applyTurners(!turners, true); });
 
-  $('#btn-offline').on('click', function () { Offline.apply(!Offline.on(), true); });
+  /* 95 MB both ways: asked before it is written to the device, and before it is
+     thrown away. The app has every page in its package, so it asks nothing. */
+  $('#btn-offline').on('click', function () {
+    var on = Offline.on();
+    if (!Offline.native() && !window.confirm(on
+      ? T('حذف النسخة المحفوظة للقراءة دون اتصال (٩٥ ميغابايت)؟', 'Remove the offline copy (95 MB)?')
+      : T('حفظ المصحف كاملًا للقراءة دون اتصال؟ نحو ٩٥ ميغابايت.', 'Save the whole mushaf for offline reading? About 95 MB.'))) return;
+    Offline.apply(!on, true);
+  });
 
   $('#btn-weight').on('click', function () {
     applyWeight(WEIGHTS[(WEIGHTS.indexOf(weight) + 1) % WEIGHTS.length]);

@@ -17,6 +17,8 @@
 
   var PAGES = 604;
   var offline = localStorage.getItem('quran-offline') === 'on';
+  // Every page's font is in the worker's cache: said as "Saved · 95 MB", not just "On"
+  var complete = false;
 
   /** Say something to the worker, and hear back on a channel of our own. */
   function swSend(msg, onMessage) {
@@ -41,7 +43,7 @@
        nothing to do, but still counts 0-100 and reads as a fresh download. */
     swSend({ type: 'usage' }, function (u) {
       if (u.type !== 'usage') return;
-      if (u.fonts >= PAGES) { app.showValues(); return; }
+      if (u.fonts >= PAGES) { complete = true; app.showValues(); return; }
       fillMushaf();
     });
   }
@@ -61,6 +63,7 @@
         if (m.failed) {
           $('#v-offline').text(T('ناقص {n}', '{n} missing', { n: app.lang() === 'ar' ? app.ar(m.failed) : m.failed }));
         } else {
+          complete = true;
           app.showValues();
         }
       }
@@ -76,6 +79,7 @@
 
   function applyOffline(on, remember) {
     offline = !!on;
+    if (!offline) complete = false;
     if (remember) localStorage.setItem('quran-offline', offline ? 'on' : 'off');
 
     $('#btn-offline').toggleClass('on', offline);
@@ -120,6 +124,7 @@
     keep  : keepPages,
     native: native,
     on    : function () { return offline; },
+    complete: function () { return offline && complete; },
   };
 
 }(window));

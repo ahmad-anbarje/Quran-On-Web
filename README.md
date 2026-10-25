@@ -49,7 +49,7 @@
 
 **Everywhere**
 - Phones, tablets and desktops; swipe, keyboard shortcuts or the on-screen buttons
-- Offline reading, installable, dark and light
+- Offline reading (the whole mushaf, about 95 MB, asked before it is saved or removed), installable, dark and light
 - The site in 14 languages: Arabic, English, Urdu, Indonesian, Bengali, Turkish,
   French, Persian, Hindi, Malay, Spanish, Russian, German and Chinese, chosen in
   Settings or from the browser's language; Urdu and Persian read right to left.
