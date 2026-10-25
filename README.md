@@ -114,10 +114,15 @@ pages, headers and Basmalahs are laid out.
 ## For developers and AI assistants
 
 **MCP.** `https://readqurantoday.com/mcp` is a public, read-only
-[Model Context Protocol](https://modelcontextprotocol.io) server. Add it to an
-assistant as a remote MCP server (Claude: Settings → Connectors → Add custom
-connector; any client that speaks Streamable HTTP), or call it from your own
-code. No key; 60 requests a minute an address, 50 ayahs a call.
+[Model Context Protocol](https://modelcontextprotocol.io) server, listed in the
+[MCP Registry](https://registry.modelcontextprotocol.io) as `com.readqurantoday/quran`.
+No key; 60 requests a minute an address, 50 ayahs a call.
+
+- **Claude:** Settings → Connectors → Add custom connector, with the URL above and no sign-in
+- **Claude Code:** `claude mcp add --transport http read-quran-today https://readqurantoday.com/mcp`
+- **Gemini CLI:** `gemini mcp add --transport http read-quran-today https://readqurantoday.com/mcp`
+- **VS Code:** in `.vscode/mcp.json`, `{"servers": {"read-quran-today": {"type": "http", "url": "https://readqurantoday.com/mcp"}}}`
+- **Anything else** that speaks Streamable HTTP, or your own code
 
 | Tool | Answers |
 |---|---|
