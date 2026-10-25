@@ -51,6 +51,7 @@ function registerTools(server, q) {
         arabic: q.arabic[s].uthmani[a - 1],
         ...(text ? { translation: text[a - 1] } : {}),
         page: q.page(s, a),
+        link: q.ayahLink(s, a),
       });
     }
     return reply({
@@ -85,7 +86,7 @@ function registerTools(server, q) {
           if (!fold(t).includes(want)) return;
           total++;
           if (found.length < most) {
-            found.push({ ref: `${info.id}:${i + 1}`, surah: info.en, text: t, link: q.link(info.id) });
+            found.push({ ref: `${info.id}:${i + 1}`, surah: info.en, text: t, link: q.ayahLink(info.id, i + 1) });
           }
         });
       }
@@ -97,7 +98,7 @@ function registerTools(server, q) {
         if (found.length < most) {
           found.push({
             ref: `${row.s}:${row.a}`, surah: q.surah(row.s).en,
-            arabic: q.arabic[row.s].uthmani[row.a - 1], link: q.link(row.s),
+            arabic: q.arabic[row.s].uthmani[row.a - 1], link: q.ayahLink(row.s, row.a),
           });
         }
       });

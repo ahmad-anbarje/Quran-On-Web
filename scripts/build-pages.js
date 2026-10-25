@@ -41,6 +41,7 @@ const EOL = String.fromCharCode(10);
 
 const rec = require('./recitations');
 const surahText = require('./surah-text');
+const ayahPages = require('./ayah-pages');
 const pageWords = require('./page-words');
 const DEFAULT_RECITATION = rec.defaultId();
 
@@ -501,11 +502,16 @@ function main() {
   const textUrls = surahText.build(surahs, SITE);
   console.log('surah/*/text/ %d pages written', textUrls.length);
 
+  /* A page an ayah, for a search that names one */
+  const ayahUrls = ayahPages.build(surahs, SITE);
+  console.log('surah/*/*/    %d ayah pages written', ayahUrls.length);
+
   /* The privacy page is hand-written rather than generated, which is how it came
      to sit outside the sitemap: a page nothing lists is a page nothing finds. */
   const urls = [`${SITE}/`, `${SITE}/privacy/`]
     .concat(surahs.map((s) => `${SITE}/surah/${s.id}/`))
-    .concat(juz.map((j) => `${SITE}/juz/${j.id}/`));
+    .concat(juz.map((j) => `${SITE}/juz/${j.id}/`))
+    .concat(ayahUrls);
   fs.writeFileSync(path.join(PUBLIC, 'sitemap.xml'),
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +

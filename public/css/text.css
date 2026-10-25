@@ -98,6 +98,7 @@ h1 .en {
 }
 
 .verses .n {
+  text-decoration: none;
   display: inline-grid;
   place-items: center;
   min-width: 1.9em;
@@ -122,3 +123,56 @@ h1 .en {
 }
 
 .foot a { color: var(--primary); }
+
+/* ---------- a page an ayah ---------- */
+
+.ayah {
+  margin: 8px 0 18px;
+  font-family: var(--quran);
+  font-size: 1.95rem;
+  line-height: 2.2;
+}
+.ayah .n {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.9em;
+  height: 1.9em;
+  padding: 0 0.3em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+  font-family: var(--ui);
+  font-size: 0.55rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.ayah-page .meta a { color: var(--primary); }
+
+.ayah-page section { margin: 26px 0 0; }
+.ayah-page h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+.ayah-page section p { margin: 0 0 8px; line-height: 1.9; }
+.ayah-page section[lang="en"] { text-align: left; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.ayah-page .src { font-size: 0.78rem; opacity: 0.75; }
+
+.words { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.words th, .words td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: left; }
+.words th { font-weight: 700; opacity: 0.8; }
+.words td:first-child { width: 2.5em; opacity: 0.7; }
+
+.steps {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 30px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+.steps a { color: var(--primary); text-decoration: none; }
+.steps a:hover { text-decoration: underline; }
+

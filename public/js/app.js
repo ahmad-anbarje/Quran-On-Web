@@ -250,9 +250,13 @@ $(function () {
         if (found) {
           /* The remembered page belongs to the remembered surah: a reload of it,
              or coming back to it, carries on there. A link to a different surah
-             starts it at the top, since that page would leave the reader looking at nothing. */
+             starts it at the top, since that page would leave the reader looking at nothing.
+             A link to an ayah (/surah/2/?ayah=255, as each ayah's own page gives)
+             opens at the page it starts on, whatever was being read before. */
+          var asked = fromUrl && +new URLSearchParams(location.search).get('ayah');
+          var ayahAt = asked && ayahs.began[found.id + ':' + asked];
           var here = found.id === last && saved >= found.from && saved <= found.to;
-          open(found, here ? saved : null);
+          open(found, ayahAt || (here ? saved : null));
         } else {
           $('.welcome-dots').remove();
           $('.welcome-note').html(

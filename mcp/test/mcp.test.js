@@ -56,6 +56,7 @@ test('get_ayah: Ayat al-Kursi, in the Complex English by default, with its page 
   assert.match(a.translation, /^All[âa]h! L[âa] il[âa]ha/);
   assert.strictEqual(a.page, 42);
   assert.strictEqual(value.link, 'https://readqurantoday.com/surah/2/');
+  assert.strictEqual(a.link, 'https://readqurantoday.com/surah/2/255/');
 });
 
 test('get_ayah: a run, another translation, and the Arabic alone', async () => {

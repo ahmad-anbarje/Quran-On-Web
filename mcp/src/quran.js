@@ -80,6 +80,9 @@ function open(root) {
 
   function link(s) { return `${SITE}/surah/${s}/`; }
 
+  /* Each ayah has its own page: the Arabic, a translation, the tafsir and its words */
+  function ayahLink(s, a) { return `${SITE}/surah/${s}/${a}/`; }
+
   const whole = (v) => v;
 
   function translation(id, s) {
@@ -115,7 +118,7 @@ function open(root) {
 
   return {
     SITE, AUDIO, surahs, translations, recitations, arabic, plain,
-    surah, page, link, translation, tafsir, words, wordLanguages, timing,
+    surah, page, link, ayahLink, translation, tafsir, words, wordLanguages, timing,
     hasTranslation: (id) => byTranslation.has(id),
     translationInfo: (id) => byTranslation.get(id) || null,
     recitation: (id) => byRecitation.get(id) || null,

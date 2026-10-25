@@ -80,6 +80,7 @@ docker run -p 8080:80 ahmadanbarje/quran
 |---|---|
 | `public/` | The site as served: `index.html` is the one page template, plus `css/`, `js/` and `fonts/` |
 | `public/surah/`, `public/juz/` | Generated pages, one per surah and juz, each with the surah's text, and its English (Hilali and Muhsin Khan), for search engines and screen readers |
+| `public/surah/<s>/<a>/` | A page an ayah, 6236: the Arabic, the King Fahd Complex English, the Tafsir al-Muyassar and the words; its link opens the reader at the ayah's page (`/surah/<s>/?ayah=<a>`) |
 | `public/data/` | The reader's data (below) |
 | `scripts/` | Builders and importers: `build-pages.js`, `build-mushaf.js`, the font and timing tools |
 | `qul/` | The QUL word-timing exports every timing file is built from |

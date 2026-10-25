@@ -139,7 +139,7 @@ ${JSON.stringify(schema, null, 2)}
 ${opensWithBasmala(s, lines, basmala) ? `
   <p class="basmala">${esc(hafs(basmala))}</p>` : ''}
   <ol class="verses">
-${said(s, lines, basmala).map((t, i) => `    <li id="v${i + 1}"><span class="n">${ar(i + 1)}</span>${esc(hafs(t))}</li>`).join('\n')}
+${said(s, lines, basmala).map((t, i) => `    <li id="v${i + 1}"><a class="n" href="/surah/${s.id}/${i + 1}/" title="${s.id}:${i + 1}">${ar(i + 1)}</a>${esc(hafs(t))}</li>`).join('\n')}
   </ol>
 
   <p class="foot">
@@ -186,4 +186,4 @@ function build(surahs, site) {
   return urls;
 }
 
-module.exports = { build, spellings };
+module.exports = { build, spellings, hafs };

@@ -250,6 +250,26 @@ async function main() {
       return 'five pages, light and dark, wide and phone';
     });
 
+    await check('an ayah has its own page, and the reader opens at it', async () => {
+      const { ctx, page, errors } = await visit(DESKTOP, 'en');
+      await page.goto(base + '/surah/2/255/', { waitUntil: 'networkidle' });
+      const st = await page.evaluate(() => ({
+        h1: document.querySelectorAll('h1').length,
+        canonical: document.querySelector('link[rel=canonical]').href,
+        english: !!document.querySelector('section[lang="en"] p'),
+        words: document.querySelectorAll('.words tbody tr').length,
+        read: document.querySelector('.meta a').getAttribute('href'),
+      }));
+      assert(st.h1 === 1 && /\/surah\/2\/255\/$/.test(st.canonical), `the page: ${JSON.stringify(st)}`);
+      assert(st.english && st.words > 40, `the page's text: ${JSON.stringify(st)}`);
+      await open(page, st.read);
+      const seen = await drawn(page);
+      assert(seen.some((x) => x.page === 42), `${st.read} opened at ${JSON.stringify(seen.map((x) => x.page))}, not page 42`);
+      assert(!errors.length, errors.join(' | '));
+      await ctx.close();
+      return '/surah/2/255/: its text, its words; its link opens the mushaf at page 42';
+    });
+
     await check('a surah page carries its text for search engines', async () => {
       const html = await (await fetch(base + '/surah/36/')).text();
       assert((html.match(/<h1[\s>]/g) || []).length === 1, 'not exactly one h1');
