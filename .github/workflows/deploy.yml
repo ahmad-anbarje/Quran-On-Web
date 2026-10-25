@@ -73,8 +73,11 @@ jobs:
       # meaning window, the fourteen languages, offline, accessibility.
       - name: In the browser
         run: |
-          npx playwright install --with-deps chromium
-          npm run test:browser
+          # The runner's own Chrome where it has one: Playwright cannot always
+          # install its browser on the newest runner images
+          CHROME_PATH="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -z "$CHROME_PATH" ]; then npx playwright install --with-deps chromium; fi
+          CHROME_PATH="$CHROME_PATH" npm run test:browser
 
       # The feedback service: validation, rate limits, and the reports list.
       - name: Feedback service

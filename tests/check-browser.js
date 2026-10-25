@@ -9,7 +9,8 @@
  * axe rates serious or critical.
  *
  * Run with: npm run test:browser
- * (once, to fetch the browser: npx playwright install chromium)
+ * (once, to fetch the browser: npx playwright install chromium; or point
+ * CHROME_PATH at a Chrome already installed)
  *
  * The recordings and Cloudflare's country lookup are on other hosts or not
  * there locally, so requests to them are let fail; nothing here waits on them.
@@ -70,7 +71,9 @@ async function main() {
     try { await fetch(base + '/data/surahs.json'); break; } catch (e) { await new Promise((r) => setTimeout(r, 100)); }
   }
 
-  const browser = await chromium.launch();
+  /* CHROME_PATH names a browser already on the machine, as CI uses the
+     runner's own Chrome; otherwise Playwright's */
+  const browser = await chromium.launch(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {});
 
   /* A fresh visitor, optionally with the site set to a language */
   async function visit(shape, lang, extra = {}) {

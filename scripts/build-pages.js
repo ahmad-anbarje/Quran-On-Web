@@ -24,6 +24,7 @@
  * what lets CI check the committed files are current.
  */
 
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -445,6 +446,19 @@ function named(html) {
     .replace(/("url": ")https?:\/\/[^"]*(")/, `$1${SITE}/$2`);
 }
 
+/* Each script and stylesheet the page names carries ?v= with a hash of its
+   own contents, so a changed file is a new address. That is what lets nginx
+   keep them for a year: a stale copy cannot outlive an edit, and nobody has
+   to remember to bump a number. */
+function versioned(html) {
+  return html.replace(/((?:src|href)="(\/(?:js|css)\/[^"?]+\.(?:js|css)))(?:\?v=[^"]*)?"/g, (all, attr, file) => {
+    const f = path.join(PUBLIC, file);
+    if (!fs.existsSync(f)) return all;
+    const hash = crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex').slice(0, 10);
+    return `${attr}?v=${hash}"`;
+  });
+}
+
 function main() {
   const indexPath = path.join(PUBLIC, 'index.html');
   let index = fs.readFileSync(indexPath, 'utf8');
@@ -458,7 +472,7 @@ function main() {
   if (!/<nav id="juz-list" hidden>[\s\S]*?<\/nav>/.test(index)) throw new Error('no <nav id="juz-list" hidden> in index.html');
   index = index.replace(/<nav id="juz-list" hidden>[\s\S]*?<\/nav>/,
     () => `<nav id="juz-list" hidden>${juzListHtml(juz)}</nav>`);
-  index = named(index);
+  index = versioned(named(index));
   fs.writeFileSync(indexPath, index);
   console.log('index.html    surah list filled in, %d surahs; head names %s', surahs.length, SITE);
 
