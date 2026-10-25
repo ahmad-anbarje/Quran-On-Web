@@ -139,15 +139,18 @@ function open(root) {
      nothing asked for here: only where each ayah falls is kept. */
   const ayahTimes = (t) => ({ audioPath: t.audioPath, duration: t.duration, ayah: t.ayah });
 
+  const timingName = (id, s) => `${String(s).padStart(3, '0')}.${id}.timing.json`;
+
   function timing(id, s) {
-    return byRecitation.has(id)
-      ? file(`r:${id}:${s}`, ayahTimes, PUBLIC, 'surah', String(s), `${String(s).padStart(3, '0')}.${id}.timing.json`)
-      : null;
+    return byRecitation.has(id) ? file(`r:${id}:${s}`, ayahTimes, PUBLIC, 'surah', String(s), timingName(id, s)) : null;
   }
+
+  /* The whole timing file, words and all, as the site serves it */
+  function timingLink(id, s) { return `${SITE}/surah/${s}/${timingName(id, s)}`; }
 
   return {
     SITE, AUDIO, surahs, translations, recitations, arabic, plain,
-    surah, page, link, ayahLink, readerLink, translation, tafsir, words, wordLanguages, timing, mushaf, hafs: surahText.hafs,
+    surah, page, link, ayahLink, readerLink, translation, tafsir, words, wordLanguages, timing, mushaf, timingLink, hafs: surahText.hafs,
     hasTranslation: (id) => byTranslation.has(id),
     translationInfo: (id) => byTranslation.get(id) || null,
     recitation: (id) => byRecitation.get(id) || null,

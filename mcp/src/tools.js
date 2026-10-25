@@ -209,15 +209,16 @@ function registerTools(server, q) {
   tool('get_file', {
     title: 'Get a file',
     description:
-      'A link to download a surah as a file: its text (the Arabic, optionally with a translation and the ' +
-      'Tafsir al-Muyassar) as a .txt, or its recording as an MP3. For the recordings, leave out the surah ' +
-      'for the links to all of a reciter\'s.',
+      'Links to download a surah\'s files: "text", the Arabic (optionally with a translation and the ' +
+      'Tafsir al-Muyassar) as a .txt; "audio", its recording as an MP3 (leave out the surah for all of a ' +
+      'reciter\'s); "timing", where each ayah and word of a recording starts and ends, as JSON; "font", the ' +
+      'mushaf\'s fonts for the surah\'s pages (QCF V2, one a page) with the glyphs each ayah is written in.',
     inputSchema: {
-      kind: z.enum(['text', 'audio']),
-      surah: surahArg.optional().describe('Surah number, 1-114; needed for text'),
+      kind: z.enum(['text', 'audio', 'timing', 'font']),
+      surah: surahArg.optional().describe('Surah number, 1-114; needed for all but audio'),
       translation: z.string().optional().describe('For text: a translation id to put under each ayah, e.g. "hilali"'),
       tafsir: z.boolean().optional().describe('For text: the Tafsir al-Muyassar under each ayah'),
-      reciter: z.string().optional().describe('For audio: reciter id; defaults to the site\'s own'),
+      reciter: z.string().optional().describe('For audio and timing: reciter id; defaults to the site\'s own'),
     },
     annotations: { readOnlyHint: true, openWorldHint: false },
   }, ({ kind, surah: s, translation, tafsir, reciter }) => {
@@ -234,9 +235,36 @@ function registerTools(server, q) {
         link: q.link(s),
       });
     }
+    if (kind === 'font') {
+      if (!s) return fail('Fonts are given for a surah: give its number.');
+      const info = q.surah(s);
+      const pages = [];
+      for (let p = info.from; p <= info.to; p++) pages.push({ page: p, font: `${q.SITE}/fonts/v2/p${p}.woff2` });
+      return reply({
+        surah: { number: s, name: info.en, arabic: info.name, pages: [info.from, info.to] },
+        // Each word is one glyph, drawn right only in its own page's font
+        fonts: pages,
+        ayahs: q.mushaf(s).map((pieces, i) => ({ ayah: i + 1, glyphs: pieces.map(([page, g]) => ({ page, text: g.join(' ') })) })),
+        plainArabicFont: `${q.SITE}/fonts/UthmanicHafs1Ver18.woff2`,
+        note: 'The QCF V2 fonts draw the glyphs given, a page\'s in its own font; for ordinary Arabic text use plainArabicFont.',
+        link: q.link(s),
+      });
+    }
     const id = reciter || q.recitations.default;
     const r = q.recitation(id);
     if (!r) return fail(`No reciter "${id}"; list_reciters gives the ids.`);
+    if (kind === 'timing') {
+      if (!s) return fail('A timing file is for one surah: give its number.');
+      if (!q.timing(id, s)) return fail(`${r.name} (${id}) has no recording of surah ${s} here.`);
+      return reply({
+        surah: { number: s, name: q.surah(s).en },
+        reciter: { id, name: r.name },
+        download: q.timingLink(id, s),
+        contains: 'The MP3\'s length, and where each ayah and each word starts and ends, in milliseconds',
+        audio: `${q.AUDIO}/${q.timing(id, s).audioPath}`,
+        link: q.link(s),
+      });
+    }
     const mp3 = (n) => {
       const t = q.timing(id, n);
       return t && { surah: n, name: q.surah(n).en, download: `${q.AUDIO}/${t.audioPath}`, minutes: Math.round(t.duration / 60) };

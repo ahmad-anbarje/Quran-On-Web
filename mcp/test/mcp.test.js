@@ -160,6 +160,18 @@ test('get_file: the MP3 of a surah, or all of a reciter\'s', async () => {
   assert.ok((await call('get_file', { kind: 'audio', reciter: 'nobody' })).error);
 });
 
+test('get_file: a recording\'s timing file, and the mushaf\'s fonts for a surah with its glyphs', async () => {
+  const t = (await call('get_file', { kind: 'timing', surah: 1, reciter: 'mishari-rashid-al-afasy' })).value;
+  assert.strictEqual(t.download, 'https://readqurantoday.com/surah/1/001.mishari-rashid-al-afasy.timing.json');
+  const f = (await call('get_file', { kind: 'font', surah: 2 })).value;
+  assert.deepStrictEqual(f.surah.pages, [2, 49]);
+  assert.strictEqual(f.fonts.length, 48);
+  assert.strictEqual(f.fonts[0].font, 'https://readqurantoday.com/fonts/v2/p2.woff2');
+  assert.strictEqual(f.ayahs.length, 286);
+  assert.ok(f.ayahs.every((a) => a.glyphs.every((g) => g.page >= 2 && g.page <= 49 && g.text)));
+  assert.ok((await call('get_file', { kind: 'font' })).error);
+});
+
 test('the lists: surahs, translations narrowed by language, reciters', async () => {
   assert.strictEqual((await call('list_surahs', {})).value.length, 114);
   const urdu = (await call('list_translations', { language: 'urdu' })).value.translations;
