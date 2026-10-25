@@ -602,6 +602,8 @@
       '</div>' +
 
       '<div class="r-acts">' +
+        /* Three kinds of row, in the order they are wanted: what to play, how to
+           hear it (who, how fast, how often), and what it means. */
         '<button data-act="ayah">' +
           '<svg class="ic" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
           '<span class="lang-ar">تشغيل الآية</span><span class="lang-en">Play this ayah</span>' +
@@ -610,32 +612,34 @@
           '<svg class="ic" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
           '<span class="lang-ar">تشغيل الكلمة</span><span class="lang-en">Play this word</span>' +
         '</button>' +
-        '<button data-act="repeat" class="r-repeat">' +
-          '<svg class="ic" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg>' +
-          '<span class="lang-ar">التكرار</span><span class="lang-en">Repeat</span>' +
-          '<span class="r-repeat-value"></span>' +
-        '</button>' +
-        '<button data-act="latin" class="r-latin">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M2.8 18.5 7.5 5.5l4.7 13M4.5 14h6"/><path d="M17 15.2m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0M20.2 11.6v6.9"/></svg>' +
-          '<span class="lang-ar">النطق بالحروف اللاتينية</span><span class="lang-en">Transliteration</span>' +
-        '</button>' +
-        /* What the ayah means: the translation and the tafsir, in a window of
-           their own that keeps up with the recitation. */
-        '<button data-act="meaning" class="r-meaning">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M12 6.5C10.3 5.2 7.9 4.6 4 4.6v13.2c3.9 0 6.3.6 8 1.9 1.7-1.3 4.1-1.9 8-1.9V4.6c-3.9 0-6.3.6-8 1.9zM12 6.5v13.2"/></svg>' +
-          '<span class="lang-ar">الترجمة والتفسير</span><span class="lang-en">Translation &amp; tafsir</span>' +
-        '</button>' +
-        '<button data-act="speed" class="r-speed">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M5.07 18A8 8 0 1 1 18.93 18"/><path d="M12 14l3.6-4.4M12 14m-1.3 0a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0-2.6 0"/></svg>' +
-          '<span class="lang-ar">سرعة التلاوة</span><span class="lang-en">Speed</span>' +
-          '<span class="r-speed-value"></span>' +
-        '</button>' +
+        '<div class="r-sep" role="separator"></div>' +
         /* Only where there is in fact a choice to make. One recitation and
            this is a row that opens a list of one and changes nothing. */
         '<button data-act="voice" class="r-voice" hidden>' +
           '<svg class="ic" viewBox="0 0 24 24"><path d="M12 12.2a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2zm0 1.8c-4.2 0-7.2 2.2-7.2 4.6V21h14.4v-2.4c0-2.4-3-4.6-7.2-4.6z"/></svg>' +
           '<span class="lang-ar">القارئ</span><span class="lang-en">Reciter</span>' +
           '<span class="r-voice-value"></span>' +
+        '</button>' +
+        '<button data-act="speed" class="r-speed">' +
+          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M5.07 18A8 8 0 1 1 18.93 18"/><path d="M12 14l3.6-4.4M12 14m-1.3 0a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0-2.6 0"/></svg>' +
+          '<span class="lang-ar">سرعة التلاوة</span><span class="lang-en">Speed</span>' +
+          '<span class="r-speed-value"></span>' +
+        '</button>' +
+        '<button data-act="repeat" class="r-repeat">' +
+          '<svg class="ic" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg>' +
+          '<span class="lang-ar">التكرار</span><span class="lang-en">Repeat</span>' +
+          '<span class="r-repeat-value"></span>' +
+        '</button>' +
+        '<div class="r-sep" role="separator"></div>' +
+        /* What the ayah means: the translation and the tafsir, in a window of
+           their own that keeps up with the recitation. */
+        '<button data-act="meaning" class="r-meaning">' +
+          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M12 6.5C10.3 5.2 7.9 4.6 4 4.6v13.2c3.9 0 6.3.6 8 1.9 1.7-1.3 4.1-1.9 8-1.9V4.6c-3.9 0-6.3.6-8 1.9zM12 6.5v13.2"/></svg>' +
+          '<span class="lang-ar">الترجمة والتفسير</span><span class="lang-en">Translation &amp; tafsir</span>' +
+        '</button>' +
+        '<button data-act="latin" class="r-latin">' +
+          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M2.8 18.5 7.5 5.5l4.7 13M4.5 14h6"/><path d="M17 15.2m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0M20.2 11.6v6.9"/></svg>' +
+          '<span class="lang-ar">النطق بالحروف اللاتينية</span><span class="lang-en">Transliteration</span>' +
         '</button>' +
       '</div>' +
 

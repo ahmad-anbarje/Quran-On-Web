@@ -37,6 +37,8 @@
      size and weight carry the hierarchy instead. */
   --text-mute: var(--text);
   --on-dark:   #ffffff;
+  /* The panels' ink: menus and windows are read in short glances, at small sizes */
+  --ui-ink:    #0e1c29;
 
   --line:      #dce8f2;
 
@@ -143,6 +145,8 @@ body.dark-mode {
 
   --text:      #a2a7ad;
   --text-mute: var(--text);
+  /* The page's grey is for a long read; a panel's few words want to stand out */
+  --ui-ink:    #e3e7eb;
 
   --line:      #2a3138;
 
@@ -2875,3 +2879,8 @@ body.dark-mode #app-card {
 #btn-app:active, .icon-badge:active { transform: scale(0.96); }
 .icon-badge svg { width: calc(var(--bw) * 0.17); height: calc(var(--bw) * 0.17); flex-shrink: 0; fill: #fff; }
 .icon-badge .mb-docker { fill: #2496ed; }
+
+/* --- panels in one clear ink ---
+   The index, the settings, the player and the meaning window take the panel ink
+   in place of the page's: every rule inside them that says --text now says it. */
+#sidebar, #r-menu, #meaning, #app-card { --text: var(--ui-ink); --text-mute: var(--ui-ink); color: var(--ui-ink); }

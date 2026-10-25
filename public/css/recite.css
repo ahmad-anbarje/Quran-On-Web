@@ -708,7 +708,8 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   background: transparent;
   color: var(--text);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   text-align: start;
   cursor: pointer;
 }
@@ -716,12 +717,15 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
 #r-menu .r-acts button:hover { background: var(--primary-soft); color: var(--primary); }
 
 #r-menu .r-acts .ic {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 18px;
   flex: 0 0 auto;
   fill: currentColor;
-  color: var(--text-mute);
+  color: var(--text);
 }
+
+/* Between the menu's three kinds of row: what to play, how to hear it, what it means */
+#r-menu .r-sep { height: 1px; margin: 4px 10px; background: var(--line); }
 
 #r-menu .r-acts button:hover .ic { color: var(--primary); }
 
@@ -978,18 +982,18 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
   font-size: 0.85rem;
 }
 #meaning .mn-search:focus { outline: 2px solid var(--primary); outline-offset: 0; border-color: transparent; }
-#meaning .mn-count { margin: 6px 2px 4px; font-size: 0.72rem; opacity: 0.7; }
+#meaning .mn-count { margin: 6px 2px 4px; font-size: 0.76rem; opacity: 0.85; }
 #meaning .mn-list { flex: 1 1 auto; min-height: 0; margin: 0 0 8px; padding: 0; list-style: none; overflow-y: auto; overscroll-behavior: contain; }
 #meaning .mn-group {
   position: sticky;
   top: 0;
-  padding: 6px 8px 3px;
+  padding: 7px 8px 3px;
   background: var(--surface);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--primary);
 }
-#meaning .mn-item { padding: 6px 12px; border-radius: var(--r-sm); font-size: 0.82rem; cursor: pointer; }
+#meaning .mn-item { padding: 7px 12px; border-radius: var(--r-sm); font-size: 0.88rem; font-weight: 600; cursor: pointer; }
 #meaning .mn-item:hover, #meaning .mn-item.active { background: var(--primary-soft); }
 #meaning .mn-item[aria-selected="true"] { font-weight: 700; color: var(--primary); }
 #meaning .mn-item[aria-selected="true"]::after { content: " ✓"; }
@@ -1004,23 +1008,23 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
 #meaning .mn-body:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 #meaning .mn-text { margin: 0; white-space: pre-line; }
 #meaning .mn-ltr {
-  font: 400 1rem/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 400 1.08rem/1.7 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   text-align: left;
 }
 #meaning .mn-ar {
-  font-size: 1.04rem;
+  font-size: 1.1rem;
   line-height: 2;
   text-align: right;
 }
 /* Urdu, Persian, Pashto, Hebrew…: right to left, but not the tafsir's Arabic type */
-#meaning .mn-rtl { font-size: 1.04rem; line-height: 1.95; text-align: right; }
+#meaning .mn-rtl { font-size: 1.12rem; line-height: 1.95; text-align: right; }
 #meaning .mn-by a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 #meaning .mn-body[hidden] { display: none; }
 #meaning.mn-loading .mn-text { opacity: 0.6; }
 #meaning .mn-by {
   margin: 10px 0 0;
-  font-size: 0.72rem;
-  opacity: 0.75;
+  font-size: 0.76rem;
+  opacity: 0.85;
 }
 
 @media (prefers-reduced-motion: no-preference) {
