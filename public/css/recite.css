@@ -971,6 +971,10 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 #meaning .mn-tab.on {
   border-color: var(--primary);
@@ -1063,11 +1067,6 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
   margin: 10px 0 0;
   font-size: 0.76rem;
   opacity: 0.85;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  #meaning:not([hidden]) { animation: mn-in 0.2s var(--ease); }
-  @keyframes mn-in { from { opacity: 0; transform: translateY(6px); } }
 }
 
 /* A phone has no room to carry a window about: a sheet along the foot, on the

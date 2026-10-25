@@ -41,6 +41,11 @@
     tafsir: { ar: 'التفسير', en: 'Tafsir' },
   };
 
+  /* A translation's language by name; the built-in English has none of its own. */
+  function languageOf(t) {
+    return t.language || (t.lang === 'en' ? { ar: 'الإنجليزية', en: 'English' } : null);
+  }
+
   var CATALOGUE_URL = '/data/translations.json';
   var catalogue = null;       // the list, once fetched; its fetch before that
   var offered = [];           // the list's entries, in its order
@@ -61,7 +66,7 @@
             .map(function (x) { return x ? fold(x) : ''; });
           TEXTS[t.id] = {
             base: '/data/translation/' + t.id + '/', lang: t.lang, dir: t.dir || 'ltr',
-            source: t.source, key: t.key,
+            source: t.source, key: t.key, language: t.language,
             by: {
               ar: [t.name.ar, house(t, 'ar'), t.language.ar].filter(Boolean).join(' · '),
               en: [t.name.en, house(t, 'en'), t.language.en].filter(Boolean).join(' · '),
@@ -352,7 +357,8 @@
       return;
     }
     box.style.bottom = '';
-    if (moved) { var r = box.getBoundingClientRect(); place(r.left, r.top); return; }
+    // Once up, it stays where it stands: a word clicked elsewhere must not carry it off
+    if (moved || box.style.left) { place(box.offsetLeft, box.offsetTop); return; }
     var p = document.getElementById('r-menu');
     var at = p && !p.hidden ? p.getBoundingClientRect() : null;
     var w = box.getBoundingClientRect().width;
@@ -567,6 +573,8 @@
     if (to === ayah) return;
     ayah = to;
     render();
+    // The mushaf turns with it, when the ayah is printed on another page
+    document.dispatchEvent(new CustomEvent('meaning:step', { detail: { surah: surah.id, ayah: ayah } }));
   }
 
   /* The word labels follow the translation's language: told once it changes. */
@@ -593,9 +601,10 @@
     el.prev.disabled = ayah <= 1;
     el.next.disabled = ayah >= surah.v;
 
+    var picked = TEXTS[textOf('translation')], pl = picked && picked.lang !== l && languageOf(picked);
     box.querySelectorAll('.mn-tab').forEach(function (b) {
       var on = b.dataset.tab === tab;
-      b.textContent = TABS[b.dataset.tab][l];
+      b.textContent = TABS[b.dataset.tab][l] + (b.dataset.tab === 'translation' && pl ? ' (' + pl[l] + ')' : '');
       b.classList.toggle('on', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
       b.tabIndex = on ? 0 : -1;
@@ -645,7 +654,14 @@
     box.hidden = false;
     document.body.classList.add('has-meaning');
     render();
-    if (!was) { sized(); settle(); told(); }
+    if (!was) {
+      sized(); settle(); told();
+      // Only on opening: a CSS animation restarted on word clicks, and was measured mid-flight
+      if (box.animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        box.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }],
+          { duration: 200, easing: 'ease-out' });
+      }
+    }
     /* The other tab's text too, so switching does not wait. */
     load(textOf(tab === 'translation' ? 'tafsir' : 'translation'), s.id);
   }

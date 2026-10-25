@@ -1756,6 +1756,12 @@
   document.addEventListener('meaning:state', function () { if (menu && !menu.hidden) sync(); });
   /* A translation in another language: the words under the Latin follow it. */
   document.addEventListener('meaning:lang', function () { if (latinSurah) loadLatin(latinSurah); sayLatin(); });
+  document.addEventListener('meaning:step', function (e) {
+    var d = e.detail || {};
+    if (!surah || d.surah !== surah.id || !host || !host.ayahPage) return;
+    var p = host.ayahPage(d.ayah);
+    if (p && p !== host.currentPage()) host.goToPage(p);
+  });
 
   /* Escape puts away what is on top: the meaning first, then the player. */
   document.addEventListener('keydown', function (e) {

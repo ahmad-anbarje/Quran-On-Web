@@ -126,7 +126,18 @@ COMPLEX = re.compile(r'King Fahd|King Fahad|Complex|مجمع الملك فهد',
 
 # A heading set into the text in markup, as a rukuʿ's: not the ayah's meaning
 TAGGED = re.compile(r'<(b|strong|h\d)>.*?</\1>|<[^>]+>', re.S)
-LEAD = re.compile(r'^\s*(\d+)\s*[.\-)]\s*')
+# The ayah's own number at its head: "1.", "(1)", "2-1" (surah-ayah) or a bare "1 "
+LEAD = re.compile(r'^[\s\u200e\u200f]*(?:\(\s*(\d+)\s*\)|(\d+)\s*-\s*(\d+)(?!\d)|(\d+)\s*[.\-)]|(\d+)(?=\s))\s*')
+
+
+def lead(m, sura):
+    """The ayah number a LEAD match gives; "151-152" is a range, kept, unless the first is the surah."""
+    if not m:
+        return None
+    paren, s, b, dot, bare = m.groups()
+    if s:
+        return int(b) if int(s) == sura else None
+    return int(paren or dot or bare)
 
 
 # "[2.2]" at an ayah's head: its own reference, which the window already shows
@@ -149,7 +160,7 @@ def clean(text, aya, sura=0, key=''):
     if key in GLUED_IN:
         text = GLUED.sub('', text)
     m = LEAD.match(text)
-    while m and int(m.group(1)) == aya:      # some carry it twice: "1. 1. ..."
+    while m and lead(m, sura) == aya:      # some carry it twice: "1. 1. ..."
         text = text[m.end():]
         m = LEAD.match(text)
     return re.sub(r'\s{2,}', ' ', text).strip()
