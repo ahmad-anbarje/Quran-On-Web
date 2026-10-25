@@ -7,6 +7,7 @@ const MIN_MESSAGE = 5;
 class Invalid extends Error {}
 
 // Control characters other than line breaks and tabs have no place in a report
+// eslint-disable-next-line no-control-regex -- matching control characters is the point
 const clean = (value) => value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').trim();
 
 function text(value, limit, { required = false } = {}) {

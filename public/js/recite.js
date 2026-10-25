@@ -1312,9 +1312,9 @@
     /* Meaning needs no recording either: the text is there for every surah. */
     if (what === 'meaning') {
       if (global.Meaning && Meaning.open()) { Meaning.close(); sync(); return; }
-      var on = surah, v = (playing && at) || menuAt.v || at || 1;
+      var on = surah, ayah = (playing && at) || menuAt.v || at || 1;
       meaningScript().then(function () {
-        if (global.Meaning && surah === on) Meaning.show(on, v);
+        if (global.Meaning && surah === on) Meaning.show(on, ayah);
         sync();
       });
       return;
@@ -1376,7 +1376,7 @@
       return;
     }
 
-    var v = menuAt.v, k = menuAt.w;
+    var v = menuAt.v;
 
     if (what === 'ayah') {
       /* Starts at this ayah and lets the repeat setting say what happens at

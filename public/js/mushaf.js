@@ -176,10 +176,9 @@
   /* How many lines a page draws. Where only one free line was left above a
      surah the Basmalah shares it, but the reader always gives it its own. */
   function lineCount(lines) {
-    var n = 0, seenText = false;
+    var n = 0;
     for (var i = 0; i < lines.length; i++) {
       var l = lines[i];
-      if (l.t === 'ayah') seenText = true;
       if (l.t === 'surah') {
         n++;                 // every heading is drawn, so every heading takes a line
         if (l.b) n++;        // the Basmalah the mushaf squeezed onto its line
@@ -199,12 +198,10 @@
    */
   function fillBox(box, lines, version, basmalah, marks, at) {
     var frag = document.createDocumentFragment();
-    var seenText = false;
     // w numbers the words, g the glyph slots holding them; they part only at a pair
     var s = at ? at.s : 0, v = at ? at.v : 0, w = at ? at.w : 0, g = at ? (at.g || 0) : 0;
 
     lines.forEach(function (line) {
-      if (line.t === 'ayah') seenText = true;
       var el = document.createElement('div');
       el.className = 'm-line m-' + line.t;
 

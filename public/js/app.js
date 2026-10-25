@@ -721,7 +721,6 @@ $(function () {
     var reciting = window.Recite ? recite(s) : null;
 
     if (mode === 'spread') {
-      onShow = [];
       Leaves.showSpread(startAt || surahPages[0]);
       document.getElementById('content-area').scrollTo({ top: 0, behavior: 'auto' });
     } else {

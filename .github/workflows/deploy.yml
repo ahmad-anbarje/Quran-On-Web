@@ -47,6 +47,10 @@ jobs:
       - run: pip install --quiet "fonttools[woff]"
 
       # The glyphs the layout asks for are all present in the woff2 files.
+      # Mistakes the eye misses: an undeclared name, a variable declared twice
+      - name: Lint
+        run: npm run lint
+
       - name: Fonts match the data
         run: npm run test:fonts
 
@@ -94,10 +98,18 @@ jobs:
           npm ci --no-audit --no-fund
           npm test
 
-      # test:data is deliberately absent: it needs the reference texts, which
-      # are a 13 MB download and are not in the repo. Run it locally before a
-      # change to the mushaf data — CI cannot tell you anything there that a
-      # rebuild of mushaf.json would not.
+      # The layout against two unrelated copies of the Quran. The reference
+      # texts are a 13 MB download, not in the repo, so they are fetched once
+      # and kept in the cache until the script that fetches them changes.
+      - name: Reference texts
+        uses: actions/cache@v4
+        with:
+          path: reference
+          key: reference-${{ hashFiles('tests/fetch-reference.js') }}
+      - name: The data against Tanzil and alquran.cloud
+        run: |
+          [ -f reference/words.json ] || npm run fetch:reference
+          npm run test:data
 
   release:
     needs: check              # a red build never moves the branch
