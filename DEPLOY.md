@@ -460,7 +460,8 @@ How it fits together:
   gets a server of its own, so there are no sessions to keep. It limits each
   address to 60 requests a minute and a call to 50 ayahs.
 - nginx (`deploy/mcp-location.conf`) passes only POST and OPTIONS on `/mcp`, with
-  a 64 KB body and its own per-address limit.
+  a 64 KB body and its own per-address limit, and only GET on `/mcp/files/`, the
+  text files `get_file` links to, which the service makes as they are asked for.
 - It holds about 30 MB of data after a collection; systemd caps it at 192 MB,
   so it can never take memory from the site, which stays static files.
 - `npm test` in `mcp/` runs in CI; a deploy installs its packages when the

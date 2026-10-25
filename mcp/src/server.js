@@ -7,6 +7,8 @@
  * after, so there are no sessions to keep, leak or clean up, and a restart
  * loses nothing. The Quran itself is read once, at start.
  *
+ * It also serves the text files get_file links to, at /mcp/files/.
+ *
  * Read-only and open to all, so the only guard needed is on volume: a
  * request body cap, and a per-address budget of requests a minute. nginx in
  * front has its own limit too; this one holds when the service is reached
@@ -19,6 +21,7 @@ const path = require('path');
 const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/server/streamableHttp.js');
 const quran = require('./quran');
 const { build } = require('./mcp');
+const { serveFile } = require('./files');
 
 const VERSION = require('../package.json').version;
 const MAX_BODY = 64 * 1024;
@@ -47,7 +50,7 @@ function createServer(options = {}) {
      nothing here is private and no request carries credentials */
   const CORS = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Accept, Mcp-Protocol-Version, Mcp-Session-Id',
     'Access-Control-Max-Age': '86400',
   };
@@ -65,13 +68,21 @@ function createServer(options = {}) {
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
 
     if (url === '/health') return send(res, 200, { ok: true, version: VERSION });
+
+    const ip = req.headers['x-real-ip'] || req.socket.remoteAddress;
+    const tooMany = () => send(res, 429, rpcError(-32000, `Too many requests: ${perMinute} a minute`), { 'Retry-After': '60' });
+
+    /* The files get_file links to, made as they are asked for */
+    if (url.startsWith('/mcp/files/') && (req.method === 'GET' || req.method === 'HEAD')) {
+      if (!allowed(ip)) return tooMany();
+      if (serveFile(q, req, res)) return;
+    }
     if (url !== '/mcp') return send(res, 404, { error: 'not found; the MCP endpoint is /mcp' });
 
     /* Stateless: nothing to stream back on a GET, no session to DELETE */
     if (req.method !== 'POST') return send(res, 405, rpcError(-32000, 'Method not allowed'), { Allow: 'POST' });
 
-    const ip = req.headers['x-real-ip'] || req.socket.remoteAddress;
-    if (!allowed(ip)) return send(res, 429, rpcError(-32000, `Too many requests: ${perMinute} a minute`), { 'Retry-After': '60' });
+    if (!allowed(ip)) return tooMany();
 
     let size = 0;
     const chunks = [];

@@ -11,9 +11,9 @@ Requirements: <https://claude.com/docs/connectors/building/submission>.
 
 ## 2. Tools
 
-Synced from the server. All eight are read-only, each with a title and
+Synced from the server. All nine are read-only, each with a title and
 `readOnlyHint: true`: `get_ayah`, `search`, `get_tafsir`, `word_by_word`,
-`get_recitation`, `list_surahs`, `list_translations`, `list_reciters`.
+`get_recitation`, `get_file`, `list_surahs`, `list_translations`, `list_reciters`.
 
 ## 3. Listing
 

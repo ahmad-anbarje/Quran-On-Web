@@ -131,7 +131,11 @@ No key; 60 requests a minute an address, 50 ayahs a call.
 | `get_tafsir` | The Tafsir al-Muyassar of an ayah or a run |
 | `word_by_word` | Each word's transliteration and meaning, in English and six more languages |
 | `get_recitation` | A recording's MP3 link, its length, where each ayah starts, and a link that starts at one. In Claude it opens a player: the surah's Arabic, each ayah lit as it is recited, tap an ayah to go to it, change the reciter or the speed |
+| `get_file` | A link to download a surah as a `.txt` (the Arabic, with a translation or the tafsir if asked), or its MP3, or the MP3s of all 114 for a reciter |
 | `list_surahs`, `list_translations`, `list_reciters` | What there is to ask for, and the ids |
+
+Every ayah in an answer links to its own page on the site (`link`) and to the
+reader opened at it, to read in the mushaf and listen (`read`).
 
 The same data by address, for clients that read resources:
 `quran://surah/{surah}`, `quran://translation/{id}/{surah}`,

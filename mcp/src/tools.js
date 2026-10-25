@@ -4,16 +4,20 @@
  * recitations.json, surahs.json), so a translation or a reciter added to the
  * site is offered here with no change to this file.
  *
- * Every answer carries the link to the surah on readqurantoday.com, so an
- * assistant quoting it has a source to give. Recordings are links, not the
- * audio: they are tens of megabytes, and the listener's player fetches them
- * from the same bucket the site plays them from.
+ * Every ayah an answer gives carries two links to readqurantoday.com: its
+ * own page (`link`: the Arabic, a translation, the tafsir, its words) and the
+ * reader opened at it (`read`: the mushaf page, to read on and listen), so an
+ * assistant quoting it has a source to give and a reader a place to go.
+ * Recordings are links, not the audio: they are tens of megabytes, and the
+ * listener's player fetches them from the same bucket the site plays them
+ * from. Files to save are links too (get_file, files.js).
  */
 'use strict';
 
 const { z } = require('zod');
 const { MAX_RESULTS, DEFAULT_TRANSLATION, fold, reply, fail, checkAyahs, translationName } = require('./shared');
 const { playerMeta } = require('./app');
+const { fileUrl, fileName } = require('./files');
 
 const surahArg = z.number().int().min(1).max(114).describe('Surah number, 1-114');
 
@@ -56,6 +60,7 @@ function registerTools(server, q) {
         ...(text ? { translation: text[a - 1] } : {}),
         page: q.page(s, a),
         link: q.ayahLink(s, a),
+        read: q.readerLink(s, a),
       });
     }
     return reply({
@@ -90,7 +95,7 @@ function registerTools(server, q) {
           if (!fold(t).includes(want)) return;
           total++;
           if (found.length < most) {
-            found.push({ ref: `${info.id}:${i + 1}`, surah: info.en, text: t, link: q.ayahLink(info.id, i + 1) });
+            found.push({ ref: `${info.id}:${i + 1}`, surah: info.en, text: t, link: q.ayahLink(info.id, i + 1), read: q.readerLink(info.id, i + 1) });
           }
         });
       }
@@ -102,7 +107,7 @@ function registerTools(server, q) {
         if (found.length < most) {
           found.push({
             ref: `${row.s}:${row.a}`, surah: q.surah(row.s).en,
-            arabic: q.arabic[row.s].uthmani[row.a - 1], link: q.ayahLink(row.s, row.a),
+            arabic: q.arabic[row.s].uthmani[row.a - 1], link: q.ayahLink(row.s, row.a), read: q.readerLink(row.s, row.a),
           });
         }
       });
@@ -125,7 +130,7 @@ function registerTools(server, q) {
     if (bad) return fail(bad);
     const text = q.tafsir(s);
     const out = [];
-    for (let a = ayah; a <= last; a++) out.push({ ref: `${s}:${a}`, tafsir: text[a - 1] });
+    for (let a = ayah; a <= last; a++) out.push({ ref: `${s}:${a}`, tafsir: text[a - 1], link: q.ayahLink(s, a), read: q.readerLink(s, a) });
     return reply({ tafsir: 'Al-Tafsir al-Muyassar, King Fahd Complex (Arabic)', ayahs: out, link: q.link(s) });
   });
 
@@ -155,7 +160,8 @@ function registerTools(server, q) {
       words: said.map((l, i) => (means[i]
         ? { position: i + 1, transliteration: l, meaning: means[i] }
         : { position: i + 1, transliteration: l, meaning: english[i], meaningLanguage: 'en' })),
-      link: q.link(s),
+      link: q.ayahLink(s, ayah),
+      read: q.readerLink(s, ayah),
     });
   });
 
@@ -189,6 +195,8 @@ function registerTools(server, q) {
       duration: Math.round(t.duration),
       ayahs: t.ayah.map(([a, b], i) => ({ ayah: i + 1, start: sec(a), end: sec(b) })),
       link: q.link(s),
+      // The same recording on the site, in the mushaf, from the ayah asked for
+      read: q.readerLink(s, ayah),
     };
     // The player draws from structuredContent; the mushaf's own glyphs ride in _meta, for it and not the model
     return {
@@ -196,6 +204,52 @@ function registerTools(server, q) {
       structuredContent: value,
       _meta: { 'com.readqurantoday/mushaf': { fonts: `${q.SITE}/fonts/v2/`, ayahs: q.mushaf(s) } },
     };
+  });
+
+  tool('get_file', {
+    title: 'Get a file',
+    description:
+      'A link to download a surah as a file: its text (the Arabic, optionally with a translation and the ' +
+      'Tafsir al-Muyassar) as a .txt, or its recording as an MP3. For the recordings, leave out the surah ' +
+      'for the links to all of a reciter\'s.',
+    inputSchema: {
+      kind: z.enum(['text', 'audio']),
+      surah: surahArg.optional().describe('Surah number, 1-114; needed for text'),
+      translation: z.string().optional().describe('For text: a translation id to put under each ayah, e.g. "hilali"'),
+      tafsir: z.boolean().optional().describe('For text: the Tafsir al-Muyassar under each ayah'),
+      reciter: z.string().optional().describe('For audio: reciter id; defaults to the site\'s own'),
+    },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+  }, ({ kind, surah: s, translation, tafsir, reciter }) => {
+    if (kind === 'text') {
+      if (!s) return fail('A text file is one surah: give its number.');
+      if (translation && !q.hasTranslation(translation)) return fail(`No translation "${translation}"; list_translations gives the ids.`);
+      const opts = { translation, tafsir };
+      const info = q.surah(s);
+      return reply({
+        surah: { number: s, name: info.en, arabic: info.name, ayahs: info.v },
+        file: fileName(q, s, opts),
+        contains: ['Arabic', ...(translation ? [translationName(q, translation)] : []), ...(tafsir ? ['Tafsir al-Muyassar'] : [])],
+        download: fileUrl(q, s, opts),
+        link: q.link(s),
+      });
+    }
+    const id = reciter || q.recitations.default;
+    const r = q.recitation(id);
+    if (!r) return fail(`No reciter "${id}"; list_reciters gives the ids.`);
+    const mp3 = (n) => {
+      const t = q.timing(id, n);
+      return t && { surah: n, name: q.surah(n).en, download: `${q.AUDIO}/${t.audioPath}`, minutes: Math.round(t.duration / 60) };
+    };
+    const files = (s ? [s] : q.surahs.map((x) => x.id)).map(mp3).filter(Boolean);
+    if (!files.length) return fail(`${r.name} (${id}) has no recording of surah ${s} here.`);
+    return reply({
+      reciter: { id, name: r.name, arabic: r.nameAr, note: r.note || undefined },
+      files,
+      // An MP3 link opens in the browser's player, which has its own download button
+      note: 'Each link is the MP3 itself; the browser plays it, and saves it from its menu.',
+      ...(s ? { link: q.link(s) } : {}),
+    });
   });
 
   tool('list_surahs', {

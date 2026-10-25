@@ -40,7 +40,7 @@ async function call(name, args) {
 test('offers its tools and file addresses', async () => {
   const client = await connect();
   const tools = (await client.listTools()).tools.map((t) => t.name).sort();
-  assert.deepStrictEqual(tools, ['get_ayah', 'get_recitation', 'get_tafsir', 'list_reciters',
+  assert.deepStrictEqual(tools, ['get_ayah', 'get_file', 'get_recitation', 'get_tafsir', 'list_reciters',
     'list_surahs', 'list_translations', 'search', 'word_by_word']);
   const templates = (await client.listResourceTemplates()).resourceTemplates.map((t) => t.uriTemplate).sort();
   assert.deepStrictEqual(templates, ['quran://recitation/{reciter}/{surah}', 'quran://surah/{surah}',
@@ -57,6 +57,7 @@ test('get_ayah: Ayat al-Kursi, in the Complex English by default, with its page 
   assert.strictEqual(a.page, 42);
   assert.strictEqual(value.link, 'https://readqurantoday.com/surah/2/');
   assert.strictEqual(a.link, 'https://readqurantoday.com/surah/2/255/');
+  assert.strictEqual(a.read, 'https://readqurantoday.com/surah/2/?ayah=255');
 });
 
 test('get_ayah: a run, another translation, and the Arabic alone', async () => {
@@ -84,9 +85,11 @@ test('search: Arabic without diacritics, and a translation', async () => {
 test('get_tafsir and word_by_word', async () => {
   const t = await call('get_tafsir', { surah: 1, ayah: 2 });
   assert.match(t.value.ayahs[0].tafsir, /[؀-ۿ]/);
+  assert.strictEqual(t.value.ayahs[0].link, 'https://readqurantoday.com/surah/1/2/');
   const w = await call('word_by_word', { surah: 1, ayah: 1 });
   assert.deepStrictEqual(w.value.words.map((x) => x.transliteration), ["bis'mi", 'l-lahi', 'l-raḥmāni', 'l-raḥīmi']);
   assert.strictEqual(w.value.words[0].meaning, 'In (the) name');
+  assert.strictEqual(w.value.read, 'https://readqurantoday.com/surah/1/?ayah=1');
   const ur = await call('word_by_word', { surah: 1, ayah: 1, language: 'ur' });
   assert.match(ur.value.words[1].meaning, /[؀-ۿ]/);
   // Turkish lacks some words of 2:255: each still has a meaning, in English and said so
@@ -123,6 +126,38 @@ test('get_recitation: a link to the recording, and to an ayah in it', async () =
   assert.match(value.startAt, /#t=\d+(\.\d+)?$/);
   assert.strictEqual(value.ayahs.length, 110);
   assert.ok(value.ayahs[9].start < value.ayahs[9].end);
+  assert.strictEqual(value.read, 'https://readqurantoday.com/surah/18/?ayah=10');
+});
+
+test('get_file: a surah as text, a link the server answers with the file', async () => {
+  const { value } = await call('get_file', { kind: 'text', surah: 112, translation: 'hilali', tafsir: true });
+  assert.strictEqual(value.file, 'surah-112-al-ikhlas-hilali-tafsir.txt');
+  assert.strictEqual(value.download, 'https://readqurantoday.com/mcp/files/surah-112.txt?translation=hilali&tafsir=1');
+  // The same path and query, asked of this server
+  const res = await fetch(base + new URL(value.download).pathname + new URL(value.download).search);
+  assert.strictEqual(res.status, 200);
+  assert.match(res.headers.get('content-type'), /^text\/plain; charset=utf-8/);
+  assert.strictEqual(res.headers.get('content-disposition'), 'attachment; filename="surah-112-al-ikhlas-hilali-tafsir.txt"');
+  const text = await res.text();
+  assert.match(text, /Surah Al-Ikhlas \(112\), 4 ayahs/);
+  for (const a of [1, 2, 3, 4]) assert.match(text, new RegExp(`^112:${a}  `, 'm'));
+  assert.match(text, /^Say \(O Muhammad/m);
+  assert.strictEqual((text.match(/^التفسير: /gm) || []).length, 4);
+  // The Arabic alone, and what is not there
+  const plain = await (await fetch(base + '/mcp/files/surah-1.txt')).text();
+  assert.strictEqual((plain.match(/^1:\d+ {2}/gm) || []).length, 7);
+  assert.strictEqual((await fetch(base + '/mcp/files/surah-115.txt')).status, 404);
+  assert.strictEqual((await fetch(base + '/mcp/files/surah-1.txt?translation=nope')).status, 404);
+  assert.ok((await call('get_file', { kind: 'text' })).error);
+});
+
+test('get_file: the MP3 of a surah, or all of a reciter\'s', async () => {
+  const one = (await call('get_file', { kind: 'audio', surah: 36, reciter: 'mishari-rashid-al-afasy' })).value;
+  assert.strictEqual(one.files.length, 1);
+  assert.strictEqual(one.files[0].download, 'https://audio.readqurantoday.com/mishari-rashid-al-afasy/036.mp3');
+  const all = (await call('get_file', { kind: 'audio' })).value;
+  assert.strictEqual(all.files.length, 114);
+  assert.ok((await call('get_file', { kind: 'audio', reciter: 'nobody' })).error);
 });
 
 test('the lists: surahs, translations narrowed by language, reciters', async () => {
