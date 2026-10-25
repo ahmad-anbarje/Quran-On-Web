@@ -296,7 +296,11 @@ async function main() {
       const { ctx, page } = await visit(DESKTOP, 'en');
       await page.goto(base + '/', { waitUntil: 'networkidle' });
       await page.evaluate(() => document.querySelector('.drawer-tab[data-pane="settings"]').click());
+      // The switch asks before saving 95 MB; the reader says yes
+      let asked = '';
+      page.once('dialog', (d) => { asked = d.message(); d.accept(); });
       await page.click('#btn-offline');
+      if (!/95/.test(asked)) throw new Error('turning offline reading on did not ask first');
       await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller, null, { timeout: 20000 });
       await open(page, '/surah/1/');
       await ctx.setOffline(true);
