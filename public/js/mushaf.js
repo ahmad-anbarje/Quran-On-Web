@@ -32,14 +32,26 @@
   }
 
   /* ---------- font registry ----------------------------------------------
-     Every registered face takes part in font matching on each style recalc,
-     so reading a long surah must not leave hundreds behind. Faces are evicted
-     oldest first; the pinned ones are the Basmalah's, which every page uses. */
+     Adding a face to document.fonts, or deleting one, makes the browser
+     re-shape every piece of text on the page at the next layout: about a
+     tenth of a second on a fast machine, several on a phone, mostly spent on
+     the surah's own text kept for crawlers and screen readers. Loading a
+     face that is already registered costs nothing. So the faces are changed
+     in batches, a batch costing what one change does: every page of a surah
+     is registered when it opens, and the last surah's go in the same breath.
+     Registering fetches nothing; a page's font is downloaded when the page
+     is built, as before.
 
-  var MAX_FACES = 24;
-  var faces  = {};    // family -> { face, promise }
-  var order  = [];    // families, least recently used first
+     Faces outside the open surah (a neighbour warmed ahead of a turn) are
+     still kept to a few, oldest first, so a long session does not leave
+     hundreds behind. The pinned ones are the Basmalah's, which every page
+     uses. */
+
+  var MAX_FACES = 24;     // beyond the open surah's own
+  var faces  = {};        // family -> { face, promise }
+  var order  = [];        // families, least recently used first
   var pinned = {};
+  var surahFaces = {};    // the open surah's families, kept for as long as it is open
 
   function touch(family) {
     var i = order.indexOf(family);
@@ -47,17 +59,23 @@
     order.push(family);
   }
 
+  function drop(family) {
+    order.splice(order.indexOf(family), 1);
+    try { document.fonts.delete(faces[family].face); } catch (e) { /* already gone */ }
+    delete faces[family];
+  }
+
+  /* All in one go, so the deletions cost one re-shape between them. */
   function evict() {
-    while (order.length > MAX_FACES) {
-      var family = null;
-      for (var i = 0; i < order.length; i++) {
-        if (!pinned[order[i]]) { family = order[i]; break; }
-      }
-      if (!family) return;
-      order.splice(order.indexOf(family), 1);
-      try { document.fonts.delete(faces[family].face); } catch (e) { /* already gone */ }
-      delete faces[family];
-    }
+    var spare = order.filter(function (f) { return !pinned[f] && !surahFaces[f]; });
+    while (spare.length > MAX_FACES) drop(spare.shift());
+  }
+
+  function register(family, version, page) {
+    if (faces[family]) return;
+    var face = new FontFace(family, 'url(/fonts/' + version + '/p' + page + '.woff2)');
+    document.fonts.add(face);
+    faces[family] = { face: face, promise: null };
   }
 
   function familyFor(version, page) { return 'QCF-' + version + '-' + page; }
@@ -73,17 +91,27 @@
     var family = familyFor(version, page);
     if (pin) pinned[family] = true;
 
-    if (!faces[family]) {
-      var face = new FontFace(family, 'url(/fonts/' + version + '/p' + page + '.woff2)');
-      document.fonts.add(face);
-      faces[family] = {
-        face: face,
-        promise: face.load().then(function () { return family; }),
-      };
-    }
+    register(family, version, page);
+    var f = faces[family];
+    if (!f.promise) f.promise = f.face.load().then(function () { return family; });
     touch(family);
     evict();
-    return faces[family].promise;
+    return f.promise;
+  }
+
+  /**
+   * The faces a surah's pages need, registered in one batch as it opens,
+   * and the last surah's dropped in the same one. Nothing is fetched here.
+   */
+  function prepareFonts(version, pages) {
+    surahFaces = {};
+    pages.forEach(function (p) { surahFaces[familyFor(version, p)] = true; });
+    order.slice().forEach(function (f) { if (!pinned[f] && !surahFaces[f]) drop(f); });
+    pages.forEach(function (p) {
+      var family = familyFor(version, p);
+      register(family, version, p);
+      touch(family);
+    });
   }
 
   /* ---------- page building ---------------------------------------------- */
@@ -443,6 +471,7 @@
     fill        : fillBox,
     empty       : emptyBox,
     loadPageFont: loadPageFont,
+    prepareFonts: prepareFonts,
     layout      : layoutLines,
     loadWords   : loadWords,
     setWords    : setWords,

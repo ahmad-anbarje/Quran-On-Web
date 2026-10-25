@@ -221,7 +221,6 @@
   global.Listen = {
     init  : init,
     render: renderDownloads,
-    sync  : syncListen,
     showing: dlOpen,
   };
 

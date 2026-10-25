@@ -638,6 +638,9 @@ $(function () {
       }
     }
 
+    /* Every page's face at once: one re-shape now, rather than two at every turn. */
+    Mushaf.prepareFonts(VERSION, surahPages);
+
     var container = document.getElementById('ayahs-container');
     container.innerHTML = '';
     container.style.setProperty('--m-base', mushaf.fit.body[VERSION]);

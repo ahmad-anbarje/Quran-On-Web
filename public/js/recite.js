@@ -1734,11 +1734,6 @@
     at = 0;
   }
 
-  function close() {
-    stop();
-    document.body.classList.remove('is-reciting');
-  }
-
   /* The reader's language can change under a menu that is already up. */
   function relabel() { if (menu && !menu.hidden) sync(); }
 
@@ -1772,8 +1767,6 @@
 
   global.Recite = {
     open: open,
-    close: close,
-    stop: stop,
     repaint: repaint,
     relabel: relabel,
 
