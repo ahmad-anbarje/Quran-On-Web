@@ -1006,6 +1006,9 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
 
 #meaning .mn-picker { display: flex; flex-direction: column; min-height: 0; max-height: min(44vh, 340px); margin-top: 8px; }
 #meaning .mn-picker[hidden] { display: none; }
+/* Sized by the reader: the open list takes the whole window, not a set share */
+#meaning.mn-sized .mn-choices:has(.mn-picker:not([hidden])) { flex: 1 1 auto; }
+#meaning.mn-sized .mn-picker { flex: 1 1 auto; max-height: none; }
 #meaning .mn-search {
   width: 100%;
   padding: 7px 10px;

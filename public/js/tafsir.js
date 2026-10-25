@@ -265,6 +265,7 @@
       box.style.width = w + 'px';
       box.style.height = h + 'px';
       box.style.maxHeight = 'none';
+      box.classList.add('mn-sized');
       box.style.left = left + 'px';
       box.style.top = top + 'px';
       moved = true;
@@ -290,11 +291,12 @@
   /* The size the reader gave it, within the screen; a phone's sheet has its own. */
   function sized() {
     var s = /^(\d+)x(\d+)$/.exec(stored(SIZE_KEY) || '');
-    if (!s || +s[1] < MIN_W || +s[2] < MIN_H || phone()) { box.style.width = box.style.height = box.style.maxHeight = ''; return; }
+    if (!s || +s[1] < MIN_W || +s[2] < MIN_H || phone()) { box.style.width = box.style.height = box.style.maxHeight = ''; box.classList.remove('mn-sized'); return; }
     var span = room();
     box.style.width = Math.max(MIN_W, Math.min(+s[1], span.to - span.from - 16)) + 'px';
     box.style.height = Math.max(MIN_H, Math.min(+s[2], window.innerHeight - 16)) + 'px';
     box.style.maxHeight = 'none';
+    box.classList.add('mn-sized');
   }
 
   /** Carried by its bar on a wide screen; on a phone it has one place. */
@@ -394,6 +396,10 @@
     zh: 'صيني mandarin', ug: 'ايغوري', bs: 'بوسني', id: 'اندونيسي bahasa', dv: 'ديفيهي',
   };
 
+  /* The list's head: languages by how many read the Quran in them, then by speakers worldwide. */
+  var POPULAR = ['en', 'ur', 'id', 'bn', 'tr', 'fr', 'fa', 'hi', 'ms', 'ha', 'sw', 'ps', 'es', 'ru', 'zh',
+    'pt', 'de', 'uz', 'so', 'ml', 'ta', 'am', 'yo', 'ku', 'ckb', 'az', 'kk', 'tg', 'bs', 'sq'];
+
   /* The first translation in a language the device asks for, if any. */
   function deviceChoice() {
     var want = (navigator.languages || [navigator.language || '']).map(function (x) {
@@ -472,6 +478,15 @@
       by[key].best = Math.max(by[key].best, s);
     });
     if (words.length) groups.sort(function (a, b) { return b.best - a.best || a.first - b.first; });
+    else {
+      // The reader's language first, then the most spoken among Quran readers, then the rest A to Z
+      var mine = (current() || {}).lang;
+      var rank = function (g) {
+        var code = g.list[0].lang, i = POPULAR.indexOf(code);
+        return code === mine ? -1 : i >= 0 ? i : POPULAR.length + g.first;
+      };
+      groups.sort(function (a, b) { return rank(a) - rank(b); });
+    }
 
     el.list.textContent = '';
     var chosen = textOf('translation');

@@ -93,6 +93,10 @@ ISO = {
     'yoruba': 'yo', 'zulu': 'zu',
 }
 
+# QuranEnc calls all four "Filipino"; each is its own language, and one group in the list
+OWN_NAME = {'ceb': ('Cebuano', 'السيبوانية'), 'ilp': ('Iranun', 'الإيرانونية'),
+            'mdh': ('Maguindanao', 'الماجينداناوية'), 'tl': ('Tagalog', 'التاغالوغية')}
+
 # Each language in its own words, so a reader finds theirs by the name they know it by
 NATIVE = {
     'aa': 'Qafaraf', 'sq': 'Shqip', 'am': 'አማርኛ', 'nqo': 'ߒߞߏ', 'ak': 'Akan', 'as': 'অসমীয়া',
@@ -328,6 +332,8 @@ def main():
             peer = next((p for p in catalogue if p.get('key', '').split('_')[0] == t['key'].split('_')[0]
                          and p['language']['en']), None)
             t['language']['en'] = peer['language']['en'] if peer else t['key'].split('_')[0].title()
+        if t['lang'] in OWN_NAME:
+            t['language']['en'], t['language']['ar'] = OWN_NAME[t['lang']]
 
     # English first, then by language, each language's own order kept
     first = {'hilali': 0, 'sahih': 1}
