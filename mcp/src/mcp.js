@@ -11,7 +11,17 @@ const { registerResources } = require('./resources');
 
 function build(q, version) {
   const server = new McpServer(
-    { name: 'readqurantoday', title: 'Read Quran Today', version },
+    {
+      name: 'readqurantoday',
+      title: 'Read Quran Today',
+      version,
+      websiteUrl: 'https://readqurantoday.com',
+      // The site's own icon, so a client's list of connectors shows it rather than a guess
+      icons: [
+        { src: 'https://readqurantoday.com/icon-192.png', mimeType: 'image/png', sizes: ['192x192'] },
+        { src: 'https://readqurantoday.com/icon-512.png', mimeType: 'image/png', sizes: ['512x512'] },
+      ],
+    },
     {
       instructions:
         `The Quran (Madinah Mushaf, Hafs) with ${q.translations.length} translations, the Tafsir ` +
