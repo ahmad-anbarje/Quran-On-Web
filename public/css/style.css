@@ -616,7 +616,7 @@ button.set-row:hover .set-ico, a.set-row:hover .set-ico { color: var(--primary);
 /* Open as the page loads: no entrance, or Google waits on contents faded in from opacity 0 */
 #sidebar.quiet, #sidebar.quiet .drawer-tabs, #sidebar.quiet .drawer-pane.on:not(.picked) { animation: none !important; transition: none !important; }
 
-body[data-lang="ar"] #sidebar { direction: rtl; }
+body.ui-rtl #sidebar { direction: rtl; }
 
 /* The way back into the reading, at the head of the index where the eye lands
    before it starts down the list. Accented, because it is the one row here
@@ -705,9 +705,9 @@ body[data-lang="ar"] #sidebar { direction: rtl; }
   scrollbar-color: rgba(26, 111, 163, 0.22) transparent;
 }
 
-body[data-lang="ar"] #surah-list > *,
-body[data-lang="ar"] #juz-list > *,
-body[data-lang="ar"] #search-results > * { direction: rtl; }
+body.ui-rtl #surah-list > *,
+body.ui-rtl #juz-list > *,
+body.ui-rtl #search-results > * { direction: rtl; }
 
 #surah-list::-webkit-scrollbar,
 #juz-list::-webkit-scrollbar,
@@ -1019,7 +1019,7 @@ body.dark-mode #content-area::-webkit-scrollbar-thumb:hover {
    #content-area: the spread lays its leaves out with row-reverse, which
    resolves against this direction, so flipping it swaps the two pages — and
    with them the gutter, the page thickness and the ribbon. */
-body[data-lang="ar"] #welcome-screen { direction: rtl; }
+body.ui-rtl #welcome-screen { direction: rtl; }
 
 /* Kept out of flow; it only defines the icon symbols. */
 #icon-sprite { position: absolute; }
@@ -1551,7 +1551,7 @@ body.dark-mode .page-section .ph-surah { color: var(--gold); }
   animation: slideIn 0.22s var(--ease) both;
 }
 
-body[data-lang="ar"] .panel { direction: rtl; }
+body.ui-rtl .panel { direction: rtl; }
 
 .panel-header {
   display: flex;
@@ -1800,7 +1800,7 @@ body.dark-mode .dl-act:hover { background: rgba(255, 255, 255, 0.09); }
   background: linear-gradient(to right, var(--line), var(--primary));
   cursor: pointer;
 }
-body[data-lang="ar"] #brightness {
+body.ui-rtl #brightness {
   background: linear-gradient(to left, var(--line), var(--primary));
 }
 
@@ -2762,7 +2762,7 @@ body[data-mode="spread"] .spread-right .page-ribbon {
 #app-card[hidden] { display: none; }
 #app-card.out { transform: translateY(110%); }
 #app-card.held { transition: none; }
-body[data-lang="ar"] #app-card { direction: rtl; }
+body.ui-rtl #app-card { direction: rtl; }
 /* Dark's surface is the page's own colour; lifted and tinted so the card reads as apart from it */
 body.dark-mode #app-card {
   background: color-mix(in srgb, var(--primary) 12%, #232a31);

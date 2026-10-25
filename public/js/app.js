@@ -6,7 +6,8 @@ $(function () {
      Built once from the page data — see Mushaf.ayahIndex. */
   var ayahs = null;
 
-  var lang  = localStorage.getItem('quran-lang')  || 'ar';
+  // Arabic or English: the page's own two; any other language rides on the English (see i18n.js)
+  var lang  = I18n.lang() === 'ar' ? 'ar' : 'en';
   /* The device has the last word every visit: a tap on the theme row holds for
      this tab only, so null here means the device is still in charge. */
   var systemDark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -68,7 +69,7 @@ $(function () {
   var icon = function (n) { return '<svg class="ic" viewBox="0 0 24 24"><use href="#i-' + n + '"/></svg>'; };
   var ar = function (n) { return String(n).replace(/\d/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[d]; }); };
   var num = function (n) { return lang === 'ar' ? ar(n) : String(n); };
-  var title = function (s) { return lang === 'ar' ? 'سورة ' + s.name : 'Surah ' + s.en; };
+  var title = function (s) { return lang === 'ar' ? 'سورة ' + s.name : T('', 'Surah {name}', { name: s.en }); };
 
   /** Which juz a page falls in. The boundaries are not evenly spaced — juz 7
       opens on page 121, juz 11 on 201 — so they come from the data. */
@@ -195,7 +196,8 @@ $(function () {
        the one stylesheet under body[data-shell="android"]. */
     if (Offline.native()) $('body').attr('data-shell', 'android');
 
-    applyLang(lang);
+    I18n.start();
+    applyLang();
     applyTheme(themeChoice);
     applyScale(scale);
     applyWeight(weight);
@@ -313,8 +315,7 @@ $(function () {
   // The corner button says what a click will do, so its label follows the state
   function syncFullscreenTip() {
     var on = !!document.fullscreenElement;
-    var text = lang === 'ar' ? (on ? 'الخروج من ملء الشاشة' : 'ملء الشاشة')
-                             : (on ? 'Exit full screen' : 'Full screen');
+    var text = on ? T('الخروج من ملء الشاشة', 'Exit full screen') : T('ملء الشاشة', 'Full screen');
     var $b = $('#btn-fullscreen');
     var $tip = $b.children('.tip');
     if (!$tip.length) {
@@ -353,13 +354,14 @@ $(function () {
       theme:   { ar: { light: 'نهاري', dark: 'ليلي' },
                  en: { light: 'Light', dark: 'Dark' } }
     };
-    $('#v-theme').text(t.theme[lang][theme]);
-    $('#v-mode').text(t.mode[lang][mode]);
-    $('#v-weight').text(t.weight[lang][weight]);
-    $('#v-turners').text(t.onOff[lang][turners ? 'on' : 'off']);
-    $('#v-offline').text(t.onState[lang][Offline.on() ? 'on' : 'off']);
-    $('#v-fullscreen').text(t.fullscreen[lang][document.fullscreenElement ? 'on' : 'off']);
-    $('#v-lang').text(lang === 'ar' ? 'العربية' : 'English');
+    var say = function (k, v) { return T(t[k].ar[v], t[k].en[v]); };
+    $('#v-theme').text(say('theme', theme));
+    $('#v-mode').text(say('mode', mode));
+    $('#v-weight').text(say('weight', weight));
+    $('#v-turners').text(say('onOff', turners ? 'on' : 'off'));
+    $('#v-offline').text(say('onState', Offline.on() ? 'on' : 'off'));
+    $('#v-fullscreen').text(say('fullscreen', document.fullscreenElement ? 'on' : 'off'));
+    $('#v-lang').text(I18n.name());
   }
 
   // --- full screen ---
@@ -379,11 +381,9 @@ $(function () {
     showValues();
   });
 
-  function applyLang(l) {
-    lang = l;
-    localStorage.setItem('quran-lang', l);
-    $('body').attr('data-lang', l);
-    $('html').attr({ lang: l, dir: l === 'ar' ? 'rtl' : 'ltr' });
+  /* The page's own words follow I18n; what the script wrote is written again. */
+  function applyLang() {
+    lang = I18n.lang() === 'ar' ? 'ar' : 'en';
     syncTips();
 
     /* The download list is built as a string, so its names and its labels are
@@ -475,7 +475,7 @@ $(function () {
     $('#btn-resume').prop('hidden', false)
       .find('.resume-where')
       .text((lang === 'ar' ? s.full : s.en)
-        + ' · ' + (lang === 'ar' ? 'صفحة ' + ar(page) : 'page ' + page));
+        + ' · ' + T('صفحة {n}', 'page {n}', { n: num(page) }));
   }
 
   /* ---------- surah index ---------- */
@@ -659,7 +659,7 @@ $(function () {
       var ribbon = document.createElement('button');
       ribbon.className = 'page-ribbon';
       ribbon.setAttribute('data-page', p);
-      ribbon.title = lang === 'ar' ? 'حفظ الصفحة' : 'Bookmark this page';
+      ribbon.title = T('حفظ الصفحة', 'Bookmark this page');
       section.appendChild(ribbon);
 
       /* The running head a printed mushaf carries: juz on the reading side,
@@ -670,7 +670,7 @@ $(function () {
       head.className = 'page-head';
       head.innerHTML =
         '<span class="page-label ph-juz">' +
-          (lang === 'ar' ? 'الجزء ' + ar(j) : 'Juz ' + j) + '</span>' +
+          T('الجزء {n}', 'Juz {n}', { n: num(j) }) + '</span>' +
         /* The name in the mushaf's own ornamental face. Named for a screen
            reader, since the glyphs are private-use and read as nothing. A page
            that opens on its surah's own title has no name in the head. */
@@ -679,7 +679,7 @@ $(function () {
               esc(ps.full) + '">' + Mushaf.surahTitle(ps.id) + '</span>'
           : '<span class="page-label ph-surah"></span>') +
         '<span class="page-label ph-page">' +
-          (lang === 'ar' ? 'الصفحة ' + ar(p) : 'Page ' + p) + '</span>';
+          T('الصفحة {n}', 'Page {n}', { n: num(p) }) + '</span>';
       section.appendChild(head);
 
       /* Only the line count varies by page; how wide a line is drawn is the
@@ -1091,7 +1091,7 @@ $(function () {
   };
 
   function sayFeedbackStatus(key, bad) {
-    $('#fb-status').text(key ? FEEDBACK_SAYS[key][lang === 'ar' ? 'ar' : 'en'] : '')
+    $('#fb-status').text(key ? T(FEEDBACK_SAYS[key].ar, FEEDBACK_SAYS[key].en) : '')
                    .toggleClass('bad', !!bad);
   }
 
@@ -1104,7 +1104,7 @@ $(function () {
     });
     $('#fb-severity').prop('hidden', feedback.kind !== 'bug');
     var box = $('#fb-message');
-    box.attr('placeholder', box.data(lang === 'ar' ? 'ph-ar' : 'ph-en'));
+    box.attr('placeholder', box.attr(lang === 'ar' ? 'data-ph-ar' : 'data-ph-en'));
     $('#fb-send').prop('disabled', feedback.sending);
   }
 
@@ -1245,9 +1245,8 @@ $(function () {
   $('#brightness').on('input', function () { applyBrightness($(this).val()); });
 
   $('#btn-clear-data').on('click', function () {
-    var msg = lang === 'ar'
-      ? 'سيُحذف كل ما هو محفوظ: الصفحات المحفوظة، آخر موضع قراءة، والإعدادات. متابعة؟'
-      : 'This clears everything stored: saved pages, last position and settings. Continue?';
+    var msg = T('سيُحذف كل ما هو محفوظ: الصفحات المحفوظة، آخر موضع قراءة، والإعدادات. متابعة؟',
+      'This clears everything stored: saved pages, last position and settings. Continue?');
     if (!window.confirm(msg)) return;
     Object.keys(localStorage).forEach(function (k) {
       if (k.indexOf('quran-') === 0) localStorage.removeItem(k);
@@ -1268,10 +1267,44 @@ $(function () {
   $('#btn-font-inc').on('click', function () { applyScale(scale + 0.05); });
   $('#btn-font-dec').on('click', function () { applyScale(scale - 0.05); });
 
+  /* The languages, each by its own name, opened under the row. */
   $('#btn-lang').on('click', function () {
-    applyLang(lang === 'ar' ? 'en' : 'ar');
+    var $list = $('#lang-list');
+    if (!$list.length) {
+      $list = $('<div id="lang-list" class="lang-list" role="listbox" hidden></div>').insertAfter(this);
+      I18n.LANGS.forEach(function (l) {
+        $('<button type="button" role="option" class="lang-opt"></button>')
+          .attr({ 'data-code': l.code, lang: l.code, dir: l.dir }).text(l.name).appendTo($list);
+      });
+    }
+    $list.find('.lang-opt').each(function () {
+      $(this).attr('aria-selected', String($(this).attr('data-code') === I18n.lang()));
+    });
+    var open = $list.prop('hidden');
+    $list.prop('hidden', !open);
+    $(this).attr('aria-expanded', String(open));
+  });
+  $(document).on('click', '#lang-list .lang-opt', function () {
+    var code = $(this).attr('data-code');
+    $('#lang-list').prop('hidden', true);
+    $('#btn-lang').attr('aria-expanded', 'false');
+    if (code === I18n.lang()) return;
+    I18n.set(code);
+    applyLang();
     if (window.Recite) Recite.relabel();
     if (surah) open(surah, page);
+  });
+  /* A language's words arrive after the page is built: what the script wrote is relabelled in place. */
+  document.addEventListener('ui:lang', function () {
+    applyLang();
+    if (window.Recite) Recite.relabel();
+    showResume();
+    $('.page-section[data-page]').each(function () {
+      var p = +this.getAttribute('data-page');
+      $(this).find('.ph-juz').text(T('الجزء {n}', 'Juz {n}', { n: num(juzOfPage(p)) }));
+      $(this).find('.ph-page').text(T('الصفحة {n}', 'Page {n}', { n: num(p) }));
+      $(this).find('.page-ribbon').attr('title', T('حفظ الصفحة', 'Bookmark this page'));
+    });
   });
 
 

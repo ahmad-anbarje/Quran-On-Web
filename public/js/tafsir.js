@@ -468,9 +468,9 @@
     var t = current(), l = lang();
     el.pickLang.textContent = t ? langLabel(t, l) : '';
     el.pickName.textContent = t ? t.name[l] : '';
-    el.search.placeholder = l === 'ar' ? 'ابحث عن لغة أو مترجم…' : 'Search a language or translator…';
+    el.search.placeholder = T('ابحث عن لغة أو مترجم…', 'Search a language or translator…');
     el.search.setAttribute('aria-label', el.search.placeholder);
-    el.pick.setAttribute('aria-label', (l === 'ar' ? 'اللغة والمترجم: ' : 'Language and translator: ')
+    el.pick.setAttribute('aria-label', (T('اللغة والمترجم: ', 'Language and translator: '))
       + el.pickLang.textContent + ' · ' + el.pickName.textContent);
   }
 
@@ -552,9 +552,9 @@
     if (first && words.length) first.classList.add('active');
 
     var langs = groups.length;
-    el.count.textContent = !shown ? (l === 'ar' ? 'لا نتائج' : 'No match')
+    el.count.textContent = !shown ? T('لا نتائج', 'No match')
       : l === 'ar' ? ar(shown) + ' ترجمة في ' + ar(langs) + ' لغة'
-      : shown + (shown === 1 ? ' translation' : ' translations') + ' in ' + langs + (langs === 1 ? ' language' : ' languages');
+      : T('', '{a} translations in {b} languages', { a: shown, b: langs });
   }
 
   function move(by) {
@@ -584,10 +584,10 @@
     a.rel = 'noopener';
     if (src.source === 'quranenc') {
       a.href = 'https://quranenc.com/' + (l === 'ar' ? 'ar' : 'en') + '/browse/' + src.key + '/' + surah.id;
-      a.textContent = l === 'ar' ? 'موسوعة القرآن الكريم (QuranEnc)' : 'QuranEnc, Encyclopedia of the Noble Quran';
+      a.textContent = T('موسوعة القرآن الكريم (QuranEnc)', 'QuranEnc, Encyclopedia of the Noble Quran');
     } else {
       a.href = 'https://tanzil.net/trans/';
-      a.textContent = l === 'ar' ? 'تنزيل (Tanzil)' : 'Tanzil';
+      a.textContent = T('تنزيل (Tanzil)', 'Tanzil');
     }
     return a;
   }
@@ -630,17 +630,17 @@
     el.title.textContent = l === 'ar'
       ? 'الآية ' + ar(ayah) + ' · ' + (surah.full || surah.name || '')
       : surah.en + ' · ' + surah.id + ':' + ayah;
-    box.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
-    el.prev.setAttribute('aria-label', l === 'ar' ? 'الآية السابقة' : 'Previous ayah');
-    el.next.setAttribute('aria-label', l === 'ar' ? 'الآية التالية' : 'Next ayah');
-    el.close.setAttribute('aria-label', l === 'ar' ? 'إغلاق' : 'Close');
+    box.setAttribute('dir', I18n.rtl() ? 'rtl' : 'ltr');
+    el.prev.setAttribute('aria-label', T('الآية السابقة', 'Previous ayah'));
+    el.next.setAttribute('aria-label', T('الآية التالية', 'Next ayah'));
+    el.close.setAttribute('aria-label', T('إغلاق', 'Close'));
     el.prev.disabled = ayah <= 1;
     el.next.disabled = ayah >= surah.v;
 
     var picked = TEXTS[textOf('translation')], pl = picked && picked.lang !== l && languageOf(picked);
     box.querySelectorAll('.mn-tab').forEach(function (b) {
       var on = b.dataset.tab === tab;
-      b.textContent = TABS[b.dataset.tab][l] + (b.dataset.tab === 'translation' && pl ? ' (' + pl[l] + ')' : '');
+      b.textContent = T(TABS[b.dataset.tab].ar, TABS[b.dataset.tab].en) + (b.dataset.tab === 'translation' && pl ? ' (' + pl[l] + ')' : '');
       b.classList.toggle('on', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
       b.tabIndex = on ? 0 : -1;
@@ -655,20 +655,20 @@
     el.text.setAttribute('lang', src.lang);
     el.text.setAttribute('dir', src.dir);
     el.text.className = 'mn-text ' + (src.lang === 'ar' ? 'mn-ar' : src.dir === 'rtl' ? 'mn-rtl' : 'mn-ltr');
-    el.by.textContent = src.by[l] + ' · ' + (l === 'ar' ? 'المصدر: ' : 'Source: ');
+    el.by.textContent = src.by[l] + ' · ' + (T('المصدر: ', 'Source: '));
     el.by.appendChild(sourceLink(src, l));
 
     var want = { id: surah.id, ayah: ayah, which: which };
     var list = texts[which][surah.id];
     if (Array.isArray(list)) { say(list); return; }
-    el.text.textContent = l === 'ar' ? 'جارٍ التحميل…' : 'Loading…';
+    el.text.textContent = T('جارٍ التحميل…', 'Loading…');
     box.classList.add('mn-loading');
     load(which, surah.id).then(function (got) {
       /* Moved on while this was in the air. */
       if (!surah || want.id !== surah.id || want.ayah !== ayah || want.which !== textOf(tab)) return;
       if (got) { say(got); return; }
       box.classList.remove('mn-loading');
-      el.text.textContent = lang() === 'ar' ? 'تعذّر التحميل. تحقق من الاتصال.' : 'Could not load. Check the connection.';
+      el.text.textContent = T('تعذّر التحميل. تحقق من الاتصال.', 'Could not load. Check the connection.');
     });
 
     function say(got) {

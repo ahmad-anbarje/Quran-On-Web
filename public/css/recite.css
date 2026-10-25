@@ -819,7 +819,7 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   #r-menu .r-panel { margin: 8px 10px 0; }
 
   #r-menu .r-dock { display: flex; }
-  body[data-lang="en"] #r-menu .r-dock { direction: ltr; }
+  body:not(.ui-rtl) #r-menu .r-dock { direction: ltr; }
 
   #r-menu .r-dock button {
     flex: 1 1 0;

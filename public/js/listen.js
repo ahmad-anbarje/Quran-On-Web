@@ -44,14 +44,14 @@
           dlPick = dlPick || (dlVoices[0] && dlVoices[0].id);
           renderDownloads();
         })
-        .catch(function () { $('#dl-list').text(app.lang() === 'ar' ? 'تعذّر' : 'unavailable'); });
+        .catch(function () { $('#dl-list').text(T('تعذّر', 'unavailable')); });
       return;
     }
 
     $('#dl-voices').html(dlVoices.map(function (v) {
       return '<button class="dl-voice' + (v.id === dlPick ? ' on' : '') + '" data-id="' + v.id + '">'
         + '<span class="lang-ar">' + v.nameAr + '</span><span class="lang-en">' + v.name + '</span>'
-        + ' <small>' + (app.lang() === 'ar' ? v.noteAr : v.note) + '</small></button>';
+        + ' <small>' + T(v.noteAr, v.note) + '</small></button>';
     }).join(''));
 
     var links = linksFor(dlPick);
@@ -77,10 +77,10 @@
             : '<span class="dl-name">' + s.en + '</span>')
         + '<span class="dl-acts">'
         + '<button type="button" class="dl-act dl-listen" data-i="' + i + '" title="'
-        + (app.lang() === 'ar' ? 'استماع' : 'Listen') + '">'
+        + T('استماع', 'Listen') + '">'
         + '<svg class="ic" viewBox="0 0 24 24"><use href="#i-play"/></svg></button>'
         + '<a class="dl-act dl-one" href="' + links[i] + '" download title="'
-        + (app.lang() === 'ar' ? 'تنزيل' : 'Download') + '">'
+        + T('تنزيل', 'Download') + '">'
         + '<svg class="ic" viewBox="0 0 24 24"><use href="#i-offline"/></svg></a>'
         + '</span>'
         + '</label>';
@@ -209,8 +209,7 @@
     $('#dl-list .dl-row').each(function () {
       var going = on && $(this).hasClass('open');
       $(this).find('.dl-listen')
-        .attr('title', going ? (app.lang() === 'ar' ? 'إيقاف' : 'Pause')
-                             : (app.lang() === 'ar' ? 'استماع' : 'Listen'))
+        .attr('title', going ? T('إيقاف', 'Pause') : T('استماع', 'Listen'))
         .find('use').attr('href', going ? '#i-pause' : '#i-play');
     });
   }

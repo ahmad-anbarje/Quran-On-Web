@@ -59,7 +59,7 @@
       } else if (m.type === 'done') {
         // Say so rather than claim the mushaf is complete
         if (m.failed) {
-          $('#v-offline').text(app.lang() === 'ar' ? 'ناقص ' + app.ar(m.failed) : m.failed + ' missing');
+          $('#v-offline').text(T('ناقص {n}', '{n} missing', { n: app.lang() === 'ar' ? app.ar(m.failed) : m.failed }));
         } else {
           app.showValues();
         }
@@ -85,12 +85,12 @@
     /* Nothing to do in the app: every page is already in the package, and a
        worker would only serve the last version's files after an update. */
     if (native()) {
-      $('#v-offline').text(app.lang() === 'ar' ? 'جاهز' : 'ready');
+      $('#v-offline').text(T('جاهز', 'ready'));
       return;
     }
 
     if (!navigator.serviceWorker) {
-      $('#v-offline').text(app.lang() === 'ar' ? 'غير مدعوم' : 'unsupported');
+      $('#v-offline').text(T('غير مدعوم', 'unsupported'));
       return;
     }
 
@@ -103,7 +103,7 @@
         if (navigator.serviceWorker.controller) return whenControlled();
         navigator.serviceWorker.addEventListener('controllerchange', whenControlled, { once: true });
       }).catch(function () {
-        $('#v-offline').text(app.lang() === 'ar' ? 'تعذّر' : 'failed');
+        $('#v-offline').text(T('تعذّر', 'failed'));
       });
     } else {
       // Off gives the space back; leaving 94 MB behind would be a liberty

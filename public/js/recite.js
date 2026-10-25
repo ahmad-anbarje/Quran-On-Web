@@ -462,10 +462,8 @@
       playing = false;
       sync();
       note(err && err.name === 'NotAllowedError'
-        ? (lang() === 'ar' ? 'المتصفح منع التشغيل — اضغط مرة أخرى'
-                           : 'The browser blocked playback — press again')
-        : (lang() === 'ar' ? 'تعذّر تشغيل التلاوة'
-                           : 'This recitation could not be played'));
+        ? T('المتصفح منع التشغيل — اضغط مرة أخرى', 'The browser blocked playback — press again')
+        : T('تعذّر تشغيل التلاوة', 'This recitation could not be played'));
     });
   }
 
@@ -955,8 +953,7 @@
          this was in the air. */
       if (!surah || surah.id !== s.id || voice !== id) return;
       if (!t) {
-        note(lang() === 'ar' ? 'لا تتوفّر هذه التلاوة لهذه السورة'
-                             : 'That recitation is not available for this surah');
+        note(T('لا تتوفّر هذه التلاوة لهذه السورة', 'That recitation is not available for this surah'));
         return;
       }
 
@@ -1008,16 +1005,16 @@
        would mean reopening it to find a setting that was never closed. */
     menu.classList.toggle('r-min', minimized);
     if (minimized) { el.panel.hidden = true; el.voices.hidden = true; }
-    el.min.setAttribute('aria-label', lang() === 'ar' ? 'تصغير' : 'Minimise');
+    el.min.setAttribute('aria-label', T('تصغير', 'Minimise'));
     el.bubble.setAttribute('aria-label',
-      lang() === 'ar' ? 'فتح المشغّل' : 'Open the player');
+      T('فتح المشغّل', 'Open the player'));
 
     /* The transport is there whenever there is a recitation to drive, before
        anything is played as well as after: waiting until playback started grew
        the menu by a row under the reader's hand as they pressed it. */
     el.now.hidden = !timing;
     el.play.setAttribute('aria-label',
-      lang() === 'ar' ? (playing ? 'إيقاف' : 'تشغيل') : (playing ? 'Pause' : 'Play'));
+      playing ? T('إيقاف', 'Pause') : T('تشغيل', 'Play'));
 
     /* The two entries about a single word go away on an ayah's closing number,
        which is printed but never recited. */
@@ -1059,7 +1056,7 @@
       var v = voiceOf(chosen());
       el.voice.classList.toggle('open', !el.voices.hidden);
       el.voiceValue.textContent = v
-        ? (lang() === 'ar' ? (v.noteAr || v.nameAr || v.name) : (v.note || v.name))
+        ? T(v.noteAr || v.nameAr || v.name, v.note || v.name)
         : '';
       menu.querySelectorAll('[data-voice]').forEach(function (b) {
         b.classList.toggle('on', b.dataset.voice === voice);
@@ -1093,9 +1090,8 @@
   /** What the repeat is set to, in a few characters, beside its own button. */
   function repeatLabel() {
     if (!repeat.on) return '';
-    var what = lang() === 'ar'
-      ? { ayah: 'الآية', range: 'مقطع', surah: 'السورة' }[repeat.scope]
-      : { ayah: 'ayah', range: 'range', surah: 'surah' }[repeat.scope];
+    var what = T({ ayah: 'الآية', range: 'مقطع', surah: 'السورة' }[repeat.scope],
+      { ayah: 'ayah', range: 'range', surah: 'surah' }[repeat.scope]);
     return what + ' ' + (repeat.times === Infinity ? '∞' : num(repeat.times) + '×');
   }
 
@@ -1107,15 +1103,13 @@
   function head() {
     if (!el.head) return;
     if (playing && timing) {
-      el.head.textContent = lang() === 'ar'
-        ? 'الآية ' + ar(at) + ' من ' + ar(timing.ayah.length)
-        : 'Ayah ' + at + ' of ' + timing.ayah.length;
+      el.head.textContent = T('الآية {a} من {b}', 'Ayah {a} of {b}', { a: num(at), b: num(timing.ayah.length) });
       return;
     }
     var v = menuAt.v, k = menuAt.w;
-    el.head.textContent = lang() === 'ar'
-      ? (k === null ? 'نهاية الآية ' + ar(v) : 'الآية ' + ar(v) + ' — الكلمة ' + ar(k + 1))
-      : (k === null ? 'End of ayah ' + v : 'Ayah ' + v + ', word ' + (k + 1));
+    el.head.textContent = k === null
+      ? T('نهاية الآية {a}', 'End of ayah {a}', { a: num(v) })
+      : T('الآية {a} — الكلمة {b}', 'Ayah {a}, word {b}', { a: num(v), b: num(k + 1) });
   }
 
   function progress(t) {
@@ -1458,8 +1452,7 @@
       if (err && err.name === 'NotAllowedError') {
         stopWordAudio();
         sync();
-        note(lang() === 'ar' ? 'المتصفح منع التشغيل — اضغط مرة أخرى'
-                             : 'The browser blocked playback — press again');
+        note(T('المتصفح منع التشغيل — اضغط مرة أخرى', 'The browser blocked playback — press again'));
         return;
       }
       cut();
@@ -1660,8 +1653,7 @@
     audio.addEventListener('error', function () {
       playing = false;
       sync();
-      note(lang() === 'ar' ? 'تعذّر تحميل ملف التلاوة'
-                           : 'The recitation file could not be loaded');
+      note(T('تعذّر تحميل ملف التلاوة', 'The recitation file could not be loaded'));
     });
 
     /* Timings belong to a recording, not to a reciter. There are three
@@ -1818,8 +1810,7 @@
              this was in the air. */
           if (!surah || surah.id !== s.id || voice !== id) return false;
           if (!t) {
-            note(lang() === 'ar' ? 'لا تتوفّر هذه التلاوة لهذه السورة'
-                                 : 'That recitation is not available for this surah');
+            note(T('لا تتوفّر هذه التلاوة لهذه السورة', 'That recitation is not available for this surah'));
             return false;
           }
           release();
