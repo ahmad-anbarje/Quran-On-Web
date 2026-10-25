@@ -257,7 +257,8 @@ body[data-lang="en"] .lang-ar { display: none !important; }
    instead: it is inside the button, so the hit area never changes. */
 #sidebar-handle:hover {
   color: var(--primary);
-  background: var(--primary-soft);
+  /* Solid, so the page does not show through it */
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
   box-shadow: -4px 0 14px rgba(20, 60, 95, 0.14);
 }
 
