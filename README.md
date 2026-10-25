@@ -86,6 +86,7 @@ docker run -p 8080:80 ahmadanbarje/quran
 | `tests/` | Data, font, speed and page checks, and the visual layout audit |
 | `deploy/` | nginx, the pull-based deploy and the Umami setup |
 | `feedback/` | The small service that receives issue reports |
+| `mcp/` | The public MCP server, the Quran for AI assistants and developers (below) |
 | `docs/` | How the type is set, the data, speed and testing in depth |
 
 ## The data
@@ -109,6 +110,34 @@ the word timings come from [QUL](https://qul.tarteel.ai). Recordings are served
 from `audio.readqurantoday.com`. [docs/data.md](docs/data.md) explains how the
 pages, headers and Basmalahs are laid out.
 
+## For developers and AI assistants
+
+**MCP.** `https://readqurantoday.com/mcp` is a public, read-only
+[Model Context Protocol](https://modelcontextprotocol.io) server. Add it to an
+assistant as a remote MCP server (Claude: Settings → Connectors → Add custom
+connector; any client that speaks Streamable HTTP), or call it from your own
+code. No key; 60 requests a minute an address, 50 ayahs a call.
+
+| Tool | Answers |
+|---|---|
+| `get_ayah` | The Arabic of an ayah or a run of them, in any of the translations, with its mushaf page and link |
+| `search` | Ayahs containing words, in the Arabic (diacritics optional) or in a translation |
+| `get_tafsir` | The Tafsir al-Muyassar of an ayah or a run |
+| `word_by_word` | Each word's transliteration and meaning, in English and six more languages |
+| `get_recitation` | A recording's MP3 link, its length, where each ayah starts, and a link that starts at one |
+| `list_surahs`, `list_translations`, `list_reciters` | What there is to ask for, and the ids |
+
+The same data by address, for clients that read resources:
+`quran://surah/{surah}`, `quran://translation/{id}/{surah}`,
+`quran://tafsir/{surah}`, `quran://recitation/{reciter}/{surah}`. A translation
+or reciter added to the site is offered there with no change to the server.
+
+**Plain JSON.** Everything the reader loads is a static file, free to fetch:
+`/data/surahs.json`, `/data/translations.json` and `/data/translation/<id>/<surah>.json`,
+`/data/tafsir/muyassar/<surah>.json`, `/data/recitations.json` and
+`/surah/<n>/<nnn>.<reciter>.timing.json`. Please credit the translators and
+link back.
+
 ## Build and test
 
 | Command | What it does |
@@ -121,6 +150,7 @@ pages, headers and Basmalahs are laid out.
 | `npm run fetch:words` | Downloads the words' meanings in Urdu, Indonesian, Bengali, Turkish, Persian and Hindi from Quran.com, checked word by word against the Latin; a word it lacks shows in English |
 | `npm run fetch:reference` | Downloads the reference texts the data checks compare against (one-off) |
 | `npm test` | All checks: data, fonts, speed and pages |
+| `cd mcp && npm test` | The MCP server, through the SDK's own client |
 | `npm run sync:android` | Copies the reader's data into the native Android app |
 
 The layout audit renders all 604 pages at a chosen screen size: start the

@@ -76,6 +76,14 @@ jobs:
           npm ci --no-audit --no-fund
           npm test
 
+      # The public MCP server, asked through the SDK's own client: every tool,
+      # the file addresses, the limits.
+      - name: MCP server
+        working-directory: mcp
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+
       # test:data is deliberately absent: it needs the reference texts, which
       # are a 13 MB download and are not in the repo. Run it locally before a
       # change to the mushaf data — CI cannot tell you anything there that a

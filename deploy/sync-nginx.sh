@@ -44,6 +44,14 @@ if [ -f "$APP_DIR/deploy/feedback-location.conf" ]; then
   install -m 644 "$APP_DIR/deploy/feedback-location.conf" /etc/nginx/snippets/readquran-feedback.conf
 fi
 
+# The public MCP server: the same split.
+if [ -f "$APP_DIR/deploy/mcp-limit.conf" ]; then
+  install -m 644 "$APP_DIR/deploy/mcp-limit.conf" /etc/nginx/conf.d/readquran-mcp-limit.conf
+fi
+if [ -f "$APP_DIR/deploy/mcp-location.conf" ]; then
+  install -m 644 "$APP_DIR/deploy/mcp-location.conf" /etc/nginx/snippets/readquran-mcp.conf
+fi
+
 # The admin pages: the same split — the zone is http-level, the location is a
 # snippet the vhost includes.
 if [ -f "$APP_DIR/deploy/admin-limit.conf" ]; then

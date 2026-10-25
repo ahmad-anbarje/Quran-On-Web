@@ -1,0 +1,18 @@
+{
+  "name": "readquran-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Quran as readqurantoday.com has it, for AI assistants and developers: an MCP server over the site's own data",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "^3.25.76"
+  }
+}

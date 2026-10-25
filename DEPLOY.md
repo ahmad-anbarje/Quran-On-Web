@@ -447,6 +447,74 @@ systemctl status readquran-feedback --no-pager
 Save the username (`admin`) and password in your phone's password manager so
 the browser fills them in.
 
+## 6e. The public MCP server
+
+`https://readqurantoday.com/mcp` answers AI assistants and developers' apps
+over the Model Context Protocol: the Arabic, the translations, the tafsir,
+word-by-word meanings and the recordings' links, read from the site's own
+files. Read-only and open to everyone.
+
+How it fits together:
+
+- `mcp/` is a small Node service on `127.0.0.1:8788`, stateless: each request
+  gets a server of its own, so there are no sessions to keep. It limits each
+  address to 60 requests a minute and a call to 50 ayahs.
+- nginx (`deploy/mcp-location.conf`) passes only POST and OPTIONS on `/mcp`, with
+  a 64 KB body and its own per-address limit.
+- It holds about 30 MB of data after a collection; systemd caps it at 192 MB,
+  so it can never take memory from the site, which stays static files.
+- `npm test` in `mcp/` runs in CI; a deploy installs its packages when the
+  lockfile changes, and restarts it when `mcp/`, `public/data/` or `data/`
+  changes, since it reads the catalogues once at start.
+
+Work on it locally:
+
+```bash
+cd mcp
+npm install
+npm test
+npm start          # then point an MCP client at http://127.0.0.1:8788/mcp
+```
+
+### One-time setup on the box
+
+```bash
+cd /var/www/readqurantoday
+
+# the service's packages
+(cd mcp && npm ci --omit=dev)
+
+# the service, locked down: throwaway user, read-only, 192 MB cap
+sudo cp deploy/readquran-mcp.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now readquran-mcp
+
+# lets a deploy restart it, and nothing else
+sudo install -m 755 deploy/restart-mcp.sh /usr/local/sbin/readquran-restart-mcp
+echo 'linuxuser ALL=(root) NOPASSWD: /usr/local/sbin/readquran-restart-mcp' | sudo tee /etc/sudoers.d/readquran-mcp
+sudo chmod 440 /etc/sudoers.d/readquran-mcp
+
+# the sync and deploy scripts now know about it
+sudo install -m 755 deploy/sync-nginx.sh /usr/local/sbin/readquran-sync-nginx
+sudo install -m 755 deploy/pull-deploy.sh /usr/local/sbin/readquran-pull-deploy
+sudo /usr/local/sbin/readquran-sync-nginx
+```
+
+Then add one line inside the HTTPS `server { ... }` block of
+`/etc/nginx/sites-available/readqurantoday.com.conf`, beside the feedback one:
+
+```nginx
+include /etc/nginx/snippets/readquran-mcp.conf;
+```
+
+```bash
+sudo nginx -t && sudo systemctl reload nginx
+systemctl status readquran-mcp --no-pager
+curl -s https://readqurantoday.com/mcp -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | head -c 200
+```
+
 ## 6d. The admin pages
 
 `public/admin/` holds the tools for whoever runs the site, starting with

@@ -46,6 +46,11 @@ if [ -f feedback/package-lock.json ] &&    { echo "$CHANGED" | grep -q '^feedbac
   (cd feedback && npm ci --omit=dev --no-audit --no-fund --silent)
 fi
 
+# The MCP server's packages, the same way.
+if [ -f mcp/package-lock.json ] &&    { echo "$CHANGED" | grep -q '^mcp/package' || [ ! -d mcp/node_modules ]; }; then
+  (cd mcp && npm ci --omit=dev --no-audit --no-fund --silent)
+fi
+
 # Cloudflare keeps copies of the pages, so it is told to drop them once the new
 # files are on disk — never before, or it would copy the old ones again. Only
 # this hostname: the audio subdomain shares the zone and has not changed.
@@ -62,4 +67,12 @@ fi
 # Another narrow sudo rule: this one command, no arguments.
 if echo "$CHANGED" | grep -q '^feedback/'; then
   sudo /usr/local/sbin/readquran-restart-feedback
+fi
+
+# The MCP server reads the catalogues and the Arabic once at start, so a
+# change to them, as to its own code, needs a restart too. Only where the
+# box has been set up for it.
+if [ -x /usr/local/sbin/readquran-restart-mcp ] &&
+   echo "$CHANGED" | grep -qE '^(mcp/|public/data/|data/|scripts/surah-text\.js)'; then
+  sudo /usr/local/sbin/readquran-restart-mcp
 fi

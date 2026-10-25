@@ -1,0 +1,31 @@
+[Unit]
+Description=The public MCP server: the Quran for AI assistants and developers, at /mcp
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /var/www/readqurantoday/mcp/src/server.js
+# The heap is capped below MemoryMax, so Node collects early instead of growing
+# into the limit; the data it holds after a collection is about 30 MB.
+Environment=NODE_ENV=production MCP_HOST=127.0.0.1 MCP_PORT=8788 NODE_OPTIONS=--max-old-space-size=96
+Restart=on-failure
+RestartSec=5
+
+# Reads the checkout, writes nothing: a throwaway user and a read-only system
+DynamicUser=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+MemoryMax=192M
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,24 @@
+# Read Quran Today
+
+> The Holy Quran in the Madinah Mushaf (Hafs), page for page as printed by the King Fahd Complex, with recitation that highlights each word, 127 translations of the meanings in 88 languages, the Tafsir al-Muyassar and word-by-word meanings. Free, no account, no ads.
+
+The site is https://readqurantoday.com. Each surah has its own page, /surah/1/ to /surah/114/, carrying the surah's full Arabic text and its English translation (Hilali and Muhsin Khan, King Fahd Complex); each juz has /juz/1/ to /juz/30/.
+
+## For AI assistants
+
+- [MCP server](https://readqurantoday.com/mcp): public, read-only Model Context Protocol server (Streamable HTTP). Tools: get_ayah, search, get_tafsir, word_by_word, get_recitation, list_surahs, list_translations, list_reciters. Quote the text as returned and link to the surah page it gives.
+
+## Data
+
+- [Surahs](https://readqurantoday.com/data/surahs.json): the 114 surahs, their names, ayah counts and pages
+- [Translations](https://readqurantoday.com/data/translations.json): every translation, its language and translator; each at /data/translation/<id>/<surah>.json
+- [Recitations](https://readqurantoday.com/data/recitations.json): the reciters; timings at /surah/<n>/<nnn>.<reciter>.timing.json
+
+## Pages
+
+- [Surah Al-Fatihah](https://readqurantoday.com/surah/1/)
+- [Surah Al-Baqarah](https://readqurantoday.com/surah/2/)
+- [Surah Al-Kahf](https://readqurantoday.com/surah/18/)
+- [Surah Ya-Sin](https://readqurantoday.com/surah/36/)
+- [Juz Amma](https://readqurantoday.com/juz/30/)
+- [Privacy](https://readqurantoday.com/privacy/)

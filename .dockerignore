@@ -13,6 +13,7 @@ public/audio
 
 node_modules
 feedback/node_modules
+mcp/node_modules
 .git
 .github
 reference
