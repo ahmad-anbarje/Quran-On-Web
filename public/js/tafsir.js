@@ -56,9 +56,13 @@
 
   function loadCatalogue() {
     if (catalogue) return catalogue;
+    // The country only matters while nothing has been chosen; asked alongside the list
+    var where = stored(TRANSLATION_KEY) ? Promise.resolve('') : country();
     catalogue = fetch(CATALOGUE_URL)
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function (list) {
+      .then(function (list) { return where.then(function (c) { return { list: list, where: c }; }); })
+      .then(function (got) {
+        var list = got.list;
         offered = list;
         list.forEach(function (t) {
           texts[t.id] = texts[t.id] || {};
@@ -74,8 +78,8 @@
           };
         });
         /* A choice remembered from a list that has since lost it falls back;
-           with no choice yet, the reader's own language where there is one. */
-        if (!stored(TRANSLATION_KEY)) translation = deviceChoice() || translation;
+           with no choice yet, the language of the reader's country, or of their device. */
+        if (!stored(TRANSLATION_KEY)) translation = deviceChoice(got.where) || translation;
         if (!TEXTS[translation]) translation = 'hilali';
         render();
       })
@@ -406,11 +410,43 @@
   var POPULAR = ['en', 'ur', 'id', 'bn', 'tr', 'fr', 'fa', 'hi', 'ms', 'ha', 'sw', 'ps', 'es', 'ru', 'zh',
     'pt', 'de', 'uz', 'so', 'ml', 'ta', 'am', 'yo', 'ku', 'ckb', 'az', 'kk', 'tg', 'bs', 'sq'];
 
-  /* The first translation in a language the device asks for, if any. */
-  function deviceChoice() {
+  /* A country's main language among the translations; one not here is left to the browser's. */
+  var COUNTRY_LANG = {
+    US: 'en', GB: 'en', CA: 'en', AU: 'en', NZ: 'en', IE: 'en', ZA: 'en', NG: 'en', GH: 'en', KE: 'sw', TZ: 'sw', UG: 'lg',
+    PK: 'ur', IN: 'hi', BD: 'bn', LK: 'si', NP: 'ne', MV: 'dv', AF: 'ps', IR: 'fa', TJ: 'tg', UZ: 'uz', KZ: 'kk', KG: 'ky',
+    TM: 'tr', AZ: 'az', TR: 'tr', CY: 'el', GR: 'el', AL: 'sq', XK: 'sq', BA: 'bs', HR: 'hr', RS: 'sr', MK: 'mk', BG: 'bg',
+    RO: 'ro', MD: 'ro', UA: 'uk', BY: 'be', RU: 'ru', PL: 'pl', CZ: 'cs', LT: 'lt', GE: 'ka', IL: 'he',
+    ID: 'id', MY: 'ms', BN: 'ms', SG: 'ms', PH: 'tl', TH: 'th', VN: 'vi', KH: 'km', CN: 'zh', TW: 'zh', HK: 'zh', JP: 'ja', KR: 'ko',
+    FR: 'fr', BE: 'fr', LU: 'fr', MC: 'fr', SN: 'fr', ML: 'fr', CI: 'fr', BF: 'mos', NE: 'ha', CM: 'fr', GN: 'ff', TG: 'fr', BJ: 'yo',
+    CD: 'ln', CG: 'ln', GA: 'fr', MG: 'mg', RW: 'rw', BI: 'rn', HT: 'fr',
+    ES: 'es', MX: 'es', AR: 'es', CO: 'es', CL: 'es', PE: 'es', VE: 'es', EC: 'es', CU: 'es', BO: 'es', DO: 'es', GT: 'es',
+    HN: 'es', PY: 'es', SV: 'es', NI: 'es', CR: 'es', PA: 'es', UY: 'es', PR: 'es',
+    PT: 'pt', BR: 'pt', AO: 'pt', MZ: 'pt', DE: 'de', AT: 'de', CH: 'de', LI: 'de', IT: 'it', SM: 'it', NL: 'nl', SR: 'nl',
+    SE: 'sv', NO: 'no', ET: 'am', ER: 'am', SO: 'so', DJ: 'so', MW: 'ny', ZW: 'sn', MA: 'ber',
+  };
+
+  /* The visitor's country, from Cloudflare, which answers this on every site it serves; once a visit. */
+  var COUNTRY_KEY = 'quran-country';
+  function country() {
+    var known = null;
+    try { known = sessionStorage.getItem(COUNTRY_KEY); } catch (e) { /* denied */ }
+    if (known !== null) return Promise.resolve(known);
+    return fetch('/cdn-cgi/trace', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.text() : ''; })
+      .then(function (t) {
+        var m = /^loc=([A-Z]{2})$/m.exec(t), c = m ? m[1] : '';
+        try { sessionStorage.setItem(COUNTRY_KEY, c); } catch (e) { /* denied */ }
+        return c;
+      })
+      .catch(function () { return ''; });
+  }
+
+  /* The first translation in the country's language, else in one the device asks for. */
+  function deviceChoice(where) {
     var want = (navigator.languages || [navigator.language || '']).map(function (x) {
       return String(x).toLowerCase().split('-')[0];
     });
+    if (COUNTRY_LANG[where]) want.unshift(COUNTRY_LANG[where]);
     for (var i = 0; i < want.length; i++) {
       for (var j = 0; j < offered.length; j++) if (offered[j].lang === want[i]) return offered[j].id;
     }

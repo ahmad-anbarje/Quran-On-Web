@@ -35,7 +35,7 @@
   translations in 88 languages, and the Tafsir al-Muyassar; each credited, with
   a link to its source
 - Find a translation by typing: a language in Arabic, English or its own name,
-  or a translator; the first time, the device's language is offered
+  or a translator; the first time, the language of the reader's country (or device) is chosen
 - Start from any word, change the speed, and repeat an ayah, a range or the
   whole surah, a set number of times or without end
 - Download a recitation to keep
