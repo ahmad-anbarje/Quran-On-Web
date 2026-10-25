@@ -877,7 +877,24 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   overflow: hidden;
 }
 #meaning[hidden] { display: none; }
-#meaning.mn-moving { box-shadow: var(--sh-3), 0 0 0 2px var(--primary-soft); }
+#meaning.mn-moving, #meaning.mn-sizing { box-shadow: var(--sh-3), 0 0 0 2px var(--primary-soft); }
+#meaning.mn-sizing { user-select: none; }
+
+/* The corner to size it by, at the inline end of its foot */
+#meaning .mn-size {
+  position: absolute;
+  bottom: 0;
+  inset-inline-end: 0;
+  width: 18px;
+  height: 18px;
+  cursor: nwse-resize;
+  touch-action: none;
+  opacity: 0.45;
+  background:
+    linear-gradient(135deg, transparent 0 55%, currentColor 55% 62%, transparent 62% 72%, currentColor 72% 79%, transparent 79%);
+}
+#meaning[dir="rtl"] .mn-size { cursor: nesw-resize; transform: scaleX(-1); }
+#meaning .mn-size:hover, #meaning.mn-sizing .mn-size { opacity: 0.9; color: var(--primary); }
 
 #meaning .mn-bar {
   display: flex;
@@ -1052,5 +1069,6 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
   }
   #meaning .mn-bar { cursor: default; touch-action: auto; }
   #meaning .mn-bar .r-grip { display: none; }
+  #meaning .mn-size { display: none; }
 }
 

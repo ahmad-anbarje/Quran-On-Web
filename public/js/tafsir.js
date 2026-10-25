@@ -138,6 +138,7 @@
         '<p class="mn-text"></p>' +
         '<p class="mn-by"></p>' +
       '</div>' +
+      '<span class="mn-size" aria-hidden="true"></span>' +
     '</section>';
 
   function build() {
@@ -207,6 +208,7 @@
     el.search.addEventListener('input', function () { fillList(el.search.value); });
 
     draggable(el.bar);
+    resizable(box.querySelector('.mn-size'));
 
     /* A longer tafsir, or the other tab, changes its height where it stands;
        kept inside the screen as the player is. On a phone the sheet is
@@ -222,7 +224,65 @@
     new MutationObserver(function () { if (!box.hidden) render(); })
       .observe(document.body, { attributes: true, attributeFilter: ['data-lang'] });
 
-    window.addEventListener('resize', function () { if (!box.hidden) settle(); });
+    window.addEventListener('resize', function () { if (!box.hidden) { sized(); settle(); } });
+  }
+
+  /* Sized by its corner on a wide screen, and kept at that size the next time;
+     a double click on the corner puts it back as it was made. */
+  var SIZE_KEY = 'quran-meaning-size';
+  var MIN_W = 300, MIN_H = 220;
+
+  function resizable(grip) {
+    var from = null;
+    grip.addEventListener('pointerdown', function (e) {
+      if (phone() || box.hidden) return;
+      var r = box.getBoundingClientRect();
+      // The corner is at the inline end: the left one in Arabic, so the left edge moves too
+      from = { x: e.clientX, y: e.clientY, w: r.width, h: r.height, left: r.left, top: r.top,
+        rtl: getComputedStyle(box).direction === 'rtl' };
+      try { grip.setPointerCapture(e.pointerId); } catch (err) { /* gone */ }
+      box.classList.add('mn-sizing');
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    grip.addEventListener('pointermove', function (e) {
+      if (!from) return;
+      var span = room(), pad = 8;
+      var dx = e.clientX - from.x;
+      var most = from.rtl ? from.left + from.w - span.from - pad : span.to - pad - from.left;
+      var w = Math.max(MIN_W, Math.min(most, from.w + (from.rtl ? -dx : dx)));
+      var h = Math.max(MIN_H, Math.min(window.innerHeight - pad - from.top, from.h + e.clientY - from.y));
+      box.style.width = w + 'px';
+      box.style.height = h + 'px';
+      box.style.maxHeight = 'none';
+      box.style.left = (from.rtl ? from.left + from.w - w : from.left) + 'px';
+      moved = true;
+    });
+    var end = function () {
+      if (!from) return;
+      from = null;
+      box.classList.remove('mn-sizing');
+      store(SIZE_KEY, Math.round(box.offsetWidth) + 'x' + Math.round(box.offsetHeight));
+    };
+    grip.addEventListener('pointerup', end);
+    grip.addEventListener('pointercancel', end);
+    grip.addEventListener('dblclick', function (e) {
+      try { localStorage.removeItem(SIZE_KEY); } catch (err) { /* denied */ }
+      sized();
+      var r = box.getBoundingClientRect();
+      place(r.left, r.top);
+      e.stopPropagation();
+    });
+  }
+
+  /* The size the reader gave it, within the screen; a phone's sheet has its own. */
+  function sized() {
+    var s = /^(\d+)x(\d+)$/.exec(stored(SIZE_KEY) || '');
+    if (!s || +s[1] < MIN_W || +s[2] < MIN_H || phone()) { box.style.width = box.style.height = box.style.maxHeight = ''; return; }
+    var span = room();
+    box.style.width = Math.max(MIN_W, Math.min(+s[1], span.to - span.from - 16)) + 'px';
+    box.style.height = Math.max(MIN_H, Math.min(+s[2], window.innerHeight - 16)) + 'px';
+    box.style.maxHeight = 'none';
   }
 
   /** Carried by its bar on a wide screen; on a phone it has one place. */
@@ -558,7 +618,7 @@
     box.hidden = false;
     document.body.classList.add('has-meaning');
     render();
-    if (!was) { settle(); told(); }
+    if (!was) { sized(); settle(); told(); }
     /* The other tab's text too, so switching does not wait. */
     load(textOf(tab === 'translation' ? 'tafsir' : 'translation'), s.id);
   }
