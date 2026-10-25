@@ -95,6 +95,26 @@ test('get_tafsir and word_by_word', async () => {
   assert.ok(tr.value.words.some((x) => x.meaningLanguage === 'en'));
 });
 
+test('get_recitation opens the player: one self-contained page, fed the timings and the Arabic', async () => {
+  const client = await connect();
+  try {
+    const tool = (await client.listTools()).tools.find((t) => t.name === 'get_recitation');
+    assert.strictEqual(tool._meta.ui.resourceUri, 'ui://readqurantoday/player');
+    const page = (await client.readResource({ uri: 'ui://readqurantoday/player' })).contents[0];
+    assert.strictEqual(page.mimeType, 'text/html;profile=mcp-app');
+    assert.doesNotMatch(page.text, /@@(CLIENT|FONT)@@/);
+    assert.match(page.text, /font\/woff2;base64,d09GMg/);   // the face itself, "wOF2"
+    assert.deepStrictEqual(page._meta.ui.csp.resourceDomains, ['https://audio.readqurantoday.com']);
+    const r = await client.callTool({ name: 'get_recitation', arguments: { surah: 112 } });
+    assert.strictEqual(r.structuredContent.ayahs.length, 4);
+    const arabic = r._meta['com.readqurantoday/ayahs'];
+    assert.strictEqual(arabic.length, 4);
+    assert.doesNotMatch(arabic.join(' '), /[ۣ۟۫]/);   // as the face wants them (scripts/surah-text.js)
+  } finally {
+    await client.close();
+  }
+});
+
 test('get_recitation: a link to the recording, and to an ayah in it', async () => {
   const { value } = await call('get_recitation', { surah: 18, ayah: 10 });
   assert.match(value.audio, /^https:\/\/audio\.readqurantoday\.com\/.+\/018\.mp3$/);

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<title>Read Quran Today · Recitation</title>
+<style>
+  /* The mushaf's own face for the Arabic, carried in the page: the sandbox loads nothing else */
+  @font-face { font-family: "Hafs"; src: url(data:font/woff2;base64,@@FONT@@) format("woff2"); font-display: block; }
+
+  :root {
+    --bg: var(--color-background-primary, #ffffff);
+    --bg2: var(--color-background-secondary, #f4f7fa);
+    --text: var(--color-text-primary, #16283a);
+    --mute: var(--color-text-secondary, #5a7589);
+    --line: var(--color-border-tertiary, #dce8f2);
+    --accent: #1a6fa3;
+    --accent-soft: rgba(26, 111, 163, 0.12);
+    --radius: var(--border-radius-lg, 12px);
+    --ui: var(--font-sans, system-ui, "Segoe UI", Tahoma, sans-serif);
+  }
+  /* Dark without the host's own colours too: the site's dark sheet */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: var(--color-background-primary, #1a1f25); --bg2: var(--color-background-secondary, #20262d);
+      --text: var(--color-text-primary, #d7dce1); --mute: var(--color-text-secondary, #8b939c);
+      --line: var(--color-border-tertiary, #2d353e); --accent: #3f9bd1; --accent-soft: rgba(63, 155, 209, 0.18);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: var(--color-background-primary, #1a1f25); --bg2: var(--color-background-secondary, #20262d);
+    --text: var(--color-text-primary, #d7dce1); --mute: var(--color-text-secondary, #8b939c);
+    --line: var(--color-border-tertiary, #2d353e); --accent: #3f9bd1; --accent-soft: rgba(63, 155, 209, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: transparent; color: var(--text); font-family: var(--ui); }
+  .card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); overflow: hidden; }
+
+  .head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--bg2); }
+  .title { flex: 1; min-width: 0; }
+  .surah { font-family: "Hafs", serif; font-size: 1.35rem; line-height: 1.3; color: var(--accent); }
+  .sub { font-size: 0.78rem; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  select { max-width: 46%; font: inherit; font-size: 0.8rem; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+
+  .text { max-height: 330px; overflow-y: auto; padding: 14px 16px 18px; font-family: "Hafs", serif; font-size: 1.55rem; line-height: 2.25; text-align: justify; text-align-last: center; overscroll-behavior: contain; scroll-behavior: smooth; }
+  .ayah { cursor: pointer; border-radius: 8px; padding: 0 2px; transition: background 0.2s, color 0.2s; }
+  .ayah:hover { background: var(--accent-soft); }
+  .ayah.on { background: var(--accent-soft); color: var(--accent); }
+  .num { display: inline-block; min-width: 1.6em; margin: 0 0.15em; font-size: 0.72em; line-height: 1.6em; text-align: center; color: var(--accent); border: 1.5px solid currentColor; border-radius: 50%; font-family: var(--ui); vertical-align: 0.15em; }
+
+  .bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); background: var(--bg2); direction: ltr; }
+  button { font: inherit; color: var(--text); background: transparent; border: 0; border-radius: 50%; width: 36px; height: 36px; display: grid; place-items: center; cursor: pointer; flex: none; }
+  button:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  button svg { width: 18px; height: 18px; fill: currentColor; }
+  #play { width: 42px; height: 42px; background: var(--accent); color: #fff; }
+  #play:hover { background: var(--accent); color: #fff; filter: brightness(1.1); }
+  #play svg { width: 20px; height: 20px; }
+  input[type=range] { flex: 1; min-width: 60px; accent-color: var(--accent); }
+  .time { font-size: 0.74rem; color: var(--mute); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #speed { width: auto; border-radius: 8px; padding: 0 8px; font-size: 0.78rem; font-weight: 600; }
+
+  .foot { display: flex; justify-content: space-between; gap: 8px; padding: 6px 14px 9px; font-size: 0.74rem; color: var(--mute); }
+  .foot a { color: var(--accent); text-decoration: none; font-weight: 600; cursor: pointer; }
+  .note { padding: 10px 14px; font-size: 0.82rem; color: var(--color-text-danger, #b3261e); border-top: 1px solid var(--line); }
+  .note[hidden], .wait[hidden] { display: none; }
+  .wait { padding: 24px 16px; text-align: center; color: var(--mute); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="title">
+      <div class="surah" id="surah">&nbsp;</div>
+      <div class="sub" id="who">&nbsp;</div>
+    </div>
+    <select id="reciter" aria-label="Reciter" hidden></select>
+  </div>
+  <div class="wait" id="wait">…</div>
+  <div class="text" id="text" hidden></div>
+  <div class="note" id="note" role="alert" hidden></div>
+  <div class="bar">
+    <button id="prev" aria-label="Previous ayah" disabled><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
+    <button id="play" aria-label="Play" disabled><svg viewBox="0 0 24 24"><path id="playIcon" d="M8 5v14l11-7z"/></svg></button>
+    <button id="next" aria-label="Next ayah" disabled><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+    <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Position" disabled>
+    <span class="time" id="time">0:00 / 0:00</span>
+    <button id="speed" aria-label="Speed" disabled>1×</button>
+  </div>
+  <div class="foot"><span id="where">&nbsp;</span><a id="open">readqurantoday.com</a></div>
+</div>
+<audio id="audio" preload="metadata"></audio>
+<script>/*@@CLIENT@@*/</script>
+<script>
+(function () {
+  'use strict';
+  var A = window.McpApps;
+  var $ = function (id) { return document.getElementById(id); };
+  var audio = $('audio');
+  var app = new A.App({ name: 'Read Quran Today player', version: '1.0.0' });
+
+  var data = null;          // get_recitation's answer
+  var texts = [];           // the surah's ayahs, in Arabic
+  var on = -1;              // index of the ayah being recited
+  var ar = true;            // labels in Arabic unless the host speaks another language
+  var SPEEDS = [1, 1.25, 1.5, 0.75];
+  var PLAY = 'M8 5v14l11-7z', PAUSE = 'M6 5h4v14H6zM14 5h4v14h-4z';
+
+  var digits = function (n) { return ar ? String(n).replace(/\d/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[d]; }) : String(n); };
+  var clock = function (s) { s = Math.max(0, Math.floor(s || 0)); var m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); };
+  var say = function (a, e) { return ar ? a : e; };
+
+  function theme(ctx) {
+    if (!ctx) return;
+    if (ctx.theme) { A.applyDocumentTheme(ctx.theme); document.documentElement.setAttribute('data-theme', ctx.theme); }
+    if (ctx.styles && ctx.styles.variables) A.applyHostStyleVariables(ctx.styles.variables);
+    if (ctx.styles && ctx.styles.css && ctx.styles.css.fonts) A.applyHostFonts(ctx.styles.css.fonts);
+    if (ctx.locale) ar = /^ar\b/i.test(ctx.locale);
+  }
+
+  function note(msg) { $('note').textContent = msg || ''; $('note').hidden = !msg; }
+
+  /* The ayah at a moment of the recording: the last one begun by then */
+  function ayahAt(t) {
+    var list = data.ayahs, lo = 0, hi = list.length - 1, found = 0;
+    while (lo <= hi) { var mid = (lo + hi) >> 1; if (list[mid].start <= t) { found = mid; lo = mid + 1; } else hi = mid - 1; }
+    return found;
+  }
+
+  function mark(i) {
+    if (i === on) return;
+    var box = $('text'), was = box.querySelector('.ayah.on');
+    if (was) was.classList.remove('on');
+    on = i;
+    var el = box.querySelector('[data-i="' + i + '"]');
+    if (el) {
+      el.classList.add('on');
+      // Kept in view inside the box only: the conversation around it must not scroll
+      var top = el.offsetTop - box.offsetTop, bottom = top + el.offsetHeight;
+      if (top < box.scrollTop + 8 || bottom > box.scrollTop + box.clientHeight - 8) box.scrollTop = top - box.clientHeight / 3;
+    }
+    $('where').textContent = say('الآية ' + digits(i + 1) + ' من ' + digits(data.ayahs.length), 'Ayah ' + (i + 1) + ' of ' + data.ayahs.length);
+    $('prev').disabled = i <= 0;
+    $('next').disabled = i >= data.ayahs.length - 1;
+  }
+
+  function seekTo(i, play) {
+    if (!data) return;
+    i = Math.max(0, Math.min(data.ayahs.length - 1, i));
+    audio.currentTime = data.ayahs[i].start;
+    mark(i);
+    if (play) audio.play().catch(function () {});
+  }
+
+  function drawText() {
+    var box = $('text');
+    box.textContent = '';
+    texts.forEach(function (t, i) {
+      var s = document.createElement('span');
+      s.className = 'ayah';
+      s.dataset.i = i;
+      s.appendChild(document.createTextNode(t + ' '));
+      var n = document.createElement('span');
+      n.className = 'num';
+      n.textContent = digits(i + 1);
+      s.appendChild(n);
+      s.appendChild(document.createTextNode(' '));
+      s.onclick = function () { seekTo(i, true); };
+      box.appendChild(s);
+    });
+    $('wait').hidden = true;
+    box.hidden = false;
+  }
+
+  /* The Arabic comes with the result for the player alone; fetched in runs where it does not */
+  function loadText(result) {
+    var given = result && result._meta && result._meta['com.readqurantoday/ayahs'];
+    if (Array.isArray(given) && given.length === data.ayahs.length) { texts = given; drawText(); return Promise.resolve(); }
+    var runs = [], n = data.ayahs.length;
+    for (var a = 1; a <= n; a += 50) runs.push({ surah: data.surah.number, ayah: a, to: Math.min(n, a + 49), translation: 'none' });
+    return Promise.all(runs.map(function (args) { return app.callServerTool({ name: 'get_ayah', arguments: args }); }))
+      .then(function (parts) {
+        texts = [];
+        // The face wants these four marks as KFGQPC writes them (scripts/surah-text.js, hafs)
+        var HAFS = { 'ْ': 'ۡ', '۟': 'ْ', '۫': '۬', 'ۣ': 'ۜ' };
+        parts.forEach(function (p) { JSON.parse(p.content[0].text).ayahs.forEach(function (x) { texts.push(x.arabic.replace(/[ْۣ۟۫]/g, function (c) { return HAFS[c]; })); }); });
+        drawText();
+      });
+  }
+
+  function show(result, startAyah) {
+    if (!result || result.isError) { note((result && result.content && result.content[0] && result.content[0].text) || say('تعذّر جلب التلاوة.', 'The recitation could not be loaded.')); return; }
+    data = result.structuredContent || JSON.parse(result.content[0].text);
+    note('');
+    $('surah').textContent = data.surah.arabic ? 'سورة ' + data.surah.arabic : data.surah.name;
+    $('who').textContent = (ar ? data.reciter.arabic || data.reciter.name : data.reciter.name) + (data.reciter.note ? ' · ' + data.reciter.note : '') + ' · ' + data.surah.name;
+    var wasPlaying = !audio.paused;
+    audio.src = data.audio;
+    audio.playbackRate = Number($('speed').dataset.rate || 1);
+    on = -1;
+    ['play', 'seek', 'speed'].forEach(function (id) { $(id).disabled = false; });
+    var start = startAyah || 0;
+    audio.onloadedmetadata = function () { seekTo(start, wasPlaying); audio.onloadedmetadata = null; };
+    loadText(result).then(function () { mark(start); }).catch(function () { note(say('تعذّر تحميل النص.', 'The text could not be loaded.')); });
+    loadReciters();
+  }
+
+  var reciters = null;
+  function loadReciters() {
+    if (reciters) { $('reciter').value = data.reciter.id; return; }
+    reciters = [];
+    app.callServerTool({ name: 'list_reciters', arguments: {} }).then(function (r) {
+      reciters = JSON.parse(r.content[0].text).reciters;
+      var sel = $('reciter');
+      reciters.forEach(function (x) {
+        var o = document.createElement('option');
+        o.value = x.id;
+        o.textContent = (ar ? x.arabic || x.name : x.name) + (x.note ? ' · ' + x.note : '');
+        sel.appendChild(o);
+      });
+      sel.value = data.reciter.id;
+      sel.hidden = reciters.length < 2;
+    }).catch(function () { /* the one reciter stays */ });
+  }
+
+  $('reciter').onchange = function () {
+    var keep = Math.max(0, on);
+    app.callServerTool({ name: 'get_recitation', arguments: { surah: data.surah.number, reciter: this.value } })
+      .then(function (r) { show(r, keep); })
+      .catch(function () { note(say('تعذّر تغيير القارئ.', 'The reciter could not be changed.')); });
+  };
+
+  $('play').onclick = function () { if (audio.paused) audio.play().catch(function () {}); else audio.pause(); };
+  $('prev').onclick = function () { seekTo(on - 1, !audio.paused); };
+  $('next').onclick = function () { seekTo(on + 1, !audio.paused); };
+  $('speed').onclick = function () {
+    var i = (SPEEDS.indexOf(Number(this.dataset.rate || 1)) + 1) % SPEEDS.length;
+    this.dataset.rate = SPEEDS[i];
+    this.textContent = SPEEDS[i] + '×';
+    audio.playbackRate = SPEEDS[i];
+  };
+  $('seek').oninput = function () { if (audio.duration) audio.currentTime = audio.duration * this.value / 1000; };
+  $('open').onclick = function () {
+    var url = data ? (on >= 0 ? data.link + (on + 1) + '/' : data.link) : 'https://readqurantoday.com/';
+    app.openLink({ url: url }).catch(function () {});
+  };
+
+  audio.onplay = function () { $('playIcon').setAttribute('d', PAUSE); $('play').setAttribute('aria-label', say('إيقاف', 'Pause')); };
+  audio.onpause = function () { $('playIcon').setAttribute('d', PLAY); $('play').setAttribute('aria-label', say('تشغيل', 'Play')); };
+  audio.ontimeupdate = function () {
+    if (!data) return;
+    mark(ayahAt(audio.currentTime));
+    if (audio.duration) $('seek').value = Math.round(audio.currentTime / audio.duration * 1000);
+    $('time').textContent = clock(audio.currentTime) + ' / ' + clock(audio.duration || data.duration);
+  };
+  audio.onerror = function () {
+    note(say('تعذّر تشغيل الصوت هنا. افتح السورة على الموقع للاستماع.', 'The audio could not play here. Open the surah on the website to listen.'));
+  };
+
+  app.ontoolinput = function () { $('wait').textContent = say('جارٍ التحميل…', 'Loading…'); };
+  app.ontoolresult = function (result) {
+    var start = 0;
+    var d = result && (result.structuredContent || null);
+    if (d && d.startAyah) start = d.startAyah - 1;
+    show(result, start);
+  };
+  app.onhostcontextchanged = theme;
+  app.connect().then(function () { theme(app.getHostContext()); }).catch(function () { note('Not connected to a host.'); });
+})();
+</script>
+</body>
+</html>

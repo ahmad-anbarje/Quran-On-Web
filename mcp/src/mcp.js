@@ -8,6 +8,7 @@
 const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
 const { registerTools } = require('./tools');
 const { registerResources } = require('./resources');
+const { registerApp } = require('./app');
 
 function build(q, version) {
   const server = new McpServer(
@@ -30,6 +31,7 @@ function build(q, version) {
     },
   );
   registerTools(server, q);
+  registerApp(server, q);
   registerResources(server, q);
   return server;
 }

@@ -34,6 +34,11 @@ module.exports = [
     languageOptions: { ecmaVersion: 2023, sourceType: 'commonjs', globals: { ...globals.node } },
   },
   {
+    // The player's client entry: an ES module for esbuild, run in the host's sandbox
+    files: ['mcp/app/client.js'],
+    languageOptions: { ecmaVersion: 2022, sourceType: 'module', globals: { ...globals.browser } },
+  },
+  {
     // Browser tests: the functions handed to page.evaluate run in the page
     files: ['tests/check-browser.js', 'tests/check-dom.js'],
     languageOptions: { globals: { ...globals.browser, $: 'readonly' } },

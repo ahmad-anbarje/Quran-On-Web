@@ -13,6 +13,7 @@
 
 const { z } = require('zod');
 const { MAX_RESULTS, DEFAULT_TRANSLATION, fold, reply, fail, checkAyahs, translationName } = require('./shared');
+const { playerMeta } = require('./app');
 
 const surahArg = z.number().int().min(1).max(114).describe('Surah number, 1-114');
 
@@ -169,6 +170,7 @@ function registerTools(server, q) {
       ayah: z.number().int().min(1).optional().describe('An ayah to start the link at'),
     },
     annotations: { readOnlyHint: true, openWorldHint: false },
+    _meta: playerMeta,
   }, ({ surah: s, reciter, ayah }) => {
     const id = reciter || q.recitations.default;
     const r = q.recitation(id);
@@ -179,15 +181,17 @@ function registerTools(server, q) {
     if (ayah && ayah > info.v) return fail(`Surah ${s} has ${info.v} ayahs.`);
     const audio = `${q.AUDIO}/${t.audioPath}`;
     const sec = (ms) => Math.round(ms) / 1000;
-    return reply({
-      surah: { number: s, name: info.en },
+    const value = {
+      surah: { number: s, name: info.en, arabic: info.name },
       reciter: { id, name: r.name, arabic: r.nameAr, note: r.note || undefined },
       audio,
-      ...(ayah ? { startAt: `${audio}#t=${sec(t.ayah[ayah - 1][0])}` } : {}),
+      ...(ayah ? { startAyah: ayah, startAt: `${audio}#t=${sec(t.ayah[ayah - 1][0])}` } : {}),
       duration: Math.round(t.duration),
       ayahs: t.ayah.map(([a, b], i) => ({ ayah: i + 1, start: sec(a), end: sec(b) })),
       link: q.link(s),
-    });
+    };
+    // The player draws from structuredContent; the Arabic rides in _meta, for it and not the model
+    return { ...reply(value), structuredContent: value, _meta: { 'com.readqurantoday/ayahs': q.arabic[s].uthmani.map(q.hafs) } };
   });
 
   tool('list_surahs', {

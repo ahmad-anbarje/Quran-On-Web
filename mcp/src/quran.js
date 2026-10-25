@@ -118,7 +118,7 @@ function open(root) {
 
   return {
     SITE, AUDIO, surahs, translations, recitations, arabic, plain,
-    surah, page, link, ayahLink, translation, tafsir, words, wordLanguages, timing,
+    surah, page, link, ayahLink, translation, tafsir, words, wordLanguages, timing, hafs: surahText.hafs,
     hasTranslation: (id) => byTranslation.has(id),
     translationInfo: (id) => byTranslation.get(id) || null,
     recitation: (id) => byRecitation.get(id) || null,

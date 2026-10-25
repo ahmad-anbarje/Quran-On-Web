@@ -29,6 +29,9 @@ COPY data/quran-uthmani.txt data/
 COPY scripts/surah-text.js scripts/
 COPY --from=data /src/public public
 COPY mcp/src mcp/src
+# The recitation player (an MCP App) and the mushaf face it carries
+COPY mcp/app/player.html mcp/app/client.min.js mcp/app/
+COPY public/fonts/UthmanicHafs1Ver18.woff2 public/fonts/
 
 USER node
 # The heap is capped below the container's memory limit, so Node collects
