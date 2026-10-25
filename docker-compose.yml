@@ -2,6 +2,9 @@
 #
 #   docker compose up --build
 #
+# Two containers: the site (nginx and its files) and the MCP server, which the
+# site's nginx reaches at /mcp. The site runs on its own just as well.
+#
 # SITE is baked into the pages at build time, not read at runtime, because
 # every page names it. Change it and rebuild.
 
@@ -16,4 +19,17 @@ services:
         AUDIO: ${AUDIO:-}
     ports:
       - "8080:80"
+    restart: unless-stopped
+
+  # The public MCP server (/mcp, passed on by the site's nginx). Its own
+  # container: Node beside nginx's files, restarted and limited on its own,
+  # and reached only through the site, so it publishes no port.
+  mcp:
+    build:
+      context: .
+      dockerfile: mcp/Dockerfile
+    environment:
+      MCP_PER_MINUTE: ${MCP_PER_MINUTE:-60}
+    read_only: true
+    mem_limit: 192m
     restart: unless-stopped

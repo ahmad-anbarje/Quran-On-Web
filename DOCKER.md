@@ -143,6 +143,27 @@ Of that web root, 95 MB is the 604 page fonts and 65 MB is `surah/` — which is
 timings are only read while audio plays, so with no `AUDIO` set they are about
 54 MB the copy never touches.
 
+## The MCP server beside it
+
+`docker compose up --build` runs two containers: the site, and the public MCP
+server (`mcp/Dockerfile`), which the site's nginx reaches at `/mcp`. A
+separate container rather than a second process in the site's: the site stays
+nginx and files, the MCP server restarts and updates on its own, and it is held
+to 192 MB, so it can never take memory from the site. It publishes no port;
+only the site's nginx talks to it.
+
+```bash
+docker compose up -d --build                         # both
+docker compose up -d --build mcp                     # after an update to mcp/ or the data
+curl -s http://localhost:8080/mcp -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | head -c 200
+```
+
+Run on its own (`docker run` of the site image alone), the site works as before
+and `/mcp` answers 502. The MCP image is about 570 MB: Node, and the 127
+translations it serves (210 MB); its memory in use is about 30 MB.
+
 ## What is not in the image
 
 | | |
@@ -150,6 +171,7 @@ timings are only read while audio plays, so with no `AUDIO` set they are about
 | `/admin/` | the tools for whoever runs *this* site, and the password they sit behind is not in here |
 | analytics | `/stats.js` answers with an empty script so the console stays clean |
 | the feedback service | it exists for the Android app's reports, and needs Node and a database |
+| the MCP server | its own image, `mcp/Dockerfile`; `docker compose` runs it beside this one |
 | the recitations | unless you put one in, as above |
 
 ## Two things worth knowing

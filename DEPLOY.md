@@ -476,6 +476,11 @@ npm test
 npm start          # then point an MCP client at http://127.0.0.1:8788/mcp
 ```
 
+**Running the site in Docker?** Then skip the steps below: `docker compose up
+-d --build` starts the MCP server in its own container beside the site, and
+the site's nginx already passes `/mcp` to it. See DOCKER.md. The steps below
+are for the site served by nginx on the box itself.
+
 ### One-time setup on the box
 
 ```bash
