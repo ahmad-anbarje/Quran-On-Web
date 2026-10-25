@@ -49,7 +49,12 @@
 
 **Everywhere**
 - Phones, tablets and desktops; swipe, keyboard shortcuts or the on-screen buttons
-- Offline reading, installable, dark and light, Arabic and English
+- Offline reading, installable, dark and light
+- The site in 14 languages: Arabic, English, Urdu, Indonesian, Bengali, Turkish,
+  French, Persian, Hindi, Malay, Spanish, Russian, German and Chinese, chosen in
+  Settings or from the browser's language; Urdu and Persian read right to left.
+  The translation in the meaning window follows the site's language until the
+  reader picks one
 - Report an issue or a suggestion from inside the site
 - No third-party requests and no cookies; visits counted with self-hosted Umami
 
@@ -109,6 +114,8 @@ pages, headers and Basmalahs are laid out.
 | Command | What it does |
 |---|---|
 | `npm run build:pages` | Regenerates the surah and juz pages, the sitemap and `robots.txt` from `public/index.html` |
+| `python scripts/i18n-table.py` | Writes `public/i18n/<lang>.json`, the site's own words in the twelve languages beyond Arabic and English |
+| `python scripts/i18n-keys.py` | Lists every English phrase the site shows, and how many each language still lacks |
 | `python scripts/fetch-quranenc.py` | Downloads every QuranEnc translation of the meanings, and from Tanzil the languages QuranEnc lacks, checked ayah by ayah; one left incomplete is left out |
 | `npm run fetch:translations` | Downloads Saheeh International, the tafsir and the words' English (one-off; checks the words line up with the Latin) |
 | `npm run fetch:words` | Downloads the words' meanings in Urdu, Indonesian, Bengali, Turkish, Persian and Hindi from Quran.com, checked word by word against the Latin; a word it lacks shows in English |

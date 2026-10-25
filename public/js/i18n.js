@@ -34,7 +34,7 @@
 
   var KEY = 'quran-lang';
   var DICT_KEY = 'quran-i18n';
-  var VERSION = '2026-10-25';
+  var VERSION = '2026-10-25b';
 
   function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function store(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* denied */ } }
@@ -103,8 +103,19 @@
     });
   }
 
+  /* The index's search box says "بحث | Search"; beyond Arabic and English,
+     the Arabic and the reader's own word. */
+  function placeholders() {
+    var box = document.getElementById('surah-search');
+    if (!box) return;
+    if (box.__ph === undefined) box.__ph = box.getAttribute('placeholder');
+    var own = ui === 'ar' || ui === 'en' ? null : word('Search');
+    box.setAttribute('placeholder', own && own !== 'Search' ? 'بحث | ' + own : box.__ph);
+  }
+
   function translate(root) {
     if (!root || !root.querySelectorAll) return;
+    if (root === document.body) placeholders();
     if (root.classList && root.classList.contains('lang-en')) swap(root);
     root.querySelectorAll('.lang-en').forEach(swap);
     root.querySelectorAll('[data-tip-en],[data-ph-en]').forEach(swapAttrs);

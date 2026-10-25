@@ -70,16 +70,13 @@
             .map(function (x) { return x ? fold(x) : ''; });
           TEXTS[t.id] = {
             base: '/data/translation/' + t.id + '/', lang: t.lang, dir: t.dir || 'ltr',
-            source: t.source, key: t.key, language: t.language,
-            by: {
-              ar: [t.name.ar, house(t, 'ar'), t.language.ar].filter(Boolean).join(' · '),
-              en: [t.name.en, house(t, 'en'), t.language.en].filter(Boolean).join(' · '),
-            },
+            source: t.source, key: t.key, language: t.language, entry: t,
           };
         });
         /* A choice remembered from a list that has since lost it falls back;
            with no choice yet, the language of the reader's country, or of their device. */
-        if (!stored(TRANSLATION_KEY)) translation = deviceChoice(got.where) || translation;
+        where = got.where;
+        if (!stored(TRANSLATION_KEY)) translation = deviceChoice(where) || translation;
         if (!TEXTS[translation]) translation = 'hilali';
         render();
       })
@@ -441,21 +438,45 @@
       .catch(function () { return ''; });
   }
 
-  /* The first translation in the country's language, else in one the device asks for. */
+  var where = '';             // the visitor's country, once asked
+
+  /* The first translation in the site's language where the reader set it to
+     one beyond Arabic and English, else the country's, else one the device
+     asks for. */
   function deviceChoice(where) {
     var want = (navigator.languages || [navigator.language || '']).map(function (x) {
       return String(x).toLowerCase().split('-')[0];
     });
     if (COUNTRY_LANG[where]) want.unshift(COUNTRY_LANG[where]);
+    var site = global.I18n && I18n.lang();
+    if (site && site !== 'ar' && site !== 'en') want.unshift(site);
     for (var i = 0; i < want.length; i++) {
       for (var j = 0; j < offered.length; j++) if (offered[j].lang === want[i]) return offered[j].id;
     }
     return null;
   }
 
+  /* A language's name in the site's language: Arabic and English as the list
+     has them; for the other languages of the site, the language's own name,
+     the one name the list has that a reader of any of them can read. */
+  function nameIn(language, l) {
+    var site = global.I18n ? I18n.lang() : l;
+    if (site === 'ar' || site === 'en') return language[site] || language.en;
+    return language.native || language.en;
+  }
+
+  /* Who made a text, under it: translator, the Complex where it is theirs,
+     and the language, each in the site's language where it can be. */
+  function byLine(src, l) {
+    var t = src.entry;
+    if (!t) return src.by[l] || src.by.en;
+    var complex = house(t, l) ? T(COMPLEX.ar, COMPLEX.en) : '';
+    return [t.name[l] || t.name.en, complex, nameIn(t.language, l)].filter(Boolean).join(' · ');
+  }
+
   /* A language by the reader's name for it, and by its own where that differs. */
   function langLabel(t, l) {
-    var mine = t.language[l] || t.language.en, own = t.language.native;
+    var mine = nameIn(t.language, l), own = t.language.native;
     return own && fold(own) !== fold(mine) ? mine + ' · ' + own : mine;
   }
 
@@ -637,10 +658,11 @@
     el.prev.disabled = ayah <= 1;
     el.next.disabled = ayah >= surah.v;
 
-    var picked = TEXTS[textOf('translation')], pl = picked && picked.lang !== l && languageOf(picked);
+    var site = global.I18n ? I18n.lang() : l;
+    var picked = TEXTS[textOf('translation')], pl = picked && picked.lang !== site && languageOf(picked);
     box.querySelectorAll('.mn-tab').forEach(function (b) {
       var on = b.dataset.tab === tab;
-      b.textContent = T(TABS[b.dataset.tab].ar, TABS[b.dataset.tab].en) + (b.dataset.tab === 'translation' && pl ? ' (' + pl[l] + ')' : '');
+      b.textContent = T(TABS[b.dataset.tab].ar, TABS[b.dataset.tab].en) + (b.dataset.tab === 'translation' && pl ? ' (' + nameIn(pl, l) + ')' : '');
       b.classList.toggle('on', on);
       b.setAttribute('aria-selected', on ? 'true' : 'false');
       b.tabIndex = on ? 0 : -1;
@@ -655,7 +677,7 @@
     el.text.setAttribute('lang', src.lang);
     el.text.setAttribute('dir', src.dir);
     el.text.className = 'mn-text ' + (src.lang === 'ar' ? 'mn-ar' : src.dir === 'rtl' ? 'mn-rtl' : 'mn-ltr');
-    el.by.textContent = src.by[l] + ' · ' + (T('المصدر: ', 'Source: '));
+    el.by.textContent = byLine(src, l) + ' · ' + (T('المصدر: ', 'Source: '));
     el.by.appendChild(sourceLink(src, l));
 
     var want = { id: surah.id, ayah: ayah, which: which };
@@ -719,6 +741,14 @@
   }
 
   function told() { document.dispatchEvent(new CustomEvent('meaning:state')); }
+
+  /* The site's language changed: a reader who has not chosen a translation
+     follows it, as they would have had they opened the page in it. */
+  document.addEventListener('ui:lang', function () {
+    if (stored(TRANSLATION_KEY) || !offered.length) return;
+    translation = deviceChoice(where) || translation;
+    if (box && !box.hidden) render();
+  });
 
   global.Meaning = {
     show: show,
