@@ -18,7 +18,7 @@ const SITE = {
 };
 
 module.exports = [
-  { ignores: ['**/node_modules/**', 'public/js/vendor/**', '**/*.min.js', 'public/surah/**', 'public/juz/**', 'reference/**', 'qul/**'] },
+  { ignores: ['**/node_modules/**', 'tests/vendor/**', '**/*.min.js', 'public/surah/**', 'public/juz/**', 'reference/**', 'qul/**'] },
   js.configs.recommended,
   {
     files: ['public/js/**/*.js', 'public/admin/**/*.js', 'feedback/admin/**/*.js', 'tests/audit.js'],
@@ -35,8 +35,8 @@ module.exports = [
   },
   {
     // Browser tests: the functions handed to page.evaluate run in the page
-    files: ['tests/check-browser.js'],
-    languageOptions: { globals: { ...globals.browser } },
+    files: ['tests/check-browser.js', 'tests/check-dom.js'],
+    languageOptions: { globals: { ...globals.browser, $: 'readonly' } },
   },
   {
     rules: {

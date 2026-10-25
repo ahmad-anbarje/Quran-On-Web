@@ -25,6 +25,7 @@
     "fonts:glyphs": "node scripts/glyph-maps.js",
     "fetch:words": "node scripts/fetch-word-meanings.js",
     "test:browser": "node tests/check-browser.js",
+    "test:dom": "node tests/check-dom.js",
     "lint": "eslint ."
   },
   "dependencies": {

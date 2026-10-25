@@ -38,7 +38,7 @@
       { url: '/9f0578f5050c369da77670021f725393.txt', kind: 'Site file' },
 
       { url: '/sw.js', kind: 'Code' },
-      { url: '/js/vendor/jquery-3.7.1.min.js', kind: 'Code' },
+      { url: '/js/dom.min.js', kind: 'Code' },
 
       { url: '/data/mushaf.json', kind: 'Data' },
       { url: '/data/surahs.json', kind: 'Data' },

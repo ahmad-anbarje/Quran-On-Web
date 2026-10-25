@@ -30,7 +30,7 @@ const SHELL_FILES = [
   '/css/style.min.css',
   '/css/fonts.min.css',
   '/css/recite.min.css',
-  '/js/vendor/jquery-3.7.1.min.js',
+  '/js/dom.min.js',
   '/js/theme.min.js',
   '/js/i18n.min.js',
   '/js/app.min.js',

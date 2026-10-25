@@ -182,6 +182,81 @@ async function main() {
       return `20 clicks at 3 Mbit/s, pages ${seen.map((x) => x.page).join(', ')} drawn ${((Date.now() - t0) / 1000).toFixed(1)} s after`;
     });
 
+    /* What app.js and listen.js do through $, one of each kind: a delegated
+       click, a form, a request and its failure, typed data-*, toggled classes */
+    await check('search, saved pages, settings, downloads and feedback', async () => {
+      const { ctx, page, errors } = await visit(DESKTOP, 'en');
+      let posted = 0;
+      await page.route('**/api/feedback', (r) => r.fulfill(++posted === 1
+        ? { status: 201, contentType: 'application/json', body: '{"ok":true}' }
+        : { status: 429, body: 'slow down' }));
+      await open(page, '/surah/2/');
+      const click = (sel) => page.evaluate((s) => document.querySelector(s).click(), sel);
+      const says = (sel) => page.$eval(sel, (e) => e.textContent.trim());
+      const done = [];
+
+      // Search: an Arabic word finds ayahs; a hit turns to its page
+      await page.evaluate(() => { const i = document.getElementById('surah-search'); i.value = 'الرحمن'; i.dispatchEvent(new Event('input', { bubbles: true })); });
+      await page.waitForFunction(() => document.querySelectorAll('#search-results .ayah-hit').length > 0, null, { timeout: 10000 });
+      const hit = await page.$eval('#search-results .ayah-hit', (h) => +h.dataset.page);
+      await click('#search-results .ayah-hit');
+      await page.waitForTimeout(800);
+      const at = await drawn(page);
+      assert(at.some((s) => s.page === hit), `the hit is on page ${hit}, the reader shows ${at.map((s) => s.page)}`);
+      done.push('search');
+
+      // Saved pages: the ribbon saves, the list shows it, delete takes it off without opening it
+      await click('.page-section.in-spread .page-ribbon, .page-section .page-ribbon');
+      await click('#btn-bookmarks');
+      assert(await page.$$eval('#bookmarks-list .bookmark-card', (c) => c.length) === 1, 'the saved page is not listed');
+      await click('#bookmarks-list .bookmark-delete');
+      assert(await page.$$eval('#bookmarks-list .empty-state', (c) => c.length) === 1, 'deleting left the page listed');
+      assert(await page.evaluate(() => !document.getElementById('bookmarks-panel').hidden), 'delete also opened the page');
+      await click('#btn-bookmarks');
+      done.push('saved pages');
+
+      // Settings: the theme and the reading mode
+      const dark = await page.evaluate(() => document.body.classList.contains('dark-mode'));
+      await click('#btn-theme');
+      assert(await page.evaluate(() => document.body.classList.contains('dark-mode')) !== dark, 'the theme did not change');
+      await click('#btn-theme');
+      const mode = await page.evaluate(() => document.body.dataset.mode);
+      await click('#btn-mode');
+      await page.waitForTimeout(500);
+      assert(await page.evaluate(() => document.body.dataset.mode) !== mode, 'the reading mode did not change');
+      await click('#btn-mode');
+      await page.waitForTimeout(500);
+      done.push('settings');
+
+      // Downloads: 114 surahs listed, ticking them all enables the button
+      await click('.drawer-tab[data-pane="listen"]');
+      await page.waitForFunction(() => document.querySelectorAll('#dl-list .dl-pick').length === 114, null, { timeout: 10000 });
+      assert(await page.$eval('#btn-dl-selected', (b) => b.disabled), 'the download button is on with nothing ticked');
+      await click('#dl-all');
+      assert(await page.$eval('#btn-dl-selected', (b) => !b.disabled), 'ticking all left the download button off');
+      done.push('downloads');
+
+      // Feedback: too short is refused here; sent; then the server's "too many"
+      await click('#btn-feedback');
+      const send = async (text) => {
+        await page.fill('#fb-message', text);
+        await click('#fb-send');
+        await page.waitForTimeout(600);
+        return says('#fb-status');
+      };
+      const short = await send('hi');
+      assert(short && posted === 0, `a two-letter message: "${short}", ${posted} sent`);
+      const sent = await send('The page turned twice on one tap.');
+      assert(/sent/i.test(sent) && posted === 1 && !(await page.inputValue('#fb-message')), `sending: "${sent}"`);
+      const busy = await send('And once more, a second report.');
+      assert(/too many/i.test(busy), `the server's 429: "${busy}"`);
+      done.push('feedback');
+
+      assert(!errors.length, errors.join(' | '));
+      await ctx.close();
+      return done.join(', ');
+    });
+
     await check('all fourteen languages: no errors, direction, translated settings', async () => {
       const wrong = [];
       for (const lang of LANGS) {

@@ -73,14 +73,17 @@ jobs:
             exit 1
           fi
 
-      # The reader in a real browser: pages turn and draw, the player and the
-      # meaning window, the fourteen languages, offline, accessibility.
+      # dom.js against the jQuery it replaced, then the reader in a real
+      # browser: pages turn and draw, the player and the meaning window,
+      # search, saved pages, settings, the fourteen languages, offline,
+      # accessibility.
       - name: In the browser
         run: |
           # The runner's own Chrome where it has one: Playwright cannot always
           # install its browser on the newest runner images
           CHROME_PATH="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
           if [ -z "$CHROME_PATH" ]; then npx playwright install --with-deps chromium; fi
+          CHROME_PATH="$CHROME_PATH" npm run test:dom
           CHROME_PATH="$CHROME_PATH" npm run test:browser
 
       # The feedback service: validation, rate limits, and the reports list.
