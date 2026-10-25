@@ -1,15 +1,19 @@
 /**
- * The meaning beside the text: an English translation of each ayah, the
- * Tafsir al-Muyassar, and the English of each word.
+ * The meaning beside the text: translations of each ayah, the Tafsir
+ * al-Muyassar, and the English of each word.
  *
  *   node scripts/fetch-translations.js
  *
  * Writes, one file a surah, each an array with one entry an ayah:
  *
- *   public/data/translation/sahih/<n>.json   Saheeh International, ayah by ayah
+ *   public/data/translation/sahih/<n>.json   Saheeh International
+ *   public/data/translations.json            its entry in the list, for the picker
  *   public/data/tafsir/muyassar/<n>.json     التفسير الميسر, King Fahd Complex
  *   public/data/meaning/<n>.json             each word's English, as an array
  *                                            a word, lined up with translit/
+ *
+ * Only Saheeh International is fetched here; every other translation comes
+ * from QuranEnc through fetch-quranenc.py, each credited as QuranEnc credits it.
  *
  * Run once; the result is committed and served from here, so nothing at
  * runtime asks anyone else for anything.
@@ -32,6 +36,24 @@ const DATA = path.join(ROOT, 'public', 'data');
 const EDITIONS = 'https://raw.githubusercontent.com/fawazahmed0/quran-api/1/editions/';
 const WORDS = { name: '@kmaslesa/holy-quran-word-by-word-full-data', version: '1.0.6' };
 
+/* Saheeh International, from Tanzil. Every other translation is QuranEnc's,
+   written by fetch-quranenc.py, which owns the rest of translations.json. */
+const TRANSLATIONS = [
+  { id: 'sahih', edition: 'eng-ummmuhammad', lang: 'en', complex: false,
+    language: { en: 'English', ar: 'الإنجليزية', native: 'English' },
+    name: { en: 'Saheeh International', ar: 'صحيح إنترناشيونال' } },
+];
+
+/* Footnote numbers whose footnotes are not in the text: [١], [12], [১]. Only
+   for the translations marked as carrying them: elsewhere a number in brackets
+   can be the text's own, as the tafsir's "the ayah before, no. [50]". */
+const FOOTNOTE = /\s*\[\s*[\d\u0660-\u0669\u06f0-\u06f9\u09e6-\u09ef]+\s*\]/g;
+
+function clean(text) {
+  /* and, in two places in the Bengali, the ayah's own number left at its head */
+  return text.replace(FOOTNOTE, '').replace(/^[\d\u09e6-\u09ef]+\.\s*/, '').replace(/\s+([,.;:!?،])/g, '$1').replace(/\s{2,}/g, ' ').trim();
+}
+
 const surahs = JSON.parse(fs.readFileSync(path.join(DATA, 'surahs.json'), 'utf8'));
 
 async function get(url) {
@@ -41,10 +63,10 @@ async function get(url) {
 }
 
 /** One edition, as surah -> its ayahs' texts, checked against the index. */
-async function edition(id) {
+async function edition(id, footnotes) {
   const rows = JSON.parse(await get(EDITIONS + id + '.json')).quran;
   const by = surahs.map(() => []);
-  for (const row of rows) by[row.chapter - 1][row.verse - 1] = row.text.trim();
+  for (const row of rows) by[row.chapter - 1][row.verse - 1] = footnotes ? clean(row.text) : row.text.trim();
   surahs.forEach((s, i) => {
     const got = by[i].filter(Boolean).length;
     if (got !== s.v) throw new Error(`${id}: surah ${s.id} has ${got} ayahs of ${s.v}`);
@@ -107,7 +129,18 @@ function write(dir, by) {
 }
 
 (async () => {
-  write('translation/sahih', await edition('eng-ummmuhammad'));
+  for (const t of TRANSLATIONS) write('translation/' + t.id, await edition(t.edition, t.footnotes));
+  // Only these entries are ours; the rest of the list is QuranEnc's and is kept as it stands
+  const file = path.join(DATA, 'translations.json');
+  const listed = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
+  const ours = TRANSLATIONS.map((t) => ({
+    id: t.id, lang: t.lang, dir: t.dir || 'ltr', complex: t.complex, language: t.language, name: t.name,
+    source: 'tanzil',
+  }));
+  const rest = listed.filter((t) => !ours.some((o) => o.id === t.id));
+  const english = rest.filter((t) => t.language.en === 'English');
+  fs.writeFileSync(file, JSON.stringify([...english.slice(0, 1), ...ours, ...english.slice(1),
+    ...rest.filter((t) => t.language.en !== 'English')]));
   write('tafsir/muyassar', await edition('ara-kingfahadquranc'));
   write('meaning', await words());
 })().catch((e) => { console.error(e.message); process.exit(1); });

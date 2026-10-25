@@ -431,6 +431,11 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   /* The title bar runs out to the panel's edge, so the panel clips it back to
      its own rounded corner. */
   overflow: hidden;
+  /* Never taller than the screen: with the reciter list open on a short one,
+     the menu scrolls inside rather than running off the bottom. */
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 #r-menu[hidden] { display: none; }
@@ -935,6 +940,60 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
 }
 body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a; }
 
+/* Which translation: the choice as a button under the tabs, and behind it a search */
+#meaning .mn-choices { display: flex; flex-direction: column; min-height: 0; padding: 8px 10px 0; }
+#meaning .mn-choices[hidden] { display: none; }
+#meaning .mn-pick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: start;
+  cursor: pointer;
+}
+#meaning .mn-pick:hover { border-color: var(--primary); }
+#meaning .mn-pick:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+#meaning .mn-pick-lang { flex: 0 0 auto; font-weight: 700; color: var(--primary); }
+#meaning .mn-pick-name { flex: 1 1 auto; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; opacity: 0.85; }
+#meaning .mn-pick .ic { flex: 0 0 auto; width: 16px; height: 16px; transition: transform var(--t); }
+#meaning .mn-pick[aria-expanded="true"] .ic { transform: rotate(180deg); }
+
+#meaning .mn-picker { display: flex; flex-direction: column; min-height: 0; max-height: min(44vh, 340px); margin-top: 8px; }
+#meaning .mn-picker[hidden] { display: none; }
+#meaning .mn-search {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+}
+#meaning .mn-search:focus { outline: 2px solid var(--primary); outline-offset: 0; border-color: transparent; }
+#meaning .mn-count { margin: 6px 2px 4px; font-size: 0.72rem; opacity: 0.7; }
+#meaning .mn-list { flex: 1 1 auto; min-height: 0; margin: 0 0 8px; padding: 0; list-style: none; overflow-y: auto; overscroll-behavior: contain; }
+#meaning .mn-group {
+  position: sticky;
+  top: 0;
+  padding: 6px 8px 3px;
+  background: var(--surface);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+#meaning .mn-item { padding: 6px 12px; border-radius: var(--r-sm); font-size: 0.82rem; cursor: pointer; }
+#meaning .mn-item:hover, #meaning .mn-item.active { background: var(--primary-soft); }
+#meaning .mn-item[aria-selected="true"] { font-weight: 700; color: var(--primary); }
+#meaning .mn-item[aria-selected="true"]::after { content: " ✓"; }
+
 #meaning .mn-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -944,7 +1003,7 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
 }
 #meaning .mn-body:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
 #meaning .mn-text { margin: 0; white-space: pre-line; }
-#meaning .mn-en {
+#meaning .mn-ltr {
   font: 400 1rem/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   text-align: left;
 }
@@ -953,6 +1012,10 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
   line-height: 2;
   text-align: right;
 }
+/* Urdu, Persian, Pashto, Hebrew…: right to left, but not the tafsir's Arabic type */
+#meaning .mn-rtl { font-size: 1.04rem; line-height: 1.95; text-align: right; }
+#meaning .mn-by a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+#meaning .mn-body[hidden] { display: none; }
 #meaning.mn-loading .mn-text { opacity: 0.6; }
 #meaning .mn-by {
   margin: 10px 0 0;

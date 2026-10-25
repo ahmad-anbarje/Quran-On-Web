@@ -837,6 +837,21 @@
 
     fillVoices();
     draggable(menu.querySelector('.r-menu-bar'));
+
+    /* Opening the reciter list or the repeat panel grows the menu downwards
+       from where it stands, which near the foot of the screen ran it off the
+       bottom until something else happened to move it. Whenever its size
+       changes it is put back inside the screen, staying as near as it can to
+       where it was. Folded, the corner is its place; on a phone, the foot. */
+    if (global.ResizeObserver) {
+      new ResizeObserver(function () {
+        if (menu.hidden || minimized || window.matchMedia('(max-width: 480px)').matches) return;
+        var r = menu.getBoundingClientRect();
+        if (r.top < 8 || r.bottom > window.innerHeight - 8 || r.left < 8 || r.right > window.innerWidth - 8) {
+          place(r.left, r.top);
+        }
+      }).observe(menu);
+    }
   }
 
   /* Escaped, because a name comes out of a data file and goes into markup.
