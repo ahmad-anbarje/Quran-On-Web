@@ -145,11 +145,15 @@ function registerTools(server, q) {
     if (!langs.includes(lang)) return fail(`Word meanings are in: ${langs.join(', ')}.`);
     const { latin, meaning } = q.words(s, lang);
     const said = latin[ayah - 1], means = meaning[ayah - 1];
+    // A word missing in the language is given in English, as the site shows it, and marked so
+    const english = lang === 'en' ? means : q.words(s, 'en').meaning[ayah - 1];
     return reply({
       ref: `${s}:${ayah}`,
       arabic: q.arabic[s].uthmani[ayah - 1],
       language: lang,
-      words: said.map((l, i) => ({ position: i + 1, transliteration: l, meaning: means[i] })),
+      words: said.map((l, i) => (means[i]
+        ? { position: i + 1, transliteration: l, meaning: means[i] }
+        : { position: i + 1, transliteration: l, meaning: english[i], meaningLanguage: 'en' })),
       link: q.link(s),
     });
   });
