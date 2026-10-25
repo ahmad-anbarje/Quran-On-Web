@@ -56,7 +56,7 @@
      page cannot reach into it however it is sized or zoomed. */
   --turn-lane: 96px;
 
-  --sidebar-w: 280px;
+  --sidebar-w: clamp(290px, 24vw, 340px);
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 18px;

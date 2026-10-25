@@ -138,6 +138,14 @@
         '<p class="mn-text"></p>' +
         '<p class="mn-by"></p>' +
       '</div>' +
+      '<span class="mn-edge mn-n" data-edge="n" aria-hidden="true"></span>' +
+      '<span class="mn-edge mn-s" data-edge="s" aria-hidden="true"></span>' +
+      '<span class="mn-edge mn-e" data-edge="e" aria-hidden="true"></span>' +
+      '<span class="mn-edge mn-w" data-edge="w" aria-hidden="true"></span>' +
+      '<span class="mn-edge mn-ne" data-edge="ne" aria-hidden="true"></span>' +
+      '<span class="mn-edge mn-nw" data-edge="nw" aria-hidden="true"></span>' +
+      '<span class="mn-edge mn-se" data-edge="se" aria-hidden="true"></span>' +
+      '<span class="mn-edge mn-sw" data-edge="sw" aria-hidden="true"></span>' +
       '<span class="mn-size" aria-hidden="true"></span>' +
     '</section>';
 
@@ -208,7 +216,7 @@
     el.search.addEventListener('input', function () { fillList(el.search.value); });
 
     draggable(el.bar);
-    resizable(box.querySelector('.mn-size'));
+    resizable();
 
     /* A longer tafsir, or the other tab, changes its height where it stands;
        kept inside the screen as the player is. On a phone the sheet is
@@ -227,35 +235,38 @@
     window.addEventListener('resize', function () { if (!box.hidden) { sized(); settle(); } });
   }
 
-  /* Sized by its corner on a wide screen, and kept at that size the next time;
-     a double click on the corner puts it back as it was made. */
+  /* Sized by any edge or corner on a wide screen, and kept at that size the
+     next time; a double click on an edge puts it back as it was made. */
   var SIZE_KEY = 'quran-meaning-size';
   var MIN_W = 300, MIN_H = 220;
 
-  function resizable(grip) {
+  function resizable() {
     var from = null;
-    grip.addEventListener('pointerdown', function (e) {
-      if (phone() || box.hidden) return;
+    box.addEventListener('pointerdown', function (e) {
+      var edge = e.target.closest('.mn-edge');
+      if (!edge || phone() || box.hidden) return;
       var r = box.getBoundingClientRect();
-      // The corner is at the inline end: the left one in Arabic, so the left edge moves too
-      from = { x: e.clientX, y: e.clientY, w: r.width, h: r.height, left: r.left, top: r.top,
-        rtl: getComputedStyle(box).direction === 'rtl' };
-      try { grip.setPointerCapture(e.pointerId); } catch (err) { /* gone */ }
+      from = { x: e.clientX, y: e.clientY, w: r.width, h: r.height, left: r.left, top: r.top, edge: edge.dataset.edge, el: edge };
+      try { edge.setPointerCapture(e.pointerId); } catch (err) { /* gone */ }
       box.classList.add('mn-sizing');
       e.preventDefault();
       e.stopPropagation();
     });
-    grip.addEventListener('pointermove', function (e) {
+    box.addEventListener('pointermove', function (e) {
       if (!from) return;
-      var span = room(), pad = 8;
-      var dx = e.clientX - from.x;
-      var most = from.rtl ? from.left + from.w - span.from - pad : span.to - pad - from.left;
-      var w = Math.max(MIN_W, Math.min(most, from.w + (from.rtl ? -dx : dx)));
-      var h = Math.max(MIN_H, Math.min(window.innerHeight - pad - from.top, from.h + e.clientY - from.y));
+      var span = room(), pad = 8, on = from.edge;
+      var dx = e.clientX - from.x, dy = e.clientY - from.y;
+      var w = from.w, h = from.h, left = from.left, top = from.top;
+      // The side held moves; the one across from it stays where it is
+      if (on.indexOf('e') >= 0) w = Math.max(MIN_W, Math.min(span.to - pad - from.left, from.w + dx));
+      if (on.indexOf('w') >= 0) { w = Math.max(MIN_W, Math.min(from.left + from.w - span.from - pad, from.w - dx)); left = from.left + from.w - w; }
+      if (on.indexOf('s') >= 0) h = Math.max(MIN_H, Math.min(window.innerHeight - pad - from.top, from.h + dy));
+      if (on.indexOf('n') >= 0) { h = Math.max(MIN_H, Math.min(from.top + from.h - pad, from.h - dy)); top = from.top + from.h - h; }
       box.style.width = w + 'px';
       box.style.height = h + 'px';
       box.style.maxHeight = 'none';
-      box.style.left = (from.rtl ? from.left + from.w - w : from.left) + 'px';
+      box.style.left = left + 'px';
+      box.style.top = top + 'px';
       moved = true;
     });
     var end = function () {
@@ -264,9 +275,10 @@
       box.classList.remove('mn-sizing');
       store(SIZE_KEY, Math.round(box.offsetWidth) + 'x' + Math.round(box.offsetHeight));
     };
-    grip.addEventListener('pointerup', end);
-    grip.addEventListener('pointercancel', end);
-    grip.addEventListener('dblclick', function (e) {
+    box.addEventListener('pointerup', end);
+    box.addEventListener('pointercancel', end);
+    box.addEventListener('dblclick', function (e) {
+      if (!e.target.closest('.mn-edge')) return;
       try { localStorage.removeItem(SIZE_KEY); } catch (err) { /* denied */ }
       sized();
       var r = box.getBoundingClientRect();

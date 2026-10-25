@@ -880,21 +880,33 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
 #meaning.mn-moving, #meaning.mn-sizing { box-shadow: var(--sh-3), 0 0 0 2px var(--primary-soft); }
 #meaning.mn-sizing { user-select: none; }
 
-/* The corner to size it by, at the inline end of its foot */
+/* Its edges and corners to size it by: thin bands along the border, unseen;
+   the mark at the inline end of the foot only says it can be sized */
+#meaning .mn-edge { position: absolute; z-index: 3; touch-action: none; }
+#meaning .mn-n, #meaning .mn-s { left: 12px; right: 12px; height: 6px; cursor: ns-resize; }
+#meaning .mn-e, #meaning .mn-w { top: 12px; bottom: 12px; width: 6px; cursor: ew-resize; }
+#meaning .mn-n { top: 0; }
+#meaning .mn-s { bottom: 0; }
+#meaning .mn-e { right: 0; }
+#meaning .mn-w { left: 0; }
+#meaning .mn-ne, #meaning .mn-nw, #meaning .mn-se, #meaning .mn-sw { width: 14px; height: 14px; }
+#meaning .mn-ne { top: 0; right: 0; cursor: nesw-resize; }
+#meaning .mn-nw { top: 0; left: 0; cursor: nwse-resize; }
+#meaning .mn-se { bottom: 0; right: 0; cursor: nwse-resize; }
+#meaning .mn-sw { bottom: 0; left: 0; cursor: nesw-resize; }
 #meaning .mn-size {
   position: absolute;
   bottom: 0;
   inset-inline-end: 0;
   width: 18px;
   height: 18px;
-  cursor: nwse-resize;
-  touch-action: none;
+  pointer-events: none;
   opacity: 0.45;
   background:
     linear-gradient(135deg, transparent 0 55%, currentColor 55% 62%, transparent 62% 72%, currentColor 72% 79%, transparent 79%);
 }
-#meaning[dir="rtl"] .mn-size { cursor: nesw-resize; transform: scaleX(-1); }
-#meaning .mn-size:hover, #meaning.mn-sizing .mn-size { opacity: 0.9; color: var(--primary); }
+#meaning[dir="rtl"] .mn-size { transform: scaleX(-1); }
+#meaning:has(.mn-se:hover, .mn-sw:hover) .mn-size, #meaning.mn-sizing .mn-size { opacity: 0.9; color: var(--primary); }
 
 #meaning .mn-bar {
   display: flex;
@@ -935,6 +947,8 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   cursor: pointer;
 }
 #meaning .mn-bar button:hover:not(:disabled) { background: var(--primary-soft); color: var(--primary); }
+/* Closing warms as the player's close does */
+#meaning .mn-bar .mn-close:hover { background: color-mix(in srgb, var(--r-point) 14%, transparent); color: var(--r-point); }
 #meaning .mn-bar button:disabled { opacity: 0.35; cursor: default; }
 #meaning .mn-bar .ic { width: 18px; height: 18px; }
 #meaning .mn-bar > :last-child { border-start-end-radius: var(--r-md); }
@@ -1069,6 +1083,6 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
   }
   #meaning .mn-bar { cursor: default; touch-action: auto; }
   #meaning .mn-bar .r-grip { display: none; }
-  #meaning .mn-size { display: none; }
+  #meaning .mn-size, #meaning .mn-edge { display: none; }
 }
 
