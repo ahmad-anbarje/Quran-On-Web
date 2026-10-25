@@ -157,12 +157,29 @@ function iso8601(sec) {
   return 'PT' + (h ? h + 'H' : '') + (m ? m + 'M' : '') + (sec % 60) + 'S';
 }
 
+/* The site's name after the page's, where it fits: Google shows about sixty
+   characters of a title, and a name cut off in the middle reads worse than
+   one without the site after it. */
+const SUFFIX = ' | القرآن الكريم';
+function fit(title) {
+  return title.length + SUFFIX.length <= 60 ? title + SUFFIX : title;
+}
+
+/* The Complex's English, ayah by ayah, beside the Arabic: what a search in
+   English for a surah finds. Hilali and Muhsin Khan, as the meaning window
+   opens on. */
+const ENGLISH = { id: 'hilali', name: 'Muhammad Taqi-ud-Din al-Hilali and Muhammad Muhsin Khan' };
+function englishOf(s) {
+  const f = path.join(ROOT, 'public', 'data', 'translation', ENGLISH.id, s.id + '.json');
+  return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null;
+}
+
 /** The one page, with its head rewritten to name a surah. */
 function pageFor(shell, s) {
   const titleAr = `سورة ${s.name}`;
   const rec = recitationOf(s);
   // Worded as searchers type it: the bare name ranked on page one and drew no clicks
-  const title = `${titleAr} مكتوبة ${rec ? 'مع التلاوة' : 'من مصحف المدينة'} · Surah ${s.en} | القرآن الكريم`;
+  const title = fit(`${titleAr} مكتوبة ${rec ? 'مع التلاوة' : 'من مصحف المدينة'} · Surah ${s.en}`);
 
   /* A page that can be listened to says so. "Listen" is half of what anyone
      searching for a surah by name is after, and the description was promising
@@ -215,7 +232,18 @@ function wordsOf(s) {
     (t.basmala ? `    <p>${esc(t.basmala)}</p>\n` : '') +
     t.uthmani.map((u, i) =>
       `    <p>${esc(u)} ${ar(i + 1)}</p>\n`).join('') +
+    english(s) +
     '  </article>\n';
+}
+
+function english(s) {
+  const en = englishOf(s);
+  if (!en) return '';
+  return `    <section lang="en" dir="ltr">\n` +
+    `      <h2>Surah ${esc(s.en)} in English</h2>\n` +
+    `      <p>The meaning of Surah ${esc(s.en)} in English, ${s.v} verses, translated by ${ENGLISH.name}.</p>\n` +
+    en.map((t, i) => `      <p>${i + 1}. ${esc(t)}</p>\n`).join('') +
+    '    </section>\n';
 }
 
 /** The head fields every generated page rewrites. */
@@ -308,7 +336,7 @@ function surahsOfJuz(j) {
 
 function juzPageFor(shell, j) {
   const nameAr = JUZ_NAMES[j.id] || `الجزء ${JUZ_ORDINALS[j.id - 1]} من القرآن`;
-  const title = `${nameAr} مكتوب مع التلاوة · Juz ${j.id} | القرآن الكريم`;
+  const title = fit(`${nameAr} مكتوب مع التلاوة · Juz ${j.id}`);
   const one = j.first.id === j.last.id;
   const span = one ? `من سورة ${j.first.name}`
                    : `من سورة ${j.first.name} إلى سورة ${j.last.name}`;

@@ -873,6 +873,8 @@ body.dark-mode .surah-item.active { background: #1f6a9a; }
   border-color: var(--primary);
   color: var(--on-dark);
 }
+/* The dark accent is too light under white letters; the deeper blue the open surah's row uses */
+body.dark-mode .list-tab.on { background: #1f6a9a; border-color: #1f6a9a; }
 
 /* The juz names itself in the interface's own type, and the surah it opens in
    stands beside it, set as the index sets a surah. */
