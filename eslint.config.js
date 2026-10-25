@@ -18,7 +18,7 @@ const SITE = {
 };
 
 module.exports = [
-  { ignores: ['**/node_modules/**', 'public/js/vendor/**', 'public/surah/**', 'public/juz/**', 'reference/**', 'qul/**'] },
+  { ignores: ['**/node_modules/**', 'public/js/vendor/**', '**/*.min.js', 'public/surah/**', 'public/juz/**', 'reference/**', 'qul/**'] },
   js.configs.recommended,
   {
     files: ['public/js/**/*.js', 'public/admin/**/*.js', 'feedback/admin/**/*.js', 'tests/audit.js'],

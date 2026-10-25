@@ -143,7 +143,7 @@ link back.
 
 | Command | What it does |
 |---|---|
-| `npm run build:pages` | Regenerates the surah and juz pages, the sitemap and `robots.txt` from `public/index.html` |
+| `npm run build:pages` | Regenerates the surah and juz pages, the sitemap and `robots.txt` from `public/index.html`; minifies the scripts and stylesheets beside their sources (`app.js` → `app.min.js`), which are the ones to edit |
 | `python scripts/i18n-table.py` | Writes `public/i18n/<lang>.json`, the site's own words in the twelve languages beyond Arabic and English |
 | `python scripts/i18n-keys.py` | Lists every English phrase the site shows, and how many each language still lacks |
 | `python scripts/fetch-quranenc.py` | Downloads every QuranEnc translation of the meanings, and from Tanzil the languages QuranEnc lacks, checked ayah by ayah; one left incomplete is left out |

@@ -50,9 +50,9 @@
        With Browser Cache TTL set to "Respect Existing Headers" the
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v2/ -->
-  <link rel="stylesheet" href="/css/fonts.css?v=de3f527f9a" />
-  <link rel="stylesheet" href="/css/style.css?v=1811834286" />
-  <link rel="stylesheet" href="/css/recite.css?v=37dd430bf1" />
+  <link rel="stylesheet" href="/css/fonts.min.css?v=dc96e96b71" />
+  <link rel="stylesheet" href="/css/style.min.css?v=200aec0432" />
+  <link rel="stylesheet" href="/css/recite.min.css?v=afd4d8c4ae" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
   <link rel="preload" href="/data/surahs.json" as="fetch" crossorigin />
@@ -121,7 +121,7 @@
 <body data-lang="ar" class="ui-rtl">
 
   <!-- Sets the theme class before anything is painted; see js/theme.js. -->
-  <script src="/js/theme.js?v=2842167175"></script>
+  <script src="/js/theme.min.js?v=787efdda32"></script>
 
   <!-- icon sprite -->
   <svg id="icon-sprite" width="0" height="0" aria-hidden="true">
@@ -613,18 +613,18 @@
   </div>
 
   <script defer src="/js/vendor/jquery-3.7.1.min.js?v=fc9a93dd24"></script>
-  <script defer src="/js/i18n.js?v=dcf18a024e"></script>
-  <script defer src="/js/mushaf.js?v=c991d31dcb"></script>
-  <script defer src="/js/recite.js?v=d3b39c54d4"></script>
+  <script defer src="/js/i18n.min.js?v=3d91b02874"></script>
+  <script defer src="/js/mushaf.min.js?v=acf4787387"></script>
+  <script defer src="/js/recite.min.js?v=6de6bc9964"></script>
   <!-- The meaning window, fetched by recite.js the first time it is opened -->
-  <template id="meaning-script" data-src="/js/tafsir.js?v=a7a2ffc5d2"></template>
-  <script defer src="/js/ayahs.js?v=13fc370c5a"></script>
-  <script defer src="/js/listen.js?v=30f359e85c"></script>
-  <script defer src="/js/pager.js?v=b3e96d6386"></script>
-  <script defer src="/js/offline.js?v=6656553404"></script>
-  <script defer src="/js/leaves.js?v=6e67d6ad32"></script>
-  <script defer src="/js/app.js?v=b728560749"></script>
-  <script defer src="/js/appcard.js?v=2978c3969e"></script>
+  <template id="meaning-script" data-src="/js/tafsir.min.js?v=e3fc617e79"></template>
+  <script defer src="/js/ayahs.min.js?v=3b7e12dcaa"></script>
+  <script defer src="/js/listen.min.js?v=8d3a062e5a"></script>
+  <script defer src="/js/pager.min.js?v=73fed4459e"></script>
+  <script defer src="/js/offline.min.js?v=14cda818c9"></script>
+  <script defer src="/js/leaves.min.js?v=964a1ade72"></script>
+  <script defer src="/js/app.min.js?v=8b4c71ede8"></script>
+  <script defer src="/js/appcard.min.js?v=942fa5f409"></script>
   <article class="sr-only" lang="ar" dir="rtl" aria-label="نص سورة فصلت">
     <h1>سورة فصلت · Surah Fussilat</h1>
     <p>سُورَةُ فُصِّلَتۡ — 54 آية · 54 verses · الصفحات 477–482 · pages 477–482</p>

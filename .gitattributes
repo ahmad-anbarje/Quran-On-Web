@@ -10,3 +10,7 @@
 *.woff2 binary
 *.woff  binary
 *.ttf   binary
+
+# Minified by scripts/minify.js from the file beside them: generated, so folded away in diffs
+public/js/*.min.js linguist-generated=true
+public/css/*.min.css linguist-generated=true

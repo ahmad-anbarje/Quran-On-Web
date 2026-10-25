@@ -42,6 +42,7 @@ const EOL = String.fromCharCode(10);
 const rec = require('./recitations');
 const surahText = require('./surah-text');
 const ayahPages = require('./ayah-pages');
+const minify = require('./minify');
 const pageWords = require('./page-words');
 const DEFAULT_RECITATION = rec.defaultId();
 
@@ -452,15 +453,23 @@ function named(html) {
    keep them for a year: a stale copy cannot outlive an edit, and nobody has
    to remember to bump a number. */
 function versioned(html) {
-  return html.replace(/((?:src|href|data-src)="(\/(?:js|css)\/[^"?]+\.(?:js|css)))(?:\?v=[^"]*)?"/g, (all, attr, file) => {
-    const f = path.join(PUBLIC, file);
+  return html.replace(/((?:src|href|data-src)=")(\/(?:js|css)\/[^"?]+\.(?:js|css))(?:\?v=[^"]*)?"/g, (all, attr, file) => {
+    // The minified copy beside it, where there is one (scripts/minify.js)
+    const min = /\.min\.(js|css)$/.test(file) ? file : minify.minName(file);
+    const use = fs.existsSync(path.join(PUBLIC, min)) ? min : file;
+    const f = path.join(PUBLIC, use);
     if (!fs.existsSync(f)) return all;
     const hash = crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex').slice(0, 10);
-    return `${attr}?v=${hash}"`;
+    return `${attr}${use}?v=${hash}"`;
   });
 }
 
 function main() {
+  const changed = minify.build();
+  console.log(changed === null
+    ? 'js, css       esbuild not installed: the committed .min files kept'
+    : `js, css       ${minify.SOURCES.length} minified, ${changed} changed`);
+
   const indexPath = path.join(PUBLIC, 'index.html');
   let index = fs.readFileSync(indexPath, 'utf8');
 
