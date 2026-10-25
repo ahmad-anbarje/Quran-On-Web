@@ -44,6 +44,35 @@ KEPT_IDS = {
 # Translations kept from Tanzil, which this script does not own
 TANZIL = {'sahih'}
 
+# Languages QuranEnc does not have, from Tanzil: its own credit, its language in Arabic
+TANZIL_MORE = {
+    'ber.mensur': ('ber', 'Amazigh', 'الأمازيغية', 'Tamaziɣt', 'Ramdane At Mansour', 'رمضان آيت منصور'),
+    'cs.hrbek': ('cs', 'Czech', 'التشيكية', 'Čeština', 'Ivan Hrbek', 'إيفان هربك'),
+    'cs.nykl': ('cs', 'Czech', 'التشيكية', 'Čeština', 'A. R. Nykl', 'ألويس ريتشارد نيكل'),
+    'dv.divehi': ('dv', 'Divehi', 'الديفيهية', 'ދިވެހި', 'Office of the President of Maldives', 'مكتب رئيس جمهورية المالديف'),
+    'ku.asan': ('ckb', 'Kurdish', 'الكردية', 'کوردی', 'Burhan Muhammad-Amin', 'برهان محمد أمين'),
+    'no.berg': ('no', 'Norwegian', 'النرويجية', 'Norsk', 'Einar Berg', 'أينار بيرغ'),
+    'pl.bielawskiego': ('pl', 'Polish', 'البولندية', 'Polski', 'Józef Bielawski', 'يوزف بيلافسكي'),
+    'sd.amroti': ('sd', 'Sindhi', 'السندية', 'سنڌي', 'Taj Mehmood Amroti', 'تاج محمود أمروتي'),
+    'tt.nugman': ('tt', 'Tatar', 'التتارية', 'Татарча', 'Yakub Ibn Nugman', 'يعقوب بن نعمان'),
+}
+
+
+def tanzil_rows(tid):
+    os.makedirs(CACHE, exist_ok=True)
+    f = os.path.join(CACHE, f'tanzil-{tid}.txt')
+    if not os.path.exists(f) or os.path.getsize(f) == 0:
+        data = get(f'https://tanzil.net/trans/?transID={tid}&type=txt-2')
+        with open(f, 'wb') as out:
+            out.write(data)
+    rows = []
+    for line in open(f, encoding='utf-8'):
+        if line.startswith('#') or '|' not in line:
+            continue
+        sura, aya, text = line.rstrip('\n').split('|', 2)
+        rows.append((int(sura), int(aya), text))
+    return rows
+
 ISO = {
     'afar': 'aa', 'albanian': 'sq', 'amharic': 'am', 'ankobambara': 'nqo', 'asante': 'ak',
     'assamese': 'as', 'azeri': 'az', 'belarusian': 'be', 'bengali': 'bn', 'bisayan': 'ceb',
@@ -213,6 +242,24 @@ def rows(key):
         con.close()
 
 
+def write_whole(tid, by, counts):
+    """Writes a translation only if it is whole, in order, and nothing blank: one slip would
+    put a meaning under the wrong ayah, and a reader would meet a blank one. Such a
+    translation is left out, not patched; what is wrong with it is returned."""
+    for n, v in counts.items():
+        got = sorted(by.get(n, []))
+        if [a for a, _ in got] != list(range(1, v + 1)):
+            return f'surah {n} has {len(got)} ayahs, wants {v}'
+        if any(not t for _, t in got):
+            return f'surah {n} has an empty ayah'
+    out = os.path.join(DATA, 'translation', tid)
+    os.makedirs(out, exist_ok=True)
+    for n in counts:
+        with open(os.path.join(out, f'{n}.json'), 'w', encoding='utf-8', newline='\n') as f:
+            json.dump([t for _, t in sorted(by[n])], f, ensure_ascii=False, separators=(',', ':'))
+    return None
+
+
 def main():
     surahs = json.load(open(os.path.join(DATA, 'surahs.json'), encoding='utf-8'))
     counts = {s['id']: s['v'] for s in surahs}
@@ -227,28 +274,12 @@ def main():
         by = {}
         for sura, aya, text in rows(key):
             by.setdefault(int(sura), []).append((int(aya), clean(text, int(aya), int(sura), key)))
-        # Whole, in order, and nothing blank: one slip would put a meaning under the wrong ayah,
-        # and a reader would meet a blank one. Such a translation is left out, not patched.
-        gap = None
-        for n, v in counts.items():
-            got = sorted(by.get(n, []))
-            if [a for a, _ in got] != list(range(1, v + 1)):
-                gap = f'surah {n} has {len(got)} ayahs, wants {v}'
-            elif any(not t for _, t in got):
-                gap = f'surah {n} has an empty ayah'
-            if gap:
-                break
+        tid = KEPT_IDS.get(key, key)
+        gap = write_whole(tid, by, counts)
         if gap:
             skipped.append(f'{key}: {gap}')
             print(f'skipped {key}: {gap}', flush=True)
             continue
-
-        tid = KEPT_IDS.get(key, key)
-        out = os.path.join(DATA, 'translation', tid)
-        os.makedirs(out, exist_ok=True)
-        for n in counts:
-            with open(os.path.join(out, f'{n}.json'), 'w', encoding='utf-8', newline='\n') as f:
-                json.dump([t for _, t in sorted(by[n])], f, ensure_ascii=False, separators=(',', ':'))
 
         c = credit(key)
         if not c['ar']:
@@ -271,6 +302,26 @@ def main():
             'key': key,
         })
         print(f'{tid:24} {c["ar"][0]} · {c["ar"][1]}', flush=True)
+
+    for key, (iso, en, ar, native, by_en, by_ar) in TANZIL_MORE.items():
+        by = {}
+        for sura, aya, text in tanzil_rows(key):
+            by.setdefault(sura, []).append((aya, clean(text, aya, sura)))
+        tid = 'tanzil-' + key.replace('.', '-')
+        gap = write_whole(tid, by, counts)
+        if gap:
+            skipped.append(f'{key}: {gap}')
+            print(f'skipped {key}: {gap}', flush=True)
+            continue
+        catalogue.append({
+            'id': tid, 'lang': iso,
+            'dir': direction([t for _, t in by[1]] + [t for _, t in by[2][:20]]),
+            'complex': False,
+            'language': {'en': en, 'ar': ar, 'native': native},
+            'name': {'en': by_en, 'ar': by_ar},
+            'source': 'tanzil', 'key': key,
+        })
+        print(f'{tid:24} {ar} · {by_ar}', flush=True)
 
     for t in catalogue:
         if t['language']['en'] is None:

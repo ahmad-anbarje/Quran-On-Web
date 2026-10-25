@@ -29,8 +29,8 @@
 - Four reciters in five recordings, with each word highlighted as it is recited
 - The word being recited spelled out in Latin letters (transliteration), with its
   English meaning beneath
-- The meaning of each ayah in a window that keeps up with the recitation: 119
-  translations in 78 languages, and the Tafsir al-Muyassar; each credited, with
+- The meaning of each ayah in a window that keeps up with the recitation: 127
+  translations in 85 languages, and the Tafsir al-Muyassar; each credited, with
   a link to its source
 - Find a translation by typing: a language in Arabic, English or its own name,
   or a translator; the first time, the device's language is offered
@@ -107,7 +107,7 @@ pages, headers and Basmalahs are laid out.
 | Command | What it does |
 |---|---|
 | `npm run build:pages` | Regenerates the surah and juz pages, the sitemap and `robots.txt` from `public/index.html` |
-| `python scripts/fetch-quranenc.py` | Downloads every QuranEnc translation of the meanings, checked ayah by ayah; one left incomplete is left out |
+| `python scripts/fetch-quranenc.py` | Downloads every QuranEnc translation of the meanings, and from Tanzil the languages QuranEnc lacks, checked ayah by ayah; one left incomplete is left out |
 | `npm run fetch:translations` | Downloads Saheeh International, the tafsir and the words' English (one-off; checks the words line up with the Latin) |
 | `npm run fetch:reference` | Downloads the reference texts the data checks compare against (one-off) |
 | `npm test` | All checks: data, fonts, speed and pages |
@@ -138,6 +138,8 @@ The mushaf typefaces are by the King Fahd Glorious Quran Printing Complex. Page
 layout from Quran.com; reference texts from Tanzil and alquran.cloud; word
 timings from QUL by Tarteel. The translations are from
 [QuranEnc](https://quranenc.com), the Encyclopedia of the Noble Quran, each
-credited to its translator or publisher as QuranEnc credits it, with Saheeh
-International and the King Fahd Complex's Tafsir al-Muyassar from Tanzil. The
+credited to its translator or publisher as QuranEnc credits it. Saheeh
+International, the languages QuranEnc lacks (Amazigh, Czech, Divehi, Norwegian,
+Polish, Sindhi, Tatar) and the King Fahd Complex's Tafsir al-Muyassar are from
+Tanzil. The
 words' English is Quran.com's word-by-word data. The code is [MIT](LICENSE).
