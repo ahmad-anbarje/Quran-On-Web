@@ -24,7 +24,10 @@ function arabicIndex(q) {
 }
 
 function registerTools(server, q) {
-  server.registerTool('get_ayah', {
+  // The directory reads a tool's name from its annotations: the one title, given in both places
+  const tool = (name, def, fn) => server.registerTool(name, { ...def, annotations: { title: def.title, ...def.annotations } }, fn);
+
+  tool('get_ayah', {
     title: 'Get ayahs',
     description:
       'The Arabic of one ayah or a run of them (up to 50), with a translation. ' +
@@ -62,7 +65,7 @@ function registerTools(server, q) {
     });
   });
 
-  server.registerTool('search', {
+  tool('search', {
     title: 'Search the Quran',
     description:
       'Ayahs containing the words given: in the Arabic (diacritics optional) or, with "translation", ' +
@@ -106,7 +109,7 @@ function registerTools(server, q) {
     return reply({ query, in: translation ? translationName(q, translation) : 'Arabic', total, results: found });
   });
 
-  server.registerTool('get_tafsir', {
+  tool('get_tafsir', {
     title: 'Get tafsir',
     description: 'The Tafsir al-Muyassar (King Fahd Complex, Arabic) of one ayah or a run of them, up to 50.',
     inputSchema: {
@@ -125,7 +128,7 @@ function registerTools(server, q) {
     return reply({ tafsir: 'Al-Tafsir al-Muyassar, King Fahd Complex (Arabic)', ayahs: out, link: q.link(s) });
   });
 
-  server.registerTool('word_by_word', {
+  tool('word_by_word', {
     title: 'Word by word',
     description: 'Each word of an ayah: its Latin reading and its meaning, in English or another language list_translations shows as having word meanings.',
     inputSchema: {
@@ -151,7 +154,7 @@ function registerTools(server, q) {
     });
   });
 
-  server.registerTool('get_recitation', {
+  tool('get_recitation', {
     title: 'Get a recitation',
     description:
       'The recording of a surah: a link to the MP3, its length, and where each ayah starts and ends, ' +
@@ -183,7 +186,7 @@ function registerTools(server, q) {
     });
   });
 
-  server.registerTool('list_surahs', {
+  tool('list_surahs', {
     title: 'List the surahs',
     description: 'All 114 surahs: number, names, ayah count and mushaf pages.',
     annotations: { readOnlyHint: true, openWorldHint: false },
@@ -191,7 +194,7 @@ function registerTools(server, q) {
     number: s.id, name: s.en, arabic: s.name, ayahs: s.v, pages: [s.from, s.to], link: q.link(s.id),
   }))));
 
-  server.registerTool('list_translations', {
+  tool('list_translations', {
     title: 'List the translations',
     description: 'The translations on offer, optionally for one language: id, language, translator. Also which languages have word-by-word meanings.',
     inputSchema: {
@@ -208,7 +211,7 @@ function registerTools(server, q) {
     });
   });
 
-  server.registerTool('list_reciters', {
+  tool('list_reciters', {
     title: 'List the reciters',
     description: 'The recordings on offer: id, reciter, and what tells two recordings by one voice apart.',
     annotations: { readOnlyHint: true, openWorldHint: false },
