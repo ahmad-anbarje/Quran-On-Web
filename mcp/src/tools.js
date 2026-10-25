@@ -31,7 +31,7 @@ function registerTools(server, q) {
     title: 'Get ayahs',
     description:
       'The Arabic of one ayah or a run of them (up to 50), with a translation. ' +
-      'Defaults to the King Fahd Complex English (Hilali & Muhsin Khan); list_translations gives the other ids.',
+      'Defaults to the King Fahd Complex English (Hilali & Muhsin Khan).',
     inputSchema: {
       surah: surahArg,
       ayah: z.number().int().min(1).describe('First ayah'),
@@ -130,7 +130,7 @@ function registerTools(server, q) {
 
   tool('word_by_word', {
     title: 'Word by word',
-    description: 'Each word of an ayah: its Latin reading and its meaning, in English or another language list_translations shows as having word meanings.',
+    description: 'Each word of an ayah: its Latin reading and its meaning, in English or one of the other languages that have word meanings.',
     inputSchema: {
       surah: surahArg,
       ayah: z.number().int().min(1),
@@ -158,7 +158,7 @@ function registerTools(server, q) {
     title: 'Get a recitation',
     description:
       'The recording of a surah: a link to the MP3, its length, and where each ayah starts and ends, ' +
-      'in seconds, with a link that starts at a given ayah. list_reciters gives the reciter ids.',
+      'in seconds, with a link that starts at a given ayah.',
     inputSchema: {
       surah: surahArg,
       reciter: z.string().optional().describe('Reciter id; defaults to the site\'s own'),
@@ -203,8 +203,10 @@ function registerTools(server, q) {
     annotations: { readOnlyHint: true, openWorldHint: false },
   }, ({ language }) => {
     const want = language ? fold(language) : null;
-    const list = q.translations.filter((t) => !want ||
-      [t.lang, t.language.en, t.language.native, t.language.ar].some((x) => x && fold(x).includes(want)));
+    // A code is matched whole ("ur" is not in "Turkish"); a name may be part of one ("kurd")
+    const isCode = want && q.translations.some((t) => t.lang === want);
+    const list = q.translations.filter((t) => !want || (isCode ? t.lang === want
+      : [t.language.en, t.language.native, t.language.ar].some((x) => x && fold(x).includes(want))));
     return reply({
       translations: list.map((t) => ({ id: t.id, language: t.language.en, code: t.lang, translator: t.name.en })),
       wordByWordLanguages: q.wordLanguages(),
