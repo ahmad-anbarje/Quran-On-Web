@@ -1285,6 +1285,25 @@
     m.oncancel = function () { if (motion === m) motion = null; };
   }
 
+  /* The meaning window's code is fetched the first time it is opened, not on
+     every visit: most readers never open it. The page names the file, with
+     its version, on #meaning-script. */
+  var meaningLoad = null;
+  function meaningScript() {
+    if (global.Meaning) return Promise.resolve();
+    if (meaningLoad) return meaningLoad;
+    var tag = document.getElementById('meaning-script');
+    if (!tag) return Promise.resolve();
+    meaningLoad = new Promise(function (resolve) {
+      var s = document.createElement('script');
+      s.src = tag.getAttribute('data-src');
+      s.onload = resolve;
+      s.onerror = function () { meaningLoad = null; resolve(); };
+      document.head.appendChild(s);
+    });
+    return meaningLoad;
+  }
+
   function act(what) {
     if (what === 'close') { closeMenu(); return; }
     /* Folding the menu away is about the menu, not about the recitation, so it
@@ -1292,11 +1311,12 @@
     if (what === 'minimize') { setMinimized(!minimized); return; }
     /* Meaning needs no recording either: the text is there for every surah. */
     if (what === 'meaning') {
-      if (global.Meaning) {
-        if (Meaning.open()) Meaning.close();
-        else Meaning.show(surah, (playing && at) || menuAt.v || at || 1);
-      }
-      sync();
+      if (global.Meaning && Meaning.open()) { Meaning.close(); sync(); return; }
+      var on = surah, v = (playing && at) || menuAt.v || at || 1;
+      meaningScript().then(function () {
+        if (global.Meaning && surah === on) Meaning.show(on, v);
+        sync();
+      });
       return;
     }
     if (!timing) return;

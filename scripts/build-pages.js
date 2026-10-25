@@ -451,7 +451,7 @@ function named(html) {
    keep them for a year: a stale copy cannot outlive an edit, and nobody has
    to remember to bump a number. */
 function versioned(html) {
-  return html.replace(/((?:src|href)="(\/(?:js|css)\/[^"?]+\.(?:js|css)))(?:\?v=[^"]*)?"/g, (all, attr, file) => {
+  return html.replace(/((?:src|href|data-src)="(\/(?:js|css)\/[^"?]+\.(?:js|css)))(?:\?v=[^"]*)?"/g, (all, attr, file) => {
     const f = path.join(PUBLIC, file);
     if (!fs.existsSync(f)) return all;
     const hash = crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex').slice(0, 10);

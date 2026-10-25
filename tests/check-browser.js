@@ -97,8 +97,11 @@ async function main() {
     await page.evaluate(() => { const o = document.getElementById('overlay'); if (o && getComputedStyle(o).display !== 'none') o.click(); });
   }
 
-  /* The visible pages, and whether each has its font */
-  const drawn = (page) => page.evaluate(() => [...document.querySelectorAll('.page-section')]
+  /* The pages being read, and whether each has its font: in two-page mode
+     the spread on show, not the neighbours staged behind it, which are built
+     when the browser is idle; otherwise those on screen */
+  const drawn = (page) => page.evaluate(() => [...document.querySelectorAll(
+    document.querySelector('.page-section.in-spread') ? '.page-section.in-spread' : '.page-section')]
     .filter((s) => { const r = s.getBoundingClientRect(); return r.width && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth; })
     .map((s) => ({ page: +s.dataset.page, font: !!(s.querySelector('.mushaf') || {}).style?.fontFamily, words: s.querySelectorAll('.m-word').length })));
 
