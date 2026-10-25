@@ -145,12 +145,15 @@ function open(root) {
     return byRecitation.has(id) ? file(`r:${id}:${s}`, ayahTimes, PUBLIC, 'surah', String(s), timingName(id, s)) : null;
   }
 
+  /* Tanzil's Uthmani text, verbatim with its notice, for whoever builds on it; read when asked for */
+  function uthmaniText() { return fs.readFileSync(path.join(root, 'data', 'quran-uthmani.txt'), 'utf8'); }
+
   /* The whole timing file, words and all, as the site serves it */
   function timingLink(id, s) { return `${SITE}/surah/${s}/${timingName(id, s)}`; }
 
   return {
     SITE, AUDIO, surahs, translations, recitations, arabic, plain,
-    surah, page, link, ayahLink, readerLink, translation, tafsir, words, wordLanguages, timing, mushaf, timingLink, hafs: surahText.hafs,
+    surah, page, link, ayahLink, readerLink, translation, tafsir, words, wordLanguages, timing, mushaf, timingLink, uthmaniText, hafs: surahText.hafs,
     hasTranslation: (id) => byTranslation.has(id),
     translationInfo: (id) => byTranslation.get(id) || null,
     recitation: (id) => byRecitation.get(id) || null,

@@ -172,6 +172,26 @@ test('get_file: a recording\'s timing file, and the mushaf\'s fonts for a surah 
   assert.ok((await call('get_file', { kind: 'font' })).error);
 });
 
+test('get_file: the data sets, and only the files it names', async () => {
+  const d = (await call('get_file', { kind: 'data', translation: 'sahih' })).value;
+  assert.strictEqual(d.download, 'https://readqurantoday.com/mcp/files/translation-sahih.json');
+  assert.ok(['quran-uthmani', 'mushaf', 'translation', 'tafsir', 'words'].every((id) => d.datasets.some((x) => x.id === id)));
+  const uthmani = await (await fetch(base + '/mcp/files/quran-uthmani.txt')).text();
+  assert.strictEqual(uthmani.split('\n').filter((l) => l.trim() && !l.startsWith('#')).length, 6236);
+  assert.match(uthmani, /Tanzil/);
+  const tr = await (await fetch(base + '/mcp/files/translation-sahih.json')).json();
+  assert.strictEqual(tr.surahs.length, 114);
+  assert.strictEqual(tr.surahs[1].length, 286);
+  const tf = await (await fetch(base + '/mcp/files/tafsir-muyassar.json')).json();
+  assert.strictEqual(tf.surahs[113].length, 6);
+  // Nothing else: an unknown id, a path that climbs out, a file of the server's own
+  for (const p of ['/mcp/files/translation-nope.json', '/mcp/files/..%2f..%2fpackage.json', '/mcp/files/../src/server.js',
+    '/mcp/files/translation-..%2f..%2fdata.json', '/mcp/files/quran-uthmani.txt/x', '/mcp/files/']) {
+    assert.strictEqual((await fetch(base + p)).status, 404, p);
+  }
+  assert.ok((await call('get_file', { kind: 'data', translation: 'nope' })).error);
+});
+
 test('the lists: surahs, translations narrowed by language, reciters', async () => {
   assert.strictEqual((await call('list_surahs', {})).value.length, 114);
   const urdu = (await call('list_translations', { language: 'urdu' })).value.translations;

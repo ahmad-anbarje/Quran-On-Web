@@ -17,7 +17,7 @@
 const { z } = require('zod');
 const { MAX_RESULTS, DEFAULT_TRANSLATION, fold, reply, fail, checkAyahs, translationName } = require('./shared');
 const { playerMeta } = require('./app');
-const { fileUrl, fileName } = require('./files');
+const { fileUrl, fileName, datasets } = require('./files');
 
 const surahArg = z.number().int().min(1).max(114).describe('Surah number, 1-114');
 
@@ -212,16 +212,27 @@ function registerTools(server, q) {
       'Links to download a surah\'s files: "text", the Arabic (optionally with a translation and the ' +
       'Tafsir al-Muyassar) as a .txt; "audio", its recording as an MP3 (leave out the surah for all of a ' +
       'reciter\'s); "timing", where each ayah and word of a recording starts and ends, as JSON; "font", the ' +
-      'mushaf\'s fonts for the surah\'s pages (QCF V2, one a page) with the glyphs each ayah is written in.',
+      'mushaf\'s fonts for the surah\'s pages (QCF V2, one a page) with the glyphs each ayah is written in; ' +
+      '"data", for developers, the whole data sets (the Uthmani text, a translation or the tafsir in one file, ' +
+      'the mushaf layout, word by word), with their sources.',
     inputSchema: {
-      kind: z.enum(['text', 'audio', 'timing', 'font']),
+      kind: z.enum(['text', 'audio', 'timing', 'font', 'data']),
       surah: surahArg.optional().describe('Surah number, 1-114; needed for all but audio'),
-      translation: z.string().optional().describe('For text: a translation id to put under each ayah, e.g. "hilali"'),
+      translation: z.string().optional().describe('For text: a translation id to put under each ayah, e.g. "hilali"; for data: the translation to give whole'),
       tafsir: z.boolean().optional().describe('For text: the Tafsir al-Muyassar under each ayah'),
       reciter: z.string().optional().describe('For audio and timing: reciter id; defaults to the site\'s own'),
     },
     annotations: { readOnlyHint: true, openWorldHint: false },
   }, ({ kind, surah: s, translation, tafsir, reciter }) => {
+    if (kind === 'data') {
+      if (translation && !q.hasTranslation(translation)) return fail(`No translation "${translation}"; list_translations gives the ids.`);
+      const sets = datasets(q);
+      return reply({
+        ...(translation ? { download: `${q.SITE}/mcp/files/translation-${translation}.json`, translation: translationName(q, translation) } : {}),
+        datasets: sets,
+        note: 'Credit each source as given. Free to use; the files are read-only and rate-limited.',
+      });
+    }
     if (kind === 'text') {
       if (!s) return fail('A text file is one surah: give its number.');
       if (translation && !q.hasTranslation(translation)) return fail(`No translation "${translation}"; list_translations gives the ids.`);

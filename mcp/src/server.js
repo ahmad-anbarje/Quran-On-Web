@@ -76,6 +76,7 @@ function createServer(options = {}) {
     if (url.startsWith('/mcp/files/') && (req.method === 'GET' || req.method === 'HEAD')) {
       if (!allowed(ip)) return tooMany();
       if (serveFile(q, req, res)) return;
+      return send(res, 404, { error: 'no such file; get_file with kind "data" lists them' });
     }
     if (url !== '/mcp') return send(res, 404, { error: 'not found; the MCP endpoint is /mcp' });
 
