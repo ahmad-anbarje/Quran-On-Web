@@ -30,7 +30,8 @@
 - The word being recited spelled out in Latin letters (transliteration), with its
   meaning beneath, in the chosen translation's language where it has one word by
   word (Urdu, Indonesian, Bengali, Turkish, Persian, Hindi) and in English otherwise
-- The meaning of each ayah in a window that keeps up with the recitation: 127
+- The meaning of each ayah in a window that keeps up with the recitation, moved
+  and sized as the reader likes: 127
   translations in 85 languages, and the Tafsir al-Muyassar; each credited, with
   a link to its source
 - Find a translation by typing: a language in Arabic, English or its own name,
