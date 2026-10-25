@@ -22,6 +22,7 @@ const { StreamableHTTPServerTransport } = require('@modelcontextprotocol/sdk/ser
 const quran = require('./quran');
 const { build } = require('./mcp');
 const { serveFile } = require('./files');
+const { feedbackUrl } = require('./feedback');
 
 const VERSION = require('../package.json').version;
 const MAX_BODY = 64 * 1024;
@@ -31,6 +32,7 @@ function createServer(options = {}) {
   const root = options.root || path.join(__dirname, '..', '..');
   const q = quran.open(root);
   const perMinute = options.perMinute || PER_MINUTE;
+  const reports = feedbackUrl(options);
 
   /* Requests a minute, by address; the map is swept as it goes, so it holds
      only the last minute's callers */
@@ -98,7 +100,7 @@ function createServer(options = {}) {
       try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch (e) {
         return send(res, 400, rpcError(-32700, 'Parse error'));
       }
-      const server = build(q, VERSION);
+      const server = build(q, VERSION, { feedbackUrl: reports });
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
       res.on('close', () => { transport.close(); server.close(); });
       try {

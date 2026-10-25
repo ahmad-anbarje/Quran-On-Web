@@ -45,6 +45,7 @@ function openStore(dbPath) {
     `);
     const byIpSince = db.prepare('SELECT COUNT(*) AS n FROM reports WHERE ip = ? AND at > ?');
     const allSince = db.prepare('SELECT COUNT(*) AS n FROM reports WHERE at > ?');
+    const sourceSince = db.prepare('SELECT COUNT(*) AS n FROM reports WHERE source = ? AND at > ?');
     const remove = db.prepare('DELETE FROM reports WHERE id = ?');
     const removeAll = db.transaction((ids) => ids.reduce((n, id) => n + remove.run(id).changes, 0));
     const counts = db.prepare('SELECT kind, COUNT(*) AS n FROM reports GROUP BY kind');
@@ -61,6 +62,10 @@ function openStore(dbPath) {
 
         countAll(since) {
             return allSince.get(since).n;
+        },
+
+        countSource(source, since) {
+            return sourceSince.get(source, since).n;
         },
 
         /** Newest first, optionally narrowed by source, kind and severity; the ip is never returned. */

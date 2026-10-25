@@ -1,6 +1,6 @@
 const KINDS = ['bug', 'suggestion', 'feature', 'other'];
 const SEVERITIES = ['low', 'medium', 'high'];
-const SOURCES = ['android', 'web'];
+const SOURCES = ['android', 'web', 'mcp'];   // mcp: sent by an AI assistant, through the MCP server
 const EMAIL = /^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,}$/;
 const MIN_MESSAGE = 5;
 

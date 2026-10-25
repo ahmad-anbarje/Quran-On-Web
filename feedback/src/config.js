@@ -16,6 +16,9 @@ module.exports = {
         perHour: 5,
         perDay: 20,
         allPerDay: 500,
+        // Every AI assistant's reports together, through the MCP server
+        mcpPerHour: 10,
+        mcpPerDay: 40,
     },
     shown: 300,
     dev: process.argv.includes('--dev') || process.env.FEEDBACK_DEV === '1',

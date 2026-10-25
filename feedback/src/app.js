@@ -25,7 +25,17 @@ function createApp(store, { limits, maxBody, shown, dev = false, now = () => Mat
 
         const ip = clientIp(req);
         const at = now();
-        if (store.countFrom(ip, at - HOUR) >= limits.perHour
+        /* An assistant's reports all come from its maker's few servers, so a
+           budget per address would be one for every user of it: they share
+           a budget of their own instead, which also caps what claiming to be
+           one can get past the per-address limits */
+        if (report.source === 'mcp') {
+            if (store.countSource('mcp', at - HOUR) >= limits.mcpPerHour
+                || store.countSource('mcp', at - DAY) >= limits.mcpPerDay
+                || store.countAll(at - DAY) >= limits.allPerDay) {
+                return res.status(429).json({ error: 'too_many' });
+            }
+        } else if (store.countFrom(ip, at - HOUR) >= limits.perHour
             || store.countFrom(ip, at - DAY) >= limits.perDay
             || store.countAll(at - DAY) >= limits.allPerDay) {
             return res.status(429).json({ error: 'too_many' });

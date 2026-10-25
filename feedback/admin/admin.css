@@ -139,6 +139,7 @@ button,
 
 .source.android { color: #276738; border-color: #b9dcc0; }
 .source.web { color: var(--accent); border-color: #bcd6ea; }
+.source.mcp { color: #6a3d9a; border-color: #d6c6ea; }
 
 .sev {
     padding: 1px 8px;

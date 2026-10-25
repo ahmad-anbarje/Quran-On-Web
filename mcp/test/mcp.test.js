@@ -11,15 +11,27 @@ const { StreamableHTTPClientTransport } = require('@modelcontextprotocol/sdk/cli
 const { createServer } = require('../src/server');
 const { fold } = require('../src/shared');
 
-let http, base;
+let http, base, inbox;
+const received = [];
 
 test.before(async () => {
-  http = createServer({ perMinute: 1000 });
+  // A stand-in for the feedback service: takes two reports, then says too many
+  inbox = require('http').createServer((req, res) => {
+    let b = '';
+    req.on('data', (c) => { b += c; });
+    req.on('end', () => {
+      received.push(JSON.parse(b));
+      res.writeHead(received.length <= 2 ? 201 : 429, { 'Content-Type': 'application/json' });
+      res.end('{}');
+    });
+  });
+  await new Promise((ok) => inbox.listen(0, '127.0.0.1', ok));
+  http = createServer({ perMinute: 1000, feedbackUrl: `http://127.0.0.1:${inbox.address().port}/api/feedback` });
   await new Promise((ok) => http.listen(0, '127.0.0.1', ok));
   base = `http://127.0.0.1:${http.address().port}`;
 });
 
-test.after(() => new Promise((ok) => http.close(ok)));
+test.after(() => Promise.all([new Promise((ok) => http.close(ok)), new Promise((ok) => inbox.close(ok))]));
 
 async function connect() {
   const client = new Client({ name: 'test', version: '1' });
@@ -41,7 +53,7 @@ test('offers its tools and file addresses', async () => {
   const client = await connect();
   const tools = (await client.listTools()).tools.map((t) => t.name).sort();
   assert.deepStrictEqual(tools, ['get_ayah', 'get_file', 'get_recitation', 'get_tafsir', 'list_reciters',
-    'list_surahs', 'list_translations', 'search', 'word_by_word']);
+    'list_surahs', 'list_translations', 'search', 'send_feedback', 'word_by_word']);
   const templates = (await client.listResourceTemplates()).resourceTemplates.map((t) => t.uriTemplate).sort();
   assert.deepStrictEqual(templates, ['quran://recitation/{reciter}/{surah}', 'quran://surah/{surah}',
     'quran://tafsir/{surah}', 'quran://translation/{id}/{surah}']);
@@ -209,6 +221,34 @@ test('files by address', async () => {
   const rec = JSON.parse((await client.readResource({ uri: 'quran://recitation/maher-al-muaiqly-qul/1' })).contents[0].text);
   assert.match(rec.audio, /001\.mp3$/);
   await client.close();
+});
+
+test('send_feedback: the reader\'s report reaches the inbox, marked as from an assistant, and says it is not read-only', async () => {
+  const client = await connect();
+  const tool = (await client.listTools()).tools.find((t) => t.name === 'send_feedback');
+  assert.strictEqual(tool.annotations.readOnlyHint, false);
+  await client.close();
+  const r = await call('send_feedback', { kind: 'bug', message: 'The translation of this ayah has a typo', surah: 2, ayah: 255, reciter: 'mishari-rashid-al-afasy' });
+  assert.ok(r.value.sent);
+  const got = received[received.length - 1];
+  assert.strictEqual(got.source, 'mcp');
+  assert.match(got.message, /typo\n\nAbout: 2:255 \(Al-Baqarah\), mishari-rashid-al-afasy$/);
+  assert.strictEqual(got.app.page, 42);
+  assert.ok((await call('send_feedback', { kind: 'bug', message: 'too short' })).error);   // under 10
+  assert.ok((await call('send_feedback', { kind: 'bug', message: 'Something is wrong here', reciter: 'nobody' })).error);
+  assert.ok(!(await call('send_feedback', { kind: 'other', message: 'A second report, accepted' })).error);
+  const busy = await call('send_feedback', { kind: 'other', message: 'A third, over the budget' });
+  assert.ok(busy.error && /Too many/.test(busy.text));
+});
+
+test('without a feedback service, send_feedback is not offered', async () => {
+  const bare = createServer({ perMinute: 1000, feedbackUrl: '' });
+  await new Promise((ok) => bare.listen(0, '127.0.0.1', ok));
+  const client = new Client({ name: 'test', version: '1' });
+  await client.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${bare.address().port}/mcp`)));
+  assert.ok(!(await client.listTools()).tools.some((t) => t.name === 'send_feedback'));
+  await client.close();
+  await new Promise((ok) => bare.close(ok));
 });
 
 test('a caller over its budget is told to wait', async () => {

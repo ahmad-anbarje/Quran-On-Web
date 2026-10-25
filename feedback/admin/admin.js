@@ -10,7 +10,7 @@
         other: 'Other',
     };
 
-    const SOURCES = { android: 'Android', web: 'Website' };
+    const SOURCES = { android: 'Android', web: 'Website', mcp: 'AI (MCP)' };
 
     const FILTERS = [
         { label: 'All' },

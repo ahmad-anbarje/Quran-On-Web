@@ -30,6 +30,8 @@ services:
       dockerfile: mcp/Dockerfile
     environment:
       MCP_PER_MINUTE: ${MCP_PER_MINUTE:-60}
+      # No feedback service in this image, so no send_feedback
+      MCP_FEEDBACK_URL: ""
     read_only: true
     mem_limit: 192m
     restart: unless-stopped

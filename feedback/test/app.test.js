@@ -10,7 +10,7 @@ const { createApp } = require('../src/app');
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'feedback-test-'));
 const store = openStore(path.join(dir, 'test.db'));
 const app = createApp(store, {
-    limits: { perHour: 5, perDay: 20, allPerDay: 500 },
+    limits: { perHour: 5, perDay: 20, allPerDay: 500, mcpPerHour: 3, mcpPerDay: 10 },
     maxBody: '8kb',
     shown: 300,
 });
@@ -208,4 +208,17 @@ test('deleting takes an id and nothing else', async () => {
 
 test('other paths are not found', async () => {
     assert.equal((await fetch(`${base}/whatever`)).status, 404);
+});
+
+test('reports from AI assistants share one budget, whatever the address', async () => {
+    const send = (ip) => fetch(`${base}/api/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Real-IP': ip },
+        body: JSON.stringify({ source: 'mcp', kind: 'bug', message: 'The translation of 2:255 has a typo', app: { page: 42 } }),
+    });
+    const got = [];
+    for (const ip of ['198.51.100.1', '198.51.100.2', '198.51.100.3', '198.51.100.4']) got.push((await send(ip)).status);
+    assert.deepEqual(got, [201, 201, 201, 429]);
+    const list = await (await fetch(`${base}/admin/reports?source=mcp`)).json();
+    assert.equal(list.reports.length, 3);
 });
