@@ -464,6 +464,8 @@ body.no-fullscreen .fs-key { display: none !important; }
    about itself — the English name, the ayah count, the page it starts on. */
 .drawer-tab .ic { width: 22px; height: 22px; }
 .drawer-tab:hover { background: var(--primary-soft); color: var(--primary); }
+/* On that tint in dark mode the accent falls short of 4.5:1; its lighter shade clears it */
+body.dark-mode .drawer-tab:hover { color: var(--primary-light); }
 .drawer-tab.on {
   color: var(--primary);
   border-bottom-color: var(--primary);

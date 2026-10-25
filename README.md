@@ -150,6 +150,7 @@ link back.
 | `npm run fetch:words` | Downloads the words' meanings in Urdu, Indonesian, Bengali, Turkish, Persian and Hindi from Quran.com, checked word by word against the Latin; a word it lacks shows in English |
 | `npm run fetch:reference` | Downloads the reference texts the data checks compare against (one-off) |
 | `npm test` | All checks: data, fonts, speed and pages |
+| `npm run test:browser` | The reader in Chromium: pages turn and draw (on a slow line too), the player and meaning window, the 14 languages, offline, accessibility (`npx playwright install chromium` once) |
 | `cd mcp && npm test` | The MCP server, through the SDK's own client |
 | `npm run sync:android` | Copies the reader's data into the native Android app |
 

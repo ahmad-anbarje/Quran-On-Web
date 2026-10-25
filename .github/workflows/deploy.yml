@@ -69,6 +69,13 @@ jobs:
             exit 1
           fi
 
+      # The reader in a real browser: pages turn and draw, the player and the
+      # meaning window, the fourteen languages, offline, accessibility.
+      - name: In the browser
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:browser
+
       # The feedback service: validation, rate limits, and the reports list.
       - name: Feedback service
         working-directory: feedback

@@ -60,6 +60,9 @@
   }
 
   function drop(family) {
+    /* Never fetched: whoever is waiting on it hears so, rather than waiting for good */
+    var f = faces[family];
+    if (f.promise && !f.started) f.reject(new Error('dropped before it was fetched'));
     order.splice(order.indexOf(family), 1);
     try { document.fonts.delete(faces[family].face); } catch (e) { /* already gone */ }
     delete faces[family];
@@ -87,13 +90,58 @@
 
   /* Register a page's font and resolve once it is usable. The family carries
      the version, so switching version re-fits against the right metrics. */
-  function loadPageFont(version, page, pin) {
+  /* ---------- the order fonts are fetched in --------------------------------
+     Turning fast asked for every page flipped past, four fonts a click in
+     spread mode, all at once: twenty clicks were some 13 MB sharing one
+     connection, and the pages the reader stopped on came in last, half a
+     minute later on a modest line, blank until then. So a few are fetched
+     at a time, the latest asked for first, and a neighbour warmed ahead of
+     a turn only after every page actually wanted. */
+
+  var MAX_FETCHING = 3;
+  var fetching = 0;
+  var waiting = [];       // families, in the order they will be fetched
+
+  function next() {
+    while (fetching < MAX_FETCHING && waiting.length) {
+      var f = faces[waiting.shift()];
+      if (!f || f.started) continue;          // evicted, or already under way
+      f.started = true;
+      fetching++;
+      f.face.load().then(f.resolve, f.reject).then(done, done);
+    }
+  }
+  function done() { fetching--; next(); }
+
+  /* Put a family in the line: one being looked at goes to its head; one only
+     warmed goes behind everything wanted, ahead of older warmings. */
+  function queue(family, warm) {
+    var f = faces[family];
+    var at = waiting.indexOf(family);
+    if (at >= 0) {
+      if (warm || !f.warm) return;            // already as far forward as it should be
+      waiting.splice(at, 1);
+    }
+    f.warm = !!warm;
+    if (!warm) { waiting.unshift(family); return; }
+    var i = 0;
+    while (i < waiting.length && faces[waiting[i]] && !faces[waiting[i]].warm) i++;
+    waiting.splice(i, 0, family);
+  }
+
+  /* `warm` asks for a page that is not on screen yet: it waits for the ones
+     that are. */
+  function loadPageFont(version, page, pin, warm) {
     var family = familyFor(version, page);
     if (pin) pinned[family] = true;
 
     register(family, version, page);
     var f = faces[family];
-    if (!f.promise) f.promise = f.face.load().then(function () { return family; });
+    if (!f.promise) {
+      f.promise = new Promise(function (resolve, reject) { f.resolve = resolve; f.reject = reject; })
+        .then(function () { return family; });
+    }
+    if (!f.started) { queue(family, warm); next(); }
     touch(family);
     evict();
     return f.promise;

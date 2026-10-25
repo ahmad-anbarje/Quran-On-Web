@@ -93,7 +93,7 @@
 
   function warmPages(list) {
     list.forEach(function (n) {
-      if (n >= 1 && n <= 604) Mushaf.loadPageFont(app.version, n);
+      if (n >= 1 && n <= 604) Mushaf.loadPageFont(app.version, n, false, true);
     });
   }
 
@@ -161,8 +161,8 @@
       start = spreadStart(+first.getAttribute('data-page'));
     }
 
-    // The fonts before the fitting, for the turn that finds its leaves cold
-    warmPages([start, start + 1]);
+    // The fonts before the fitting, for the turn that finds its leaves cold; on screen, so first in line
+    [start, start + 1].forEach(function (n) { if (n >= 1 && n <= 604) Mushaf.loadPageFont(app.version, n); });
 
     onShow.forEach(function (n) {
       var el = sectionFor(n);
