@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.readqurantoday/quran",
+  "title": "Read Quran Today",
+  "description": "The Quran (Madinah Mushaf): Arabic, 127 translations, tafsir, word by word and recitations",
+  "version": "1.0.0",
+  "websiteUrl": "https://readqurantoday.com",
+  "repository": {
+    "url": "https://github.com/ahmad-anbarje/Quran-On-Web",
+    "source": "github",
+    "subfolder": "mcp"
+  },
+  "icons": [
+    { "src": "https://readqurantoday.com/icon-192.png", "mimeType": "image/png", "sizes": ["192x192"] },
+    { "src": "https://readqurantoday.com/icon-512.png", "mimeType": "image/png", "sizes": ["512x512"] }
+  ],
+  "remotes": [
+    { "type": "streamable-http", "url": "https://readqurantoday.com/mcp" }
+  ]
+}
