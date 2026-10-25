@@ -54,7 +54,7 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v2/ -->
   <link rel="stylesheet" href="/css/fonts.min.css?v=dc96e96b71" />
-  <link rel="stylesheet" href="/css/style.min.css?v=7a347082e0" />
+  <link rel="stylesheet" href="/css/style.min.css?v=55aa7a3149" />
   <link rel="stylesheet" href="/css/recite.min.css?v=afd4d8c4ae" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
@@ -145,6 +145,7 @@
       <g id="i-weight"><path d="M7 18V6h5.2a3 3 0 0 1 0 6H7m0 0h5.8a3 3 0 0 1 0 6H7"/></g>
       <g id="i-theme"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></g>
       <g id="i-globe"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></g>
+      <g id="i-spark"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></g>
       <g id="i-message"><path d="M4.5 5.5h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9.5L5.5 20v-3.5h-1a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/><path d="M8 9.5h8M8 12.5h5"/></g>
       <g id="i-help"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.4a2.7 2.7 0 1 1 3.4 3.2c-.6.3-.8.8-.8 1.4v.5"/><path d="M12 17.4v.1"/></g>
 
@@ -313,6 +314,11 @@
         <button id="btn-feedback" class="set-row">
           <svg class="ic set-ico" viewBox="0 0 24 24"><use href="#i-message"/></svg>
           <span class="set-label"><span class="lang-ar">الإبلاغ عن مشكلة أو اقتراح</span><span class="lang-en">Report an issue or suggest</span></span>
+        </button>
+
+        <button id="btn-ai" class="set-row">
+          <svg class="ic set-ico" viewBox="0 0 24 24"><use href="#i-spark"/></svg>
+          <span class="set-label"><span class="lang-ar">استخدمه مع الذكاء الاصطناعي</span><span class="lang-en">Use with AI</span></span>
         </button>
 
         <a id="btn-privacy" class="set-row" href="/privacy/">
@@ -494,6 +500,57 @@
   </div>
 
 
+  <!-- The site's MCP server, for AI assistants: its address, and how each adds it -->
+  <div id="ai-panel" class="panel" hidden>
+    <div class="panel-header">
+      <h2 class="lang-ar">استخدمه مع الذكاء الاصطناعي</h2>
+      <h2 class="lang-en">Use with AI</h2>
+      <button id="btn-close-ai" class="ghost-btn" aria-label="Close">
+        <svg class="ic" viewBox="0 0 24 24"><use href="#i-close"/></svg>
+      </button>
+    </div>
+
+    <div class="panel-body">
+      <p class="hints ai-intro">
+        <span class="lang-ar">اسأل Claude وChatGPT وغيرهما من المساعدين عن القرآن، فيجيبون من هذا الموقع: نص المصحف والترجمات والتفسير والتلاوات، مع روابط إليه.</span>
+        <span class="lang-en">Ask Claude, ChatGPT and other AI assistants about the Quran, and they answer from this site: the mushaf text, translations, tafsir and recitations, with links back here.</span>
+      </p>
+
+      <div class="panel-section">
+        <span class="lang-ar">عنوان الخادم</span>
+        <span class="lang-en">Server address</span>
+      </div>
+      <div class="ai-copy">
+        <input id="ai-url" class="fb-field" type="text" value="https://readqurantoday.com/mcp" dir="ltr" readonly aria-label="MCP server address" />
+        <button id="btn-ai-copy" class="primary-btn" type="button"><span class="lang-ar">نسخ</span><span class="lang-en">Copy</span></button>
+      </div>
+
+      <div class="panel-section">
+        <span class="lang-ar">طريقة الإضافة</span>
+        <span class="lang-en">How to add it</span>
+      </div>
+      <ul class="hints ai-steps">
+        <li><span class="lang-ar"><b>Claude</b>: الإعدادات ← الموصلات ← إضافة موصل مخصص، ثم الصق العنوان</span><span class="lang-en"><b>Claude</b>: Settings → Connectors → Add custom connector, then paste the address</span></li>
+        <li><span class="lang-ar"><b>ChatGPT</b>: الإعدادات ← التطبيقات، فعّل وضع المطوّر، ثم أنشئ تطبيقًا بهذا العنوان</span><span class="lang-en"><b>ChatGPT</b>: Settings → Apps, turn on developer mode, then create an app with the address</span></li>
+        <li><span class="lang-ar"><b>VS Code</b> و<b>Cursor</b>: بنقرة واحدة</span><span class="lang-en"><b>VS Code</b> and <b>Cursor</b>: in one click</span>
+          <span class="ai-apps">
+            <a class="icon-badge" href="vscode:mcp/install?%7B%22name%22%3A%22read-quran-today%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Freadqurantoday.com%2Fmcp%22%7D" data-umami-event="ai-vscode"><span class="ib-text">VS Code</span></a>
+            <a class="icon-badge" href="cursor://anysphere.cursor-deeplink/mcp/install?name=read-quran-today&amp;config=eyJ1cmwiOiJodHRwczovL3JlYWRxdXJhbnRvZGF5LmNvbS9tY3AifQ==" data-umami-event="ai-cursor"><span class="ib-text">Cursor</span></a>
+          </span>
+        </li>
+        <li><span class="lang-ar"><b>Claude Code</b> أو <b>Gemini CLI</b>، في الطرفية:</span><span class="lang-en"><b>Claude Code</b> or <b>Gemini CLI</b>, in a terminal:</span>
+          <code class="ai-cmd" dir="ltr">claude mcp add --transport http read-quran-today https://readqurantoday.com/mcp</code>
+          <code class="ai-cmd" dir="ltr">gemini mcp add --transport http read-quran-today https://readqurantoday.com/mcp</code>
+        </li>
+      </ul>
+
+      <p class="hints fb-note">
+        <span class="lang-ar">مجاني، دون تسجيل دخول. التفاصيل على <a href="https://github.com/ahmad-anbarje/Quran-On-Web#for-developers-and-ai-assistants" rel="noopener" target="_blank">GitHub</a>.</span>
+        <span class="lang-en">Free, with no sign-in. The details are on <a href="https://github.com/ahmad-anbarje/Quran-On-Web#for-developers-and-ai-assistants" rel="noopener" target="_blank">GitHub</a>.</span>
+      </p>
+    </div>
+  </div>
+
   <div id="help-panel" class="panel" hidden>
     <div class="panel-header">
       <h2 class="lang-ar">المفاتيح والإيماءات</h2>
@@ -604,7 +661,7 @@
   </div>
 
   <script defer src="/js/dom.min.js?v=1c501dfb04"></script>
-  <script defer src="/js/i18n.min.js?v=0040a062f5"></script>
+  <script defer src="/js/i18n.min.js?v=b57155789c"></script>
   <script defer src="/js/mushaf.min.js?v=acf4787387"></script>
   <script defer src="/js/recite.min.js?v=6de6bc9964"></script>
   <!-- The meaning window, fetched by recite.js the first time it is opened -->
@@ -614,7 +671,7 @@
   <script defer src="/js/pager.min.js?v=73fed4459e"></script>
   <script defer src="/js/offline.min.js?v=00521cd58b"></script>
   <script defer src="/js/leaves.min.js?v=964a1ade72"></script>
-  <script defer src="/js/app.min.js?v=b692640b20"></script>
+  <script defer src="/js/app.min.js?v=9259e2191d"></script>
   <script defer src="/js/appcard.min.js?v=942fa5f409"></script>
   <article class="sr-only" lang="ar" dir="rtl">
     <h1>الجزء التاسع عشر من القرآن · Juz 19</h1>

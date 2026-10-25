@@ -34,7 +34,7 @@
 
   var KEY = 'quran-lang';
   var DICT_KEY = 'quran-i18n';
-  var VERSION = '2026-10-25c';
+  var VERSION = '2026-10-26a';
 
   function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function store(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* denied */ } }

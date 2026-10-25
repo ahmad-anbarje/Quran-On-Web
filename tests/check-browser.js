@@ -184,8 +184,8 @@ async function main() {
 
     /* What app.js and listen.js do through $, one of each kind: a delegated
        click, a form, a request and its failure, typed data-*, toggled classes */
-    await check('search, saved pages, settings, downloads and feedback', async () => {
-      const { ctx, page, errors } = await visit(DESKTOP, 'en');
+    await check('search, saved pages, settings, downloads, feedback and Use with AI', async () => {
+      const { ctx, page, errors } = await visit(DESKTOP, 'en', { permissions: ['clipboard-read', 'clipboard-write'] });
       let posted = 0;
       await page.route('**/api/feedback', (r) => r.fulfill(++posted === 1
         ? { status: 201, contentType: 'application/json', body: '{"ok":true}' }
@@ -251,6 +251,19 @@ async function main() {
       const busy = await send('And once more, a second report.');
       assert(/too many/i.test(busy), `the server's 429: "${busy}"`);
       done.push('feedback');
+
+      // Use with AI: the panel, its address, and the address copied
+      await click('#btn-ai');
+      assert(await page.evaluate(() => !document.getElementById('ai-panel').hidden), 'the AI panel did not open');
+      assert(await page.inputValue('#ai-url') === 'https://readqurantoday.com/mcp', 'the server address is wrong');
+      await click('#btn-ai-copy');
+      await page.waitForTimeout(300);
+      const copied = await page.evaluate(() => navigator.clipboard.readText());
+      assert(copied === 'https://readqurantoday.com/mcp', `copied "${copied}"`);
+      assert(/Copied/.test(await says('#btn-ai-copy')), 'the button does not say it copied');
+      await click('#btn-close-ai');
+      assert(await page.evaluate(() => document.getElementById('ai-panel').hidden), 'the AI panel did not close');
+      done.push('Use with AI');
 
       assert(!errors.length, errors.join(' | '));
       await ctx.close();

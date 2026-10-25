@@ -1046,6 +1046,7 @@ $(function () {
     $('#bookmarks-panel').prop('hidden', which !== 'saved');
     $('#help-panel').prop('hidden', which !== 'help');
     $('#feedback-panel').prop('hidden', which !== 'feedback');
+    $('#ai-panel').prop('hidden', which !== 'ai');
     $('#btn-bookmarks').toggleClass('on', which === 'saved');
     $('#btn-help').toggleClass('on', which === 'help');
     $('#btn-feedback').toggleClass('on', which === 'feedback');
@@ -1080,7 +1081,25 @@ $(function () {
   $('#btn-feedback').on('click', function () {
     showPanel($('#feedback-panel').prop('hidden') ? 'feedback' : null);
   });
-  $('#btn-close-bookmarks, #btn-close-help, #btn-close-feedback').on('click', function () { showPanel(null); });
+  $('#btn-ai').on('click', function () {
+    showPanel($('#ai-panel').prop('hidden') ? 'ai' : null);
+    track('ai-panel');
+  });
+  $('#btn-close-bookmarks, #btn-close-help, #btn-close-feedback, #btn-close-ai').on('click', function () { showPanel(null); });
+
+  /* The server's address, copied; where the clipboard is refused, selected for the reader to copy */
+  $('#btn-ai-copy').on('click', function () {
+    var box = $('#ai-url')[0], btn = this;
+    function done() {
+      $(btn).find('.lang-ar').text('تم النسخ');
+      $(btn).find('.lang-en').text(T('تم النسخ', 'Copied'));
+      track('ai-copy');
+    }
+    box.select();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(box.value).then(done, function () { /* left selected */ });
+    } else if (document.execCommand && document.execCommand('copy')) done();
+  });
 
   /* ---------- reporting an issue or suggesting something --------------------
 

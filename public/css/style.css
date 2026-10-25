@@ -2027,6 +2027,28 @@ kbd {
 
 label.panel-section { display: block; }
 
+/* --- using the site from an AI assistant: the address, and the ways in --- */
+.ai-intro { padding-inline-start: 0; margin-top: 12px; }
+.ai-copy { display: flex; gap: 8px; margin: 0 12px; }
+.ai-copy .fb-field { flex: 1; width: auto; margin: 0; min-width: 0; font-size: 0.8rem; }
+.ai-copy .primary-btn { width: auto; flex-shrink: 0; padding-inline: 14px; }
+.ai-steps li { margin-bottom: 8px; }
+#ai-panel .fb-note a { color: var(--primary); }
+.ai-apps { display: flex; gap: 8px; margin-top: 6px; }
+.ai-apps > * { --bw: 88px; }
+.ai-cmd {
+  display: block;
+  margin-top: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 .fb-field {
   display: block;
   width: calc(100% - 24px);
