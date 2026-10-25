@@ -1289,6 +1289,12 @@ $(function () {
     var open = $list.prop('hidden');
     $list.prop('hidden', !open);
     $(this).attr('aria-expanded', String(open));
+    if (open) {
+      // At the pane's foot it opens below the fold: brought up, with the language in use focused
+      $list[0].scrollIntoView({ block: 'nearest' });
+      var on = $list[0].querySelector('[aria-selected="true"]');
+      if (on) on.focus({ preventScroll: true });
+    }
   });
   $(document).on('click', '#lang-list .lang-opt', function () {
     var code = $(this).attr('data-code');
@@ -1296,6 +1302,15 @@ $(function () {
     $('#btn-lang').attr('aria-expanded', 'false');
     if (code === I18n.lang()) return;
     I18n.set(code);
+    // The translation follows a language chosen here; kept for the meaning window, which loads when opened
+    if (code !== 'ar') {
+      try {
+        localStorage.setItem('quran-translation-follow', code);
+        localStorage.setItem('quran-translation-lang', code);
+      } catch (e) { /* denied */ }
+      document.dispatchEvent(new CustomEvent('ui:chosen', { detail: code }));
+      document.dispatchEvent(new CustomEvent('meaning:lang', { detail: code }));
+    }
     applyLang();
     if (window.Recite) Recite.relabel();
     if (surah) open(surah, page);

@@ -53,8 +53,8 @@
 - The site in 14 languages: Arabic, English, Urdu, Indonesian, Bengali, Turkish,
   French, Persian, Hindi, Malay, Spanish, Russian, German and Chinese, chosen in
   Settings or from the browser's language; Urdu and Persian read right to left.
-  The translation in the meaning window follows the site's language until the
-  reader picks one
+  Picking a language in Settings picks its translation in the meaning window
+  too, and the word-by-word meanings where there are some
 - Report an issue or a suggestion from inside the site
 - No third-party requests and no cookies; visits counted with self-hosted Umami
 

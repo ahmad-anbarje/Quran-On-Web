@@ -518,6 +518,52 @@ button.set-row:hover .set-ico, a.set-row:hover .set-ico { color: var(--primary);
 
 .set-label { flex: 1; min-width: 0; }
 
+/* The languages, opened under their row: two to a line, each in its own words,
+   the one in use filled so it reads as chosen at a glance */
+.lang-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 2px 14px 12px;
+}
+.lang-list[hidden] { display: none; }
+/* Centred, whichever way a name is written, so the grid reads even; the tick
+   sits in the corner and takes no room from the name */
+.lang-opt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 40px;
+  padding: 8px 20px;
+  line-height: 1.25;
+  text-align: center;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--ui-font);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t), color var(--t);
+}
+.lang-opt:hover { border-color: var(--primary); background: var(--primary-soft); }
+.lang-opt:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.lang-opt[aria-selected="true"] { border-color: var(--primary); background: var(--primary); color: #fff; }
+.lang-opt[aria-selected="true"]::after {
+  content: "✓";
+  position: absolute;
+  inset-inline-end: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+/* The dark theme's blue is too light behind white */
+body.dark-mode .lang-opt[aria-selected="true"] { border-color: #1f6a9a; background: #1f6a9a; }
+
 /* What it is set to now, so the row reads as a sentence rather than a guess. */
 .set-value {
   color: var(--primary);

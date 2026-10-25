@@ -77,6 +77,7 @@
            with no choice yet, the language of the reader's country, or of their device. */
         where = got.where;
         if (!stored(TRANSLATION_KEY)) translation = deviceChoice(where) || translation;
+        followSite();
         if (!TEXTS[translation]) translation = 'hilali';
         render();
       })
@@ -749,6 +750,23 @@
     translation = deviceChoice(where) || translation;
     if (box && !box.hidden) render();
   });
+
+  /* A language picked in the settings takes the translation with it, even over
+     one chosen before: the first in that language, where there is one. */
+  var FOLLOW_KEY = 'quran-translation-follow';
+  function followSite() {
+    var code = stored(FOLLOW_KEY);
+    if (!code || !offered.length) return;
+    try { localStorage.removeItem(FOLLOW_KEY); } catch (e) { /* denied */ }
+    for (var i = 0; i < offered.length; i++) {
+      if (offered[i].lang !== code) continue;
+      translation = offered[i].id;
+      store(TRANSLATION_KEY, translation);
+      if (box && !box.hidden) render();
+      return;
+    }
+  }
+  document.addEventListener('ui:chosen', followSite);
 
   global.Meaning = {
     show: show,
