@@ -28,7 +28,8 @@
 **Listening**
 - Four reciters in five recordings, with each word highlighted as it is recited
 - The word being recited spelled out in Latin letters (transliteration), with its
-  English meaning beneath
+  meaning beneath, in the chosen translation's language where it has one word by
+  word (Urdu, Indonesian, Bengali, Turkish, Persian, Hindi) and in English otherwise
 - The meaning of each ayah in a window that keeps up with the recitation: 127
   translations in 85 languages, and the Tafsir al-Muyassar; each credited, with
   a link to its source
@@ -91,7 +92,7 @@ docker run -p 8080:80 ahmadanbarje/quran
 | `public/data/recitations.json` | The reciters, and where their recordings are |
 | `public/surah/N/NNN.<reciter>.timing.json` | When each word is recited, per surah and reciter |
 | `public/data/quran-simple.txt` | The plain text the search runs on |
-| `public/data/translit/N.json`, `meaning/N.json` | Each word's Latin reading and its English, per surah |
+| `public/data/translit/N.json`, `meaning/N.json`, `meaning/<lang>/N.json` | Each word's Latin reading, its English, and its meaning in six more languages, per surah |
 | `public/data/translations.json` | The translations on offer: language, translator, publisher |
 | `public/data/translation/<id>/N.json` | Each translation, ayah by ayah; `hilali` (Hilali and Khan) is the default |
 | `public/data/tafsir/muyassar/N.json` | Tafsir al-Muyassar, ayah by ayah |
@@ -109,6 +110,7 @@ pages, headers and Basmalahs are laid out.
 | `npm run build:pages` | Regenerates the surah and juz pages, the sitemap and `robots.txt` from `public/index.html` |
 | `python scripts/fetch-quranenc.py` | Downloads every QuranEnc translation of the meanings, and from Tanzil the languages QuranEnc lacks, checked ayah by ayah; one left incomplete is left out |
 | `npm run fetch:translations` | Downloads Saheeh International, the tafsir and the words' English (one-off; checks the words line up with the Latin) |
+| `npm run fetch:words` | Downloads the words' meanings in Urdu, Indonesian, Bengali, Turkish, Persian and Hindi from Quran.com, checked word by word against the Latin; a word it lacks shows in English |
 | `npm run fetch:reference` | Downloads the reference texts the data checks compare against (one-off) |
 | `npm test` | All checks: data, fonts, speed and pages |
 | `npm run sync:android` | Copies the reader's data into the native Android app |

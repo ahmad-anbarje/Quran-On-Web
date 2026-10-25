@@ -482,9 +482,19 @@
     render();
   }
 
+  /* The word labels follow the translation's language: told once it changes. */
+  var WORDS_LANG_KEY = 'quran-translation-lang';
+  function tellWordsLang() {
+    var t = TEXTS[textOf('translation')];
+    if (!t || stored(WORDS_LANG_KEY) === t.lang) return;
+    store(WORDS_LANG_KEY, t.lang);
+    document.dispatchEvent(new CustomEvent('meaning:lang', { detail: t.lang }));
+  }
+
   function render() {
     if (!box || !surah) return;
     var l = lang(), which = textOf(tab), src = TEXTS[which];
+    if (offered.length) tellWordsLang();
 
     el.title.textContent = l === 'ar'
       ? 'الآية ' + ar(ayah) + ' · ' + (surah.full || surah.name || '')

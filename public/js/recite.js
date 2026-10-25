@@ -79,7 +79,16 @@
   var LATIN_KEY = 'quran-latin';
   var latinOn = stored(LATIN_KEY) !== '0';
   var latin = {};               // surah id -> its ayahs' words, or the fetch for them
-  var meaning = {};             // the same, each word's English, under the Latin
+  var meanings = { en: {} };    // language -> the same, each word's meaning, under the Latin
+  var latinSurah = null;        // the surah the labels are for
+  /* The word meanings there are besides English, and the two of them written right to left */
+  var WORD_LANGS = { ur: 1, id: 1, bn: 1, tr: 1, fa: 1, hi: 1 };
+  var RTL_LANGS = { ur: 1, fa: 1 };
+  /* The language of the translation the reader chose, where its words are here too */
+  function wordsLang() {
+    var l = stored('quran-translation-lang');
+    return WORD_LANGS[l] ? l : 'en';
+  }
   var tip = null;               // the label over the marked word
 
   /* The word-by-word recordings: one short file a word, named by surah, ayah
@@ -261,10 +270,14 @@
   /* ---------- the Latin reading over the marked word ---------------------- */
 
   function loadLatin(id) {
+    latinSurah = id;
     fetchWords(latin, '/data/translit/', id);
-    /* The words' English, from one index with the Latin: the same ayah and
-       word numbers find both. */
-    fetchWords(meaning, '/data/meaning/', id);
+    /* The words' meaning, from one index with the Latin: the same ayah and
+       word numbers find both. English always, to stand in for a word the
+       chosen language has not arrived for yet. */
+    fetchWords(meanings.en, '/data/meaning/', id);
+    var l = wordsLang();
+    if (l !== 'en') fetchWords(meanings[l] = meanings[l] || {}, '/data/meaning/' + l + '/', id);
   }
 
   function fetchWords(into, base, id) {
@@ -298,11 +311,13 @@
        mouse is asking what each word says. */
     var word = overWord && overWord.isConnected ? overWord
            : lit.el && lit.el.isConnected ? lit.el : null;
-    var said = null, means = null;
+    var said = null, means = null, l = wordsLang(), inLang = 'en';
     if (latinOn && word && word.dataset.a && word.dataset.w !== undefined) {
       var key = word.dataset.a.split(':');
       said = wordOf(latin, key, +word.dataset.w);
-      means = wordOf(meaning, key, +word.dataset.w);
+      means = l !== 'en' && meanings[l] ? wordOf(meanings[l], key, +word.dataset.w) : null;
+      if (means) inLang = l;
+      else means = wordOf(meanings.en, key, +word.dataset.w);
     }
     var r = said || means ? word.getBoundingClientRect() : null;
     /* A word turned off the screen takes its label with it. */
@@ -312,6 +327,8 @@
     tip.firstChild.hidden = !said;
     tip.lastChild.textContent = means || '';
     tip.lastChild.hidden = !means;
+    tip.lastChild.setAttribute('lang', inLang);
+    tip.lastChild.setAttribute('dir', RTL_LANGS[inLang] ? 'rtl' : 'ltr');
     tip.hidden = false;
     var t = tip.getBoundingClientRect();
     /* Clear of the marks above the letters; below the word where there is no room above. */
@@ -847,14 +864,16 @@
        bottom until something else happened to move it. Whenever its size
        changes it is put back inside the screen, staying as near as it can to
        where it was. Folded, the corner is its place; on a phone, the foot. */
-    if (global.ResizeObserver) {
-      new ResizeObserver(function () {
-        if (menu.hidden || minimized || window.matchMedia('(max-width: 480px)').matches) return;
-        var r = menu.getBoundingClientRect();
-        if (r.top < 8 || r.bottom > window.innerHeight - 8 || r.left < 8 || r.right > window.innerWidth - 8) {
-          place(r.left, r.top);
-        }
-      }).observe(menu);
+    if (global.ResizeObserver) new ResizeObserver(keepOnScreen).observe(menu);
+  }
+
+  /* Not while it folds or unfolds: mid-journey it is drawn where it came from, the
+     corner, and read there it was pinned to the corner. Asked again once it lands. */
+  function keepOnScreen() {
+    if (!menu || menu.hidden || minimized || motion || window.matchMedia('(max-width: 480px)').matches) return;
+    var r = menu.getBoundingClientRect();
+    if (r.top < 8 || r.bottom > window.innerHeight - 8 || r.left < 8 || r.right > window.innerWidth - 8) {
+      place(r.left, r.top);
     }
   }
 
@@ -1245,6 +1264,7 @@
       motion = menu.animate(
         [{ opacity: 0 }, { opacity: 1 }],
         { duration: 120, easing: 'ease-out' });
+      landed(motion);
       return;
     }
 
@@ -1261,6 +1281,14 @@
         opacity: 0 },
       { transform: 'none', opacity: 1 },
     ], { duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
+    landed(motion);
+  }
+
+  /* The journey over, the menu is where it is drawn: kept on the screen from there. */
+  function landed(m) {
+    var done = function () { if (motion === m) { motion = null; keepOnScreen(); } };
+    m.onfinish = done;
+    m.oncancel = function () { if (motion === m) motion = null; };
   }
 
   function act(what) {
@@ -1726,6 +1754,8 @@
 
   /* The meaning window's own close button changes what the player's says. */
   document.addEventListener('meaning:state', function () { if (menu && !menu.hidden) sync(); });
+  /* A translation in another language: the words under the Latin follow it. */
+  document.addEventListener('meaning:lang', function () { if (latinSurah) loadLatin(latinSurah); sayLatin(); });
 
   /* Escape puts away what is on top: the meaning first, then the player. */
   document.addEventListener('keydown', function (e) {

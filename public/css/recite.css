@@ -883,7 +883,7 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   display: flex;
   align-items: center;
   gap: 4px;
-  padding-inline: 10px 4px;
+  padding-inline: 10px 0;
   border-bottom: 1px solid var(--line);
   background: var(--surface-2);
   cursor: grab;
@@ -901,15 +901,18 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+/* The player's own bar buttons: full-height squares, the last one on the corner */
 #meaning .mn-bar button {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
+  align-self: stretch;
   width: 34px;
-  height: 34px;
+  height: auto;
+  min-height: 34px;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: 0;
   background: none;
   color: var(--text);
   cursor: pointer;
@@ -917,6 +920,7 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
 #meaning .mn-bar button:hover:not(:disabled) { background: var(--primary-soft); color: var(--primary); }
 #meaning .mn-bar button:disabled { opacity: 0.35; cursor: default; }
 #meaning .mn-bar .ic { width: 18px; height: 18px; }
+#meaning .mn-bar > :last-child { border-start-end-radius: var(--r-md); }
 /* The steps point the way the ayahs run: in Arabic the next one is to the left */
 #meaning[dir="rtl"] .mn-step .ic { transform: scaleX(-1); }
 
@@ -929,7 +933,7 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   flex: 1 1 0;
   padding: 7px 10px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--r-sm);
   background: none;
   color: var(--text);
   font: inherit;

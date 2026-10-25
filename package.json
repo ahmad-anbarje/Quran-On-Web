@@ -22,7 +22,8 @@
     "docker:release": "node scripts/docker-release.js",
     "docker:reclaim": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/docker-reclaim.ps1",
     "fonts:ttf": "node scripts/fonts-to-ttf.js",
-    "fonts:glyphs": "node scripts/glyph-maps.js"
+    "fonts:glyphs": "node scripts/glyph-maps.js",
+    "fetch:words": "node scripts/fetch-word-meanings.js"
   },
   "dependencies": {
     "compression": "^1.8.1",
