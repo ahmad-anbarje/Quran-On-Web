@@ -95,7 +95,7 @@ test('get_tafsir and word_by_word', async () => {
   assert.ok(tr.value.words.some((x) => x.meaningLanguage === 'en'));
 });
 
-test('get_recitation opens the player: one self-contained page, fed the timings and the Arabic', async () => {
+test('get_recitation opens the player: one self-contained page, fed the timings and the glyphs of the mushaf', async () => {
   const client = await connect();
   try {
     const tool = (await client.listTools()).tools.find((t) => t.name === 'get_recitation');
@@ -104,12 +104,14 @@ test('get_recitation opens the player: one self-contained page, fed the timings 
     assert.strictEqual(page.mimeType, 'text/html;profile=mcp-app');
     assert.doesNotMatch(page.text, /@@(CLIENT|FONT)@@/);
     assert.match(page.text, /font\/woff2;base64,d09GMg/);   // the face itself, "wOF2"
-    assert.deepStrictEqual(page._meta.ui.csp.resourceDomains, ['https://audio.readqurantoday.com']);
+    assert.deepStrictEqual(page._meta.ui.csp.resourceDomains, ['https://audio.readqurantoday.com', 'https://readqurantoday.com']);
     const r = await client.callTool({ name: 'get_recitation', arguments: { surah: 112 } });
     assert.strictEqual(r.structuredContent.ayahs.length, 4);
-    const arabic = r._meta['com.readqurantoday/ayahs'];
-    assert.strictEqual(arabic.length, 4);
-    assert.doesNotMatch(arabic.join(' '), /[ۣ۟۫]/);   // as the face wants them (scripts/surah-text.js)
+    // The mushaf's own glyphs, a word each, by page: Al-Ikhlas is all on page 604
+    const mushaf = r._meta['com.readqurantoday/mushaf'];
+    assert.strictEqual(mushaf.fonts, 'https://readqurantoday.com/fonts/v2/');
+    assert.strictEqual(mushaf.ayahs.length, 4);
+    assert.ok(mushaf.ayahs.every((pieces) => pieces.length === 1 && pieces[0][0] === 604 && pieces[0][1].length > 1));
   } finally {
     await client.close();
   }

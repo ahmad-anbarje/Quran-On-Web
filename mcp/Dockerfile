@@ -13,8 +13,8 @@ WORKDIR /src
 COPY public/data public/data
 COPY public/surah public/surah
 # The recordings' timings are all the server wants of public/surah; the pages go
-RUN find public/surah -type f ! -name '*.timing.json' -delete \
- && rm -rf public/data/mushaf.json
+# The player draws the ayahs from mushaf.json, so it stays
+RUN find public/surah -type f ! -name '*.timing.json' -delete
 
 FROM node:22-alpine
 WORKDIR /app

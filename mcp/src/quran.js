@@ -106,6 +106,32 @@ function open(root) {
       .filter((d) => fs.statSync(path.join(DATA, 'meaning', d)).isDirectory()).sort());
   }
 
+  /* Each ayah as the mushaf prints it, for the player: QCF V2 glyphs, one a word,
+     in pieces by page, since each page has its own font. A glyph in the page's
+     marks closes an ayah, as public/js/mushaf.js reads them (ayahIndex). */
+  let mushafAyahs = null;
+  function mushaf(s) {
+    if (!mushafAyahs) {
+      const m = json(DATA, 'mushaf.json');
+      mushafAyahs = {};
+      let su = 0, v = 1;
+      for (let p = 1; p <= 604; p++) {
+        const marks = m.marks[p] || '';
+        for (const line of m.pages[p] || []) {
+          if (line.t === 'surah') { su = line.s; v = 1; mushafAyahs[su] = []; continue; }
+          if (line.t !== 'ayah') continue;
+          for (const g of line.v2.split('|')) {
+            const ayah = mushafAyahs[su][v - 1] || (mushafAyahs[su][v - 1] = []);
+            const last = ayah[ayah.length - 1];
+            if (last && last[0] === p) last[1].push(g); else ayah.push([p, [g]]);
+            if (marks.indexOf(g) >= 0) v++;
+          }
+        }
+      }
+    }
+    return mushafAyahs[s] || null;
+  }
+
   /* A timing file also times every word, which is most of its weight and
      nothing asked for here: only where each ayah falls is kept. */
   const ayahTimes = (t) => ({ audioPath: t.audioPath, duration: t.duration, ayah: t.ayah });
@@ -118,7 +144,7 @@ function open(root) {
 
   return {
     SITE, AUDIO, surahs, translations, recitations, arabic, plain,
-    surah, page, link, ayahLink, translation, tafsir, words, wordLanguages, timing, hafs: surahText.hafs,
+    surah, page, link, ayahLink, translation, tafsir, words, wordLanguages, timing, mushaf, hafs: surahText.hafs,
     hasTranslation: (id) => byTranslation.has(id),
     translationInfo: (id) => byTranslation.get(id) || null,
     recitation: (id) => byRecitation.get(id) || null,

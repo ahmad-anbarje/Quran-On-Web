@@ -190,8 +190,12 @@ function registerTools(server, q) {
       ayahs: t.ayah.map(([a, b], i) => ({ ayah: i + 1, start: sec(a), end: sec(b) })),
       link: q.link(s),
     };
-    // The player draws from structuredContent; the Arabic rides in _meta, for it and not the model
-    return { ...reply(value), structuredContent: value, _meta: { 'com.readqurantoday/ayahs': q.arabic[s].uthmani.map(q.hafs) } };
+    // The player draws from structuredContent; the mushaf's own glyphs ride in _meta, for it and not the model
+    return {
+      ...reply(value),
+      structuredContent: value,
+      _meta: { 'com.readqurantoday/mushaf': { fonts: `${q.SITE}/fonts/v2/`, ayahs: q.mushaf(s) } },
+    };
   });
 
   tool('list_surahs', {

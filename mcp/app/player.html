@@ -44,6 +44,9 @@
   select { max-width: 46%; font: inherit; font-size: 0.8rem; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
 
   .text { max-height: 330px; overflow-y: auto; padding: 14px 16px 18px; font-family: "Hafs", serif; font-size: 1.55rem; line-height: 2.25; text-align: justify; text-align-last: center; overscroll-behavior: contain; scroll-behavior: smooth; }
+  /* A word of the mushaf, in its page's face; hidden until that face has come, never shown as boxes */
+  .w { display: inline-block; font-size: 1.8rem; line-height: 1.9; visibility: hidden; }
+  .w.ready { visibility: visible; }
   .ayah { cursor: pointer; border-radius: 8px; padding: 0 2px; transition: background 0.2s, color 0.2s; }
   .ayah:hover { background: var(--accent-soft); }
   .ayah.on { background: var(--accent-soft); color: var(--accent); }
@@ -134,15 +137,20 @@
     if (was) was.classList.remove('on');
     on = i;
     var el = box.querySelector('[data-i="' + i + '"]');
-    if (el) {
-      el.classList.add('on');
-      // Kept in view inside the box only: the conversation around it must not scroll
-      var top = el.offsetTop - box.offsetTop, bottom = top + el.offsetHeight;
-      if (top < box.scrollTop + 8 || bottom > box.scrollTop + box.clientHeight - 8) box.scrollTop = top - box.clientHeight / 3;
-    }
+    if (el) { el.classList.add('on'); view(); }
+    // The next few ayahs' faces, ahead of the recitation
+    if (mushafPieces) for (var k = i; k <= Math.min(mushafPieces.length - 1, i + 5); k++) mushafPieces[k].forEach(function (piece) { needPage(piece[0], true); });
     $('where').textContent = say('الآية ' + digits(i + 1) + ' من ' + digits(data.ayahs.length), 'Ayah ' + (i + 1) + ' of ' + data.ayahs.length);
     $('prev').disabled = i <= 0;
     $('next').disabled = i >= data.ayahs.length - 1;
+  }
+
+  /* The ayah being recited, kept in view inside the box only: the conversation around it must not scroll */
+  function view() {
+    var box = $('text'), el = box.querySelector('.ayah.on');
+    if (!el) return;
+    var top = el.offsetTop - box.offsetTop, bottom = top + el.offsetHeight;
+    if (top < box.scrollTop + 8 || bottom > box.scrollTop + box.clientHeight - 8) box.scrollTop = top - box.clientHeight / 3;
   }
 
   function seekTo(i, play) {
@@ -151,6 +159,74 @@
     audio.currentTime = data.ayahs[i].start;
     mark(i);
     if (play) audio.play().catch(function () {});
+  }
+
+  /* The mushaf's own glyphs: each page of the Madinah Mushaf is a font of its own (QCF V2),
+     fetched from the site as its ayahs are needed, the ones being recited first */
+  var fontBase = '', loaded = {}, queue = [], busy = 0, mushafPieces = null;
+  function needPage(p, first) {
+    if (loaded[p]) return;
+    loaded[p] = 'queued';
+    if (first) queue.unshift(p); else queue.push(p);
+    pump();
+  }
+  function pump() {
+    while (busy < 3 && queue.length) {
+      var p = queue.shift();
+      busy++;
+      var face = new FontFace('qcf' + p, 'url(' + fontBase + 'p' + p + '.woff2)');
+      face.load().then(function (f) { document.fonts.add(f); return f; }).then(function (f) {
+        var n = f.family.slice(3);
+        loaded[n] = true;
+        document.querySelectorAll('.qp' + n).forEach(function (el) { el.classList.add('ready'); });
+        view();   // a face arriving moves the words: the ayah being recited is found again
+      }, function () {
+        note(say('تعذّر تحميل خطّ المصحف.', 'The mushaf\'s font could not be loaded.'));
+      }).then(function () { busy--; pump(); });
+    }
+  }
+
+  function drawMushaf(m, start) {
+    var box = $('text');
+    box.textContent = '';
+    fontBase = m.fonts;
+    m.ayahs.forEach(function (pieces, i) {
+      var s = document.createElement('span');
+      s.className = 'ayah';
+      s.dataset.i = i;
+      pieces.forEach(function (piece) {
+        var p = piece[0];
+        piece[1].forEach(function (g) {
+          // A box a word: the glyphs are private-use, so the boxes are what keep them right to left
+          var w = document.createElement('span');
+          w.className = 'w qp' + p + (loaded[p] === true ? ' ready' : '');
+          w.style.fontFamily = 'qcf' + p;
+          w.textContent = g;
+          s.appendChild(w);
+          s.appendChild(document.createTextNode(' '));
+        });
+      });
+      s.onclick = function () { seekTo(i, true); };
+      box.appendChild(s);
+    });
+    // The pages round where the recitation starts first, then the surah in order
+    var near = [];
+    for (var i = Math.max(0, start - 2); i <= Math.min(m.ayahs.length - 1, start + 12); i++) {
+      m.ayahs[i].forEach(function (piece) { if (near.indexOf(piece[0]) < 0) near.push(piece[0]); });
+    }
+    near.forEach(function (p) { needPage(p, true); });
+    // The rest only as they come near: Al-Baqarah alone is 48 faces, some 7 MB
+    var watch = new IntersectionObserver(function (seen) {
+      seen.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        watch.unobserve(e.target);
+        m.ayahs[+e.target.dataset.i].forEach(function (piece) { needPage(piece[0]); });
+      });
+    }, { root: box, rootMargin: '600px 0px' });
+    box.querySelectorAll('.ayah').forEach(function (el) { watch.observe(el); });
+    mushafPieces = m.ayahs;
+    $('wait').hidden = true;
+    box.hidden = false;
   }
 
   function drawText() {
@@ -173,10 +249,11 @@
     box.hidden = false;
   }
 
-  /* The Arabic comes with the result for the player alone; fetched in runs where it does not */
-  function loadText(result) {
-    var given = result && result._meta && result._meta['com.readqurantoday/ayahs'];
-    if (Array.isArray(given) && given.length === data.ayahs.length) { texts = given; drawText(); return Promise.resolve(); }
+  /* The mushaf's glyphs come with the result, for the player alone; where they do not,
+     the plain Arabic is fetched and set in the embedded face */
+  function loadText(result, start) {
+    var m = result && result._meta && result._meta['com.readqurantoday/mushaf'];
+    if (m && Array.isArray(m.ayahs) && m.ayahs.length === data.ayahs.length) { drawMushaf(m, start || 0); return Promise.resolve(); }
     var runs = [], n = data.ayahs.length;
     for (var a = 1; a <= n; a += 50) runs.push({ surah: data.surah.number, ayah: a, to: Math.min(n, a + 49), translation: 'none' });
     return Promise.all(runs.map(function (args) { return app.callServerTool({ name: 'get_ayah', arguments: args }); }))
@@ -201,8 +278,9 @@
     on = -1;
     ['play', 'seek', 'speed'].forEach(function (id) { $(id).disabled = false; });
     var start = startAyah || 0;
+    $('time').textContent = clock(data.ayahs[start] ? data.ayahs[start].start : 0) + ' / ' + clock(data.duration);
     audio.onloadedmetadata = function () { seekTo(start, wasPlaying); audio.onloadedmetadata = null; };
-    loadText(result).then(function () { mark(start); }).catch(function () { note(say('تعذّر تحميل النص.', 'The text could not be loaded.')); });
+    loadText(result, start).then(function () { mark(start); }).catch(function () { note(say('تعذّر تحميل النص.', 'The text could not be loaded.')); });
     loadReciters();
   }
 

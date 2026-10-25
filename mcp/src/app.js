@@ -25,9 +25,13 @@ function playerHtml() {
   return page;
 }
 
-/* The recordings' host, the one origin the sandbox has to reach; none when they are served alongside */
-function mediaOrigins(audio) {
-  try { return [new URL(audio).origin]; } catch (e) { return []; }
+/* The recordings' host, and the site for the mushaf's page fonts: the origins the sandbox reaches */
+function mediaOrigins(q) {
+  const out = [];
+  for (const u of [q.AUDIO, q.SITE]) {
+    try { const o = new URL(u).origin; if (!out.includes(o)) out.push(o); } catch (e) { /* served alongside */ }
+  }
+  return out;
 }
 
 function registerApp(server, q) {
@@ -40,7 +44,7 @@ function registerApp(server, q) {
       uri: PLAYER_URI,
       mimeType: MIME,
       text: playerHtml(),
-      _meta: { ui: { csp: { resourceDomains: mediaOrigins(q.AUDIO) }, prefersBorder: false } },
+      _meta: { ui: { csp: { resourceDomains: mediaOrigins(q) }, prefersBorder: false } },
     }],
   }));
 }
