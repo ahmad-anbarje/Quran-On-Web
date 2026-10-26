@@ -41,4 +41,11 @@ function translationName(q, id) {
   return t ? `${t.name.en} (${t.language.en})` : id;
 }
 
-module.exports = { MAX_AYAHS, MAX_RESULTS, DEFAULT_TRANSLATION, fold, reply, fail, checkAyahs, translationName };
+/* A link that saves the file when opened: Cloudflare answers ?dl=1 as an attachment for the
+   recordings and the site's .json, .txt and .woff2; the server's /mcp/files/ are attachments already */
+function saveLink(url) {
+  if (!/^https:\/\//.test(url) || url.includes('/mcp/files/')) return url;
+  return url + (url.includes('?') ? '&' : '?') + 'dl=1';
+}
+
+module.exports = { MAX_AYAHS, MAX_RESULTS, DEFAULT_TRANSLATION, fold, reply, fail, checkAyahs, translationName, saveLink };

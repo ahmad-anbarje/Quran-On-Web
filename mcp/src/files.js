@@ -21,7 +21,7 @@
  */
 'use strict';
 
-const { translationName } = require('./shared');
+const { translationName, saveLink } = require('./shared');
 
 const PATH = /^\/mcp\/files\/surah-(\d{1,3})\.txt$/;
 const UTHMANI = '/mcp/files/quran-uthmani.txt';
@@ -51,7 +51,7 @@ function datasets(q) {
       source: 'Quran.com word by word' },
     { id: 'timing', url: `${q.SITE}/surah/<surah>/<sss>.<reciter>.timing.json`, format: 'JSON, milliseconds',
       holds: 'Where each ayah and word of a recording starts and ends; <sss> is the surah in three figures' },
-  ];
+  ].map((d) => (d.url.includes('<') ? d : { ...d, download: saveLink(d.url) }));
 }
 
 /* A whole data set made from the per-surah files, as one. A few megabytes

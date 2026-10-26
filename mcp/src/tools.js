@@ -15,7 +15,7 @@
 'use strict';
 
 const { z } = require('zod');
-const { MAX_RESULTS, DEFAULT_TRANSLATION, fold, reply, fail, checkAyahs, translationName } = require('./shared');
+const { MAX_RESULTS, DEFAULT_TRANSLATION, fold, reply, fail, checkAyahs, translationName, saveLink } = require('./shared');
 const { playerMeta } = require('./app');
 const { fileUrl, fileName, datasets } = require('./files');
 
@@ -250,7 +250,10 @@ function registerTools(server, q) {
       if (!s) return fail('Fonts are given for a surah: give its number.');
       const info = q.surah(s);
       const pages = [];
-      for (let p = info.from; p <= info.to; p++) pages.push({ page: p, font: `${q.SITE}/fonts/v2/p${p}.woff2` });
+      for (let p = info.from; p <= info.to; p++) {
+        const font = `${q.SITE}/fonts/v2/p${p}.woff2`;
+        pages.push({ page: p, font, download: saveLink(font) });
+      }
       return reply({
         surah: { number: s, name: info.en, arabic: info.name, pages: [info.from, info.to] },
         // Each word is one glyph, drawn right only in its own page's font
@@ -270,18 +273,17 @@ function registerTools(server, q) {
       return reply({
         surah: { number: s, name: q.surah(s).en },
         reciter: { id, name: r.name },
-        download: q.timingLink(id, s),
+        download: saveLink(q.timingLink(id, s)),
+        open: q.timingLink(id, s),
         contains: 'The MP3\'s length, and where each ayah and each word starts and ends, in milliseconds',
         audio: `${q.AUDIO}/${q.timing(id, s).audioPath}`,
         link: q.link(s),
       });
     }
-    // The recordings' host answers ?dl=1 as an attachment, so a click saves the file rather than playing it
-    const save = (u) => (/^https:\/\//.test(q.AUDIO) ? `${u}?dl=1` : u);
     const mp3 = (n) => {
       const t = q.timing(id, n);
       const url = `${q.AUDIO}/${t ? t.audioPath : ''}`;
-      return t && { surah: n, name: q.surah(n).en, download: save(url), play: url, minutes: Math.round(t.duration / 60) };
+      return t && { surah: n, name: q.surah(n).en, download: saveLink(url), play: url, minutes: Math.round(t.duration / 60) };
     };
     const files = (s ? [s] : q.surahs.map((x) => x.id)).map(mp3).filter(Boolean);
     if (!files.length) return fail(`${r.name} (${id}) has no recording of surah ${s} here.`);

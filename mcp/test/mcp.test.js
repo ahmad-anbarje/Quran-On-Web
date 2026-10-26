@@ -175,11 +175,14 @@ test('get_file: the MP3 of a surah, or all of a reciter\'s', async () => {
 
 test('get_file: a recording\'s timing file, and the mushaf\'s fonts for a surah with its glyphs', async () => {
   const t = (await call('get_file', { kind: 'timing', surah: 1, reciter: 'mishari-rashid-al-afasy' })).value;
-  assert.strictEqual(t.download, 'https://readqurantoday.com/surah/1/001.mishari-rashid-al-afasy.timing.json');
+  // A download link that saves the file (Cloudflare's ?dl=1), and the plain one beside it
+  assert.strictEqual(t.download, 'https://readqurantoday.com/surah/1/001.mishari-rashid-al-afasy.timing.json?dl=1');
+  assert.strictEqual(t.open, 'https://readqurantoday.com/surah/1/001.mishari-rashid-al-afasy.timing.json');
   const f = (await call('get_file', { kind: 'font', surah: 2 })).value;
   assert.deepStrictEqual(f.surah.pages, [2, 49]);
   assert.strictEqual(f.fonts.length, 48);
   assert.strictEqual(f.fonts[0].font, 'https://readqurantoday.com/fonts/v2/p2.woff2');
+  assert.strictEqual(f.fonts[0].download, 'https://readqurantoday.com/fonts/v2/p2.woff2?dl=1');
   assert.strictEqual(f.ayahs.length, 286);
   assert.ok(f.ayahs.every((a) => a.glyphs.every((g) => g.page >= 2 && g.page <= 49 && g.text)));
   assert.ok((await call('get_file', { kind: 'font' })).error);
@@ -189,6 +192,11 @@ test('get_file: the data sets, and only the files it names', async () => {
   const d = (await call('get_file', { kind: 'data', translation: 'sahih' })).value;
   assert.strictEqual(d.download, 'https://readqurantoday.com/mcp/files/translation-sahih.json');
   assert.ok(['quran-uthmani', 'mushaf', 'translation', 'tafsir', 'words'].every((id) => d.datasets.some((x) => x.id === id)));
+  // Each whole file has a link that saves it; the server's own are attachments already
+  const ds = Object.fromEntries(d.datasets.map((x) => [x.id, x]));
+  assert.strictEqual(ds.mushaf.download, 'https://readqurantoday.com/data/mushaf.json?dl=1');
+  assert.strictEqual(ds['quran-uthmani'].download, 'https://readqurantoday.com/mcp/files/quran-uthmani.txt');
+  assert.strictEqual(ds.timing.download, undefined);
   const uthmani = await (await fetch(base + '/mcp/files/quran-uthmani.txt')).text();
   assert.strictEqual(uthmani.split('\n').filter((l) => l.trim() && !l.startsWith('#')).length, 6236);
   assert.match(uthmani, /Tanzil/);
