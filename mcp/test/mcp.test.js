@@ -166,7 +166,8 @@ test('get_file: a surah as text, a link the server answers with the file', async
 test('get_file: the MP3 of a surah, or all of a reciter\'s', async () => {
   const one = (await call('get_file', { kind: 'audio', surah: 36, reciter: 'mishari-rashid-al-afasy' })).value;
   assert.strictEqual(one.files.length, 1);
-  assert.strictEqual(one.files[0].download, 'https://audio.readqurantoday.com/mishari-rashid-al-afasy/036.mp3');
+  assert.strictEqual(one.files[0].download, 'https://audio.readqurantoday.com/mishari-rashid-al-afasy/036.mp3?dl=1');
+  assert.strictEqual(one.files[0].play, 'https://audio.readqurantoday.com/mishari-rashid-al-afasy/036.mp3');
   const all = (await call('get_file', { kind: 'audio' })).value;
   assert.strictEqual(all.files.length, 114);
   assert.ok((await call('get_file', { kind: 'audio', reciter: 'nobody' })).error);

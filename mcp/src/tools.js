@@ -276,17 +276,19 @@ function registerTools(server, q) {
         link: q.link(s),
       });
     }
+    // The recordings' host answers ?dl=1 as an attachment, so a click saves the file rather than playing it
+    const save = (u) => (/^https:\/\//.test(q.AUDIO) ? `${u}?dl=1` : u);
     const mp3 = (n) => {
       const t = q.timing(id, n);
-      return t && { surah: n, name: q.surah(n).en, download: `${q.AUDIO}/${t.audioPath}`, minutes: Math.round(t.duration / 60) };
+      const url = `${q.AUDIO}/${t ? t.audioPath : ''}`;
+      return t && { surah: n, name: q.surah(n).en, download: save(url), play: url, minutes: Math.round(t.duration / 60) };
     };
     const files = (s ? [s] : q.surahs.map((x) => x.id)).map(mp3).filter(Boolean);
     if (!files.length) return fail(`${r.name} (${id}) has no recording of surah ${s} here.`);
     return reply({
       reciter: { id, name: r.name, arabic: r.nameAr, note: r.note || undefined },
       files,
-      // An MP3 link opens in the browser's player, which has its own download button
-      note: 'Each link is the MP3 itself; the browser plays it, and saves it from its menu.',
+      note: '"download" saves the MP3 when opened; "play" opens it in the browser\'s player.',
       ...(s ? { link: q.link(s) } : {}),
     });
   });
