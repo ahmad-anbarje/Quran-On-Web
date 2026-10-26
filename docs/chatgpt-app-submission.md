@@ -4,6 +4,13 @@ What to enter at <https://platform.openai.com/plugins> → **Upload new or exist
 plugin** → **With MCP**. Requirements:
 <https://developers.openai.com/apps-sdk/deploy/submission>.
 
+## The package
+
+`integrations/chatgpt/` is the upload, zipped from inside the folder (so
+`.codex-plugin/plugin.json` sits at the root of the zip): the manifest with the
+listing and the test cases below, `.mcp.json` with the server, and the icons.
+Set `demo_recording_url` in the manifest once the video is up, zip, upload.
+
 ## Before you start (yours to do)
 
 - **Verify the OpenAI organization** (individual or business), in organization

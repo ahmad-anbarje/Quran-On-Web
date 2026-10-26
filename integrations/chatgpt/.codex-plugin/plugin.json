@@ -1,0 +1,83 @@
+{
+  "name": "read-quran-today",
+  "version": "1.0.0",
+  "description": "The Holy Quran as printed in the Madinah Mushaf (Hafs), for ChatGPT: the Arabic, 127 translations in 88 languages, the Tafsir al-Muyassar, word-by-word meanings and recitations, from readqurantoday.com.",
+  "author": {
+    "name": "Read Quran Today",
+    "email": "readqurantoday@outlook.com",
+    "url": "https://readqurantoday.com"
+  },
+  "homepage": "https://readqurantoday.com",
+  "repository": "https://github.com/ahmad-anbarje/Quran-On-Web",
+  "license": "MIT",
+  "keywords": ["quran", "islam", "tafsir", "translation", "recitation", "arabic"],
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Read Quran Today",
+    "shortDescription": "The Quran: text, audio, tafsir",
+    "longDescription": "Read Quran Today gives ChatGPT the text of the Holy Quran as printed in the Madinah Mushaf (Hafs), so it can quote ayahs exactly instead of from memory.\n\nAsk for any ayah or run of ayahs and get the Arabic with its mushaf page and links to read and hear it on readqurantoday.com, in any of 127 translations in 88 languages: Saheeh International, Hilali and Khan, and the translations published by QuranEnc and Tanzil, each credited to its translator. Search the Arabic (with or without diacritics) or a translation. Read the Tafsir al-Muyassar of an ayah, and each word's transliteration and meaning in English and six more languages. Find a reciter's recording of a surah, with where each ayah starts, and download a surah as text or audio.\n\nFree and open: no account, no key, no advertising, and nothing about you is kept.",
+    "developerName": "Read Quran Today",
+    "category": "Education",
+    "capabilities": [],
+    "websiteURL": "https://readqurantoday.com",
+    "supportURL": "https://readqurantoday.com/terms/#contact",
+    "privacyPolicyURL": "https://readqurantoday.com/privacy/",
+    "termsOfServiceURL": "https://readqurantoday.com/terms/",
+    "defaultPrompt": [
+      "Show me Ayat al-Kursi with its translation",
+      "Explain Surah Al-Ikhlas word by word",
+      "Play Surah Al-Kahf by Maher al-Muaiqly"
+    ],
+    "brandColor": "#1A6FA3",
+    "brandColorDark": "#3F9BD1",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/logo.png"
+  },
+  "extensions": {
+    "com.openai": {
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Quote an ayah exactly, with a named translation",
+              "prompt": "Show me Ayat al-Kursi in Arabic with the Saheeh International translation.",
+              "tools_triggered": ["get_ayah"],
+              "expected_behavior": "Quotes 2:255 in Arabic exactly as returned, with the Saheeh International English, mushaf page 42, and the link https://readqurantoday.com/surah/2/255/."
+            },
+            {
+              "description": "Find ayahs by a word in a translation",
+              "prompt": "Which ayahs of the Quran mention patience? Give me the first five with references.",
+              "tools_triggered": ["search"],
+              "expected_behavior": "Searches a translation for 'patience' and lists five ayahs with their references (such as 2:45 and 2:153) and links."
+            },
+            {
+              "description": "Word-by-word meanings in another language",
+              "prompt": "Explain Surah Al-Ikhlas word by word in Urdu.",
+              "tools_triggered": ["word_by_word"],
+              "expected_behavior": "For each of the four ayahs of surah 112, gives each word's transliteration and its Urdu meaning."
+            },
+            {
+              "description": "The tafsir of an ayah",
+              "prompt": "What does the Tafsir al-Muyassar say about the first ayah of Surah Al-Fatiha?",
+              "tools_triggered": ["get_tafsir"],
+              "expected_behavior": "Quotes the Arabic tafsir of 1:1 as returned, credited to the King Fahd Complex, with the link."
+            },
+            {
+              "description": "A recitation, starting at an ayah",
+              "prompt": "Give me Surah Ya-Sin recited by Mishari al-Afasy, starting at ayah 12.",
+              "tools_triggered": ["list_reciters", "get_recitation"],
+              "expected_behavior": "Gives the recording of surah 36 by Mishari Rashid al-Afasy and a link that starts at ayah 12."
+            }
+          ],
+          "negative": [
+            { "description": "Weather, not the Quran", "prompt": "What is the weather in Dubai today?" },
+            { "description": "Creative writing, not the Quran", "prompt": "Write me a short poem about the sea." },
+            { "description": "Everyday translation, not the Quran", "prompt": "Translate 'good morning' into Arabic." }
+          ]
+        },
+        "demo_recording_url": "",
+        "commerce": false
+      }
+    }
+  }
+}
