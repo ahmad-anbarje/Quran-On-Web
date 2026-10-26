@@ -515,9 +515,9 @@ function main() {
   const ayahUrls = ayahPages.build(surahs, SITE);
   console.log('surah/*/*/    %d ayah pages written', ayahUrls.length);
 
-  /* The privacy page is hand-written rather than generated, which is how it came
-     to sit outside the sitemap: a page nothing lists is a page nothing finds. */
-  const urls = [`${SITE}/`, `${SITE}/privacy/`]
+  /* The privacy and terms pages are hand-written rather than generated, which is how
+     they came to sit outside the sitemap: a page nothing lists is a page nothing finds. */
+  const urls = [`${SITE}/`, `${SITE}/privacy/`, `${SITE}/terms/`]
     .concat(surahs.map((s) => `${SITE}/surah/${s.id}/`))
     .concat(juz.map((j) => `${SITE}/juz/${j.id}/`))
     .concat(ayahUrls);
