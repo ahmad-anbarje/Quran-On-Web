@@ -15,9 +15,9 @@
   "interface": {
     "displayName": "Read Quran Today",
     "shortDescription": "The Quran: text, audio, tafsir",
-    "longDescription": "Read Quran Today gives ChatGPT the text of the Holy Quran as printed in the Madinah Mushaf (Hafs), so it can quote ayahs exactly instead of from memory.\n\nAsk for any ayah or run of ayahs and get the Arabic with its mushaf page and links to read and hear it on readqurantoday.com, in any of 127 translations in 88 languages: Saheeh International, Hilali and Khan, and the translations published by QuranEnc and Tanzil, each credited to its translator. Search the Arabic (with or without diacritics) or a translation. Read the Tafsir al-Muyassar of an ayah, and each word's transliteration and meaning in English and six more languages. Find a reciter's recording of a surah, with where each ayah starts, and download a surah as text or audio.\n\nFree and open: no account, no key, no advertising, and nothing about you is kept.",
+    "longDescription": "Read Quran Today gives ChatGPT the text of the Holy Quran as printed in the Madinah Mushaf (Hafs), so it can quote ayahs exactly instead of from memory.\n\nAsk for any ayah or run of ayahs and get the Arabic with its mushaf page and links to read and hear it on readqurantoday.com, in any of 127 translations in 88 languages: Saheeh International, Hilali and Khan, and the translations published by QuranEnc and Tanzil, each credited to its translator. Search the Arabic (with or without diacritics) or a translation. Read the Tafsir al-Muyassar of an ayah, and each word's transliteration and meaning in English and six more languages. Find a reciter's recording of a surah, with where each ayah starts, and download a surah as text or audio.\n\nOpen to all: no account, no key, no advertising, and nothing about you is kept.",
     "developerName": "Read Quran Today",
-    "category": "Education",
+    "category": "Education & Research",
     "capabilities": [],
     "websiteURL": "https://readqurantoday.com",
     "supportURL": "https://readqurantoday.com/terms/#contact",
@@ -41,31 +41,31 @@
             {
               "description": "Quote an ayah exactly, with a named translation",
               "prompt": "Show me Ayat al-Kursi in Arabic with the Saheeh International translation.",
-              "tools_triggered": ["get_ayah"],
+              "tools_triggered": "get_ayah",
               "expected_behavior": "Quotes 2:255 in Arabic exactly as returned, with the Saheeh International English, mushaf page 42, and the link https://readqurantoday.com/surah/2/255/."
             },
             {
               "description": "Find ayahs by a word in a translation",
               "prompt": "Which ayahs of the Quran mention patience? Give me the first five with references.",
-              "tools_triggered": ["search"],
+              "tools_triggered": "search",
               "expected_behavior": "Searches a translation for 'patience' and lists five ayahs with their references (such as 2:45 and 2:153) and links."
             },
             {
               "description": "Word-by-word meanings in another language",
               "prompt": "Explain Surah Al-Ikhlas word by word in Urdu.",
-              "tools_triggered": ["word_by_word"],
+              "tools_triggered": "word_by_word",
               "expected_behavior": "For each of the four ayahs of surah 112, gives each word's transliteration and its Urdu meaning."
             },
             {
               "description": "The tafsir of an ayah",
               "prompt": "What does the Tafsir al-Muyassar say about the first ayah of Surah Al-Fatiha?",
-              "tools_triggered": ["get_tafsir"],
+              "tools_triggered": "get_tafsir",
               "expected_behavior": "Quotes the Arabic tafsir of 1:1 as returned, credited to the King Fahd Complex, with the link."
             },
             {
               "description": "A recitation, starting at an ayah",
               "prompt": "Give me Surah Ya-Sin recited by Mishari al-Afasy, starting at ayah 12.",
-              "tools_triggered": ["list_reciters", "get_recitation"],
+              "tools_triggered": "list_reciters, get_recitation",
               "expected_behavior": "Gives the recording of surah 36 by Mishari Rashid al-Afasy and a link that starts at ayah 12."
             }
           ],
