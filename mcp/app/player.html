@@ -140,7 +140,9 @@
     if (el) { el.classList.add('on'); view(); }
     // The next few ayahs' faces, ahead of the recitation
     if (mushafPieces) for (var k = i; k <= Math.min(mushafPieces.length - 1, i + 5); k++) mushafPieces[k].forEach(function (piece) { needPage(piece[0], true); });
-    $('where').textContent = say('الآية ' + digits(i + 1) + ' من ' + digits(data.ayahs.length), 'Ayah ' + (i + 1) + ' of ' + data.ayahs.length);
+    $('where').textContent = range
+      ? say('الآيات ' + digits(range.from + 1) + '–' + digits(range.to + 1) + ' · الآية ' + digits(i + 1), 'Ayahs ' + (range.from + 1) + '–' + (range.to + 1) + ' · ayah ' + (i + 1))
+      : say('الآية ' + digits(i + 1) + ' من ' + digits(data.ayahs.length), 'Ayah ' + (i + 1) + ' of ' + data.ayahs.length);
     $('prev').disabled = i <= 0;
     $('next').disabled = i >= data.ayahs.length - 1;
   }
@@ -153,9 +155,14 @@
     if (top < box.scrollTop + 8 || bottom > box.scrollTop + box.clientHeight - 8) box.scrollTop = top - box.clientHeight / 3;
   }
 
+  /* A run of ayahs asked for (ayah to "to"): played and stopped at its end; going outside it leaves it */
+  var range = null;
+  var rangeEnd = function () { return range ? data.ayahs[range.to].end : Infinity; };
+
   function seekTo(i, play) {
     if (!data) return;
     i = Math.max(0, Math.min(data.ayahs.length - 1, i));
+    if (range && (i < range.from || i > range.to)) range = null;
     audio.currentTime = data.ayahs[i].start;
     mark(i);
     if (play) audio.play().catch(function () {});
@@ -269,6 +276,7 @@
   function show(result, startAyah) {
     if (!result || result.isError) { note((result && result.content && result.content[0] && result.content[0].text) || say('تعذّر جلب التلاوة.', 'The recitation could not be loaded.')); return; }
     data = result.structuredContent || JSON.parse(result.content[0].text);
+    range = data.endAyah ? { from: (data.startAyah || 1) - 1, to: data.endAyah - 1 } : null;
     note('');
     $('surah').textContent = data.surah.arabic ? 'سورة ' + data.surah.arabic : data.surah.name;
     $('who').textContent = (ar ? data.reciter.arabic || data.reciter.name : data.reciter.name) + (data.reciter.note ? ' · ' + data.reciter.note : '') + ' · ' + data.surah.name;
@@ -304,12 +312,19 @@
 
   $('reciter').onchange = function () {
     var keep = Math.max(0, on);
-    app.callServerTool({ name: 'get_recitation', arguments: { surah: data.surah.number, reciter: this.value } })
+    var args = { surah: data.surah.number, reciter: this.value };
+    if (range) { args.ayah = range.from + 1; args.to = range.to + 1; }   // the run stays the run
+    app.callServerTool({ name: 'get_recitation', arguments: args })
       .then(function (r) { show(r, keep); })
       .catch(function () { note(say('تعذّر تغيير القارئ.', 'The reciter could not be changed.')); });
   };
 
-  $('play').onclick = function () { if (audio.paused) audio.play().catch(function () {}); else audio.pause(); };
+  $('play').onclick = function () {
+    if (!audio.paused) { audio.pause(); return; }
+    // A run played to its end starts again from its first ayah
+    if (range && audio.currentTime >= rangeEnd() - 0.3) audio.currentTime = data.ayahs[range.from].start;
+    audio.play().catch(function () {});
+  };
   $('prev').onclick = function () { seekTo(on - 1, !audio.paused); };
   $('next').onclick = function () { seekTo(on + 1, !audio.paused); };
   $('speed').onclick = function () {
@@ -328,7 +343,8 @@
   audio.onpause = function () { $('playIcon').setAttribute('d', PLAY); $('play').setAttribute('aria-label', say('تشغيل', 'Play')); };
   audio.ontimeupdate = function () {
     if (!data) return;
-    mark(ayahAt(audio.currentTime));
+    if (range && !audio.paused && audio.currentTime >= rangeEnd()) audio.pause();
+    mark(ayahAt(Math.min(audio.currentTime, rangeEnd() - 0.01)));
     if (audio.duration) $('seek').value = Math.round(audio.currentTime / audio.duration * 1000);
     $('time').textContent = clock(audio.currentTime) + ' / ' + clock(audio.duration || data.duration);
   };

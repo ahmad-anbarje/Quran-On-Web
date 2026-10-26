@@ -169,15 +169,16 @@ function registerTools(server, q) {
     title: 'Get a recitation',
     description:
       'The recording of a surah: a link to the MP3, its length, and where each ayah starts and ends, ' +
-      'in seconds, with a link that starts at a given ayah.',
+      'in seconds, with a link that starts at a given ayah, or plays a run of ayahs and stops.',
     inputSchema: {
       surah: surahArg,
       reciter: z.string().optional().describe('Reciter id; defaults to the site\'s own'),
       ayah: z.number().int().min(1).optional().describe('An ayah to start the link at'),
+      to: z.number().int().min(1).optional().describe('With ayah: the last ayah of a run to play, e.g. ayah 1 to 5'),
     },
     annotations: { readOnlyHint: true, openWorldHint: false },
     _meta: playerMeta,
-  }, ({ surah: s, reciter, ayah }) => {
+  }, ({ surah: s, reciter, ayah, to }) => {
     const id = reciter || q.recitations.default;
     const r = q.recitation(id);
     if (!r) return fail(`No reciter "${id}"; list_reciters gives the ids.`);
@@ -185,13 +186,18 @@ function registerTools(server, q) {
     if (!t) return fail(`${r.name} (${id}) has no recording of surah ${s} here.`);
     const info = q.surah(s);
     if (ayah && ayah > info.v) return fail(`Surah ${s} has ${info.v} ayahs.`);
+    if (to && !ayah) return fail('"to" ends a run: give "ayah" to start it.');
+    if (to && (to < ayah || to > info.v)) return fail(`"to" must be between ${ayah} and ${info.v}.`);
     const audio = `${q.AUDIO}/${t.audioPath}`;
     const sec = (ms) => Math.round(ms) / 1000;
+    // A run plays by the link alone: a media fragment, #t=start,end, which browsers stop at the end of
+    const run = to ? { endAyah: to, playRange: `${audio}#t=${sec(t.ayah[ayah - 1][0])},${sec(t.ayah[to - 1][1])}` } : {};
     const value = {
       surah: { number: s, name: info.en, arabic: info.name },
       reciter: { id, name: r.name, arabic: r.nameAr, note: r.note || undefined },
       audio,
       ...(ayah ? { startAyah: ayah, startAt: `${audio}#t=${sec(t.ayah[ayah - 1][0])}` } : {}),
+      ...run,
       duration: Math.round(t.duration),
       ayahs: t.ayah.map(([a, b], i) => ({ ayah: i + 1, start: sec(a), end: sec(b) })),
       link: q.link(s),

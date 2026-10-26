@@ -132,6 +132,18 @@ test('get_recitation opens the player: one self-contained page, fed the timings 
   }
 });
 
+test('get_recitation: a run of ayahs plays by its link alone, and stops at its end', async () => {
+  const { value } = await call('get_recitation', { surah: 1, ayah: 1, to: 5 });
+  assert.strictEqual(value.startAyah, 1);
+  assert.strictEqual(value.endAyah, 5);
+  const [from, until] = value.playRange.split('#t=')[1].split(',').map(Number);
+  assert.strictEqual(from, value.ayahs[0].start);
+  assert.strictEqual(until, value.ayahs[4].end);
+  assert.ok((await call('get_recitation', { surah: 1, to: 5 })).error);          // "to" needs "ayah"
+  assert.ok((await call('get_recitation', { surah: 1, ayah: 5, to: 2 })).error);  // backwards
+  assert.ok((await call('get_recitation', { surah: 1, ayah: 1, to: 8 })).error);  // past the end
+});
+
 test('get_recitation: a link to the recording, and to an ayah in it', async () => {
   const { value } = await call('get_recitation', { surah: 18, ayah: 10 });
   assert.match(value.audio, /^https:\/\/audio\.readqurantoday\.com\/.+\/018\.mp3$/);
