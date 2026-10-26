@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>MCP · Admin · The Great Quran</title>
+<link rel="stylesheet" href="../admin.css" />
+<style>
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 10px; margin: 16px 0; }
+  .card { padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .card b { display: block; font-size: 1.6rem; color: var(--primary); line-height: 1.2; }
+  .card span { font-size: 0.8rem; opacity: 0.7; }
+  h2 { font-size: 1rem; margin: 22px 0 8px; }
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 120px; padding: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .bar { flex: 1 1 0; background: var(--primary); border-radius: 3px 3px 0 0; min-height: 2px; opacity: 0.85; position: relative; }
+  .bar:hover { opacity: 1; }
+  .axis { display: flex; justify-content: space-between; font-size: 0.72rem; opacity: 0.6; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  td, th { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
+  th { font-weight: 600; opacity: 0.7; font-size: 0.78rem; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; width: 6rem; }
+  tr:last-child td { border-bottom: 0; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 14px; }
+  .note { font-size: 0.8rem; opacity: 0.7; margin-top: 18px; }
+  .err { color: var(--bad); }
+  select { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <h1>MCP server</h1>
+    <select id="range" aria-label="Period">
+      <option value="1">Today</option>
+      <option value="7" selected>Last 7 days</option>
+      <option value="30">Last 30 days</option>
+      <option value="90">Last 90 days</option>
+    </select>
+  </header>
+  <p class="crumb"><a href="../">Admin</a> · how much readqurantoday.com/mcp is used, by AI assistants and developers' apps</p>
+
+  <div class="cards">
+    <div class="card"><b id="calls">–</b><span>tool calls</span></div>
+    <div class="card"><b id="conns">–</b><span>connections</span></div>
+    <div class="card"><b id="files">–</b><span>files downloaded</span></div>
+    <div class="card"><b id="limited">–</b><span>refused, too many</span></div>
+    <div class="card"><b id="errors">–</b><span>errors</span></div>
+  </div>
+
+  <h2>Tool calls a day</h2>
+  <div class="bars" id="bars"></div>
+  <div class="axis"><span id="from"></span><span id="to"></span></div>
+
+  <div class="two">
+    <div>
+      <h2>By tool</h2>
+      <table><thead><tr><th>Tool</th><th class="n">Calls</th></tr></thead><tbody id="tools"></tbody></table>
+    </div>
+    <div>
+      <h2>By app</h2>
+      <table><thead><tr><th>App (as it names itself)</th><th class="n">Connections</th></tr></thead><tbody id="clients"></tbody></table>
+    </div>
+  </div>
+
+  <p class="note" id="note">Counts only, by UTC day: no addresses and nothing asked are kept. A connection is an assistant opening the server, about once a conversation.</p>
+</main>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var data = null;
+  var fmt = function (n) { return Number(n || 0).toLocaleString(); };
+
+  function lastDays(n) {
+    var out = [], d = new Date();
+    for (var i = n - 1; i >= 0; i--) {
+      var x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - i));
+      out.push(x.toISOString().slice(0, 10));
+    }
+    return out;
+  }
+
+  function rows(tbody, map) {
+    var list = Object.keys(map).map(function (k) { return [k, map[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+    tbody.textContent = '';
+    if (!list.length) { tbody.innerHTML = '<tr><td colspan="2">None yet</td></tr>'; return; }
+    list.forEach(function (r) {
+      var tr = document.createElement('tr');
+      var a = document.createElement('td'); a.textContent = r[0];
+      var b = document.createElement('td'); b.className = 'n'; b.textContent = fmt(r[1]);
+      tr.appendChild(a); tr.appendChild(b); tbody.appendChild(tr);
+    });
+  }
+
+  function draw() {
+    if (!data) return;
+    var days = lastDays(Number($('range').value));
+    var sum = { calls: 0, files: 0, errors: 0, limited: 0, conns: 0 }, tools = {}, clients = {};
+    var per = days.map(function (k) {
+      var d = data.days[k];
+      if (!d) return 0;
+      sum.calls += d.calls; sum.files += d.files; sum.errors += d.errors; sum.limited += d.limited || 0;
+      Object.keys(d.tools).forEach(function (t) { tools[t] = (tools[t] || 0) + d.tools[t]; });
+      Object.keys(d.clients).forEach(function (c) { clients[c] = (clients[c] || 0) + d.clients[c]; sum.conns += d.clients[c]; });
+      return d.calls;
+    });
+    $('calls').textContent = fmt(sum.calls);
+    $('conns').textContent = fmt(sum.conns);
+    $('files').textContent = fmt(sum.files);
+    $('limited').textContent = fmt(sum.limited);
+    $('errors').textContent = fmt(sum.errors);
+    var max = Math.max.apply(null, per.concat([1]));
+    $('bars').textContent = '';
+    per.forEach(function (n, i) {
+      var b = document.createElement('div');
+      b.className = 'bar';
+      b.style.height = Math.max(2, n / max * 100) + '%';
+      b.title = days[i] + ': ' + fmt(n) + ' calls';
+      $('bars').appendChild(b);
+    });
+    $('from').textContent = days[0];
+    $('to').textContent = days[days.length - 1];
+    rows($('tools'), tools);
+    rows($('clients'), clients);
+  }
+
+  $('range').onchange = draw;
+  fetch('stats.json', { cache: 'no-store' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (d) {
+      data = d;
+      if (!d.saved) $('note').textContent += ' These counts are held in memory only and start again when the service restarts.';
+      draw();
+    })
+    .catch(function (e) { $('note').innerHTML = '<span class="err">Could not read the counts (' + e.message + ').</span>'; });
+})();
+</script>
+</body>
+</html>

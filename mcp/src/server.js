@@ -23,22 +23,31 @@ const quran = require('./quran');
 const { build } = require('./mcp');
 const { serveFile } = require('./files');
 const { feedbackUrl } = require('./feedback');
+const { createStats, statsFile } = require('./stats');
 
 const VERSION = require('../package.json').version;
 const MAX_BODY = 64 * 1024;
-const PER_MINUTE = Number(process.env.MCP_PER_MINUTE || 60);
+// Generous per address: every reader of one assistant arrives from that company's few addresses
+const PER_MINUTE = Number(process.env.MCP_PER_MINUTE || 600);
+// And a ceiling over all of them together, so a flood cannot take the box
+const TOTAL_PER_MINUTE = Number(process.env.MCP_TOTAL_PER_MINUTE || 6000);
 
 function createServer(options = {}) {
   const root = options.root || path.join(__dirname, '..', '..');
   const q = quran.open(root);
   const perMinute = options.perMinute || PER_MINUTE;
+  const totalPerMinute = options.totalPerMinute || TOTAL_PER_MINUTE;
+  const stats = options.stats || createStats('statsFile' in options ? options.statsFile : statsFile());
   const reports = feedbackUrl(options);
 
   /* Requests a minute, by address; the map is swept as it goes, so it holds
      only the last minute's callers */
   const seen = new Map();
+  let all = { since: 0, n: 0 };
   function allowed(ip) {
     const now = Date.now();
+    if (now - all.since > 60_000) all = { since: now, n: 0 };
+    if (++all.n > totalPerMinute) return false;
     let e = seen.get(ip);
     if (!e || now - e.since > 60_000) { e = { since: now, n: 0 }; seen.set(ip, e); }
     e.n++;
@@ -70,14 +79,16 @@ function createServer(options = {}) {
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
 
     if (url === '/health') return send(res, 200, { ok: true, version: VERSION });
+    // The counts, for the admin page: nginx passes this only behind the admin password
+    if (url === '/stats' && req.method === 'GET') return send(res, 200, stats.snapshot(), { 'Cache-Control': 'no-store' });
 
     const ip = req.headers['x-real-ip'] || req.socket.remoteAddress;
-    const tooMany = () => send(res, 429, rpcError(-32000, `Too many requests: ${perMinute} a minute`), { 'Retry-After': '60' });
+    const tooMany = () => stats.limited() || send(res, 429, rpcError(-32000, `Too many requests: ${perMinute} a minute`), { 'Retry-After': '60' });
 
     /* The files get_file links to, made as they are asked for */
     if (url.startsWith('/mcp/files/') && (req.method === 'GET' || req.method === 'HEAD')) {
       if (!allowed(ip)) return tooMany();
-      if (serveFile(q, req, res)) return;
+      if (serveFile(q, req, res)) return stats.file();
       return send(res, 404, { error: 'no such file; get_file with kind "data" lists them' });
     }
     if (url !== '/mcp') return send(res, 404, { error: 'not found; the MCP endpoint is /mcp' });
@@ -100,6 +111,7 @@ function createServer(options = {}) {
       try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch (e) {
         return send(res, 400, rpcError(-32700, 'Parse error'));
       }
+      stats.message(body);
       const server = build(q, VERSION, { feedbackUrl: reports });
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
       res.on('close', () => { transport.close(); server.close(); });
@@ -108,6 +120,7 @@ function createServer(options = {}) {
         await transport.handleRequest(req, res, body);
       } catch (e) {
         console.error(e);
+        stats.error();
         if (!res.headersSent) send(res, 500, rpcError(-32603, 'Internal error'));
       }
     });

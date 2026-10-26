@@ -10,8 +10,10 @@ Environment=NODE_ENV=production MCP_HOST=127.0.0.1 MCP_PORT=8788 NODE_OPTIONS=--
 Restart=on-failure
 RestartSec=5
 
-# Reads the checkout, writes nothing: a throwaway user and a read-only system
+# Reads the checkout, writes only its counts (/var/lib/readquran-mcp, for
+# /admin/mcp/): a throwaway user and an otherwise read-only system
 DynamicUser=yes
+StateDirectory=readquran-mcp
 NoNewPrivileges=yes
 ProtectSystem=strict
 ProtectHome=yes

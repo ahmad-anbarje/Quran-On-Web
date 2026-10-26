@@ -264,6 +264,40 @@ test('a caller over its budget is told to wait', async () => {
   await new Promise((ok) => tight.close(ok));
 });
 
+test('all callers together are held to a ceiling, whatever their addresses', async () => {
+  const capped = createServer({ perMinute: 100, totalPerMinute: 3 });
+  await new Promise((ok) => capped.listen(0, '127.0.0.1', ok));
+  const url = `http://127.0.0.1:${capped.address().port}/mcp`;
+  const ping = (ip) => fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream', 'X-Real-IP': ip },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'ping' }),
+  }).then((r) => r.status);
+  assert.deepStrictEqual([await ping('10.0.0.1'), await ping('10.0.0.2'), await ping('10.0.0.3'), await ping('10.0.0.4')], [200, 200, 200, 429]);
+  await new Promise((ok) => capped.close(ok));
+});
+
+test('usage is counted for the admin page: calls by tool, connections by app, nothing else', async () => {
+  const counted = createServer({ perMinute: 100, statsFile: null });
+  await new Promise((ok) => counted.listen(0, '127.0.0.1', ok));
+  const at = `http://127.0.0.1:${counted.address().port}`;
+  const client = new Client({ name: 'claude-ai', version: '1' });
+  await client.connect(new StreamableHTTPClientTransport(new URL(at + '/mcp')));
+  await client.callTool({ name: 'get_ayah', arguments: { surah: 1, ayah: 1 } });
+  await client.callTool({ name: 'get_ayah', arguments: { surah: 1, ayah: 2 } });
+  await client.callTool({ name: 'list_surahs', arguments: {} });
+  await client.close();
+  await fetch(at + '/mcp/files/surah-112.txt');
+  const s = await (await fetch(at + '/stats')).json();
+  const day = s.days[new Date().toISOString().slice(0, 10)];
+  assert.strictEqual(day.calls, 3);
+  assert.deepStrictEqual(day.tools, { get_ayah: 2, list_surahs: 1 });
+  assert.deepStrictEqual(day.clients, { 'claude-ai': 1 });
+  assert.strictEqual(day.files, 1);
+  assert.doesNotMatch(JSON.stringify(s), /127\.0\.0\.1|surah":1/);   // no addresses, nothing asked
+  await new Promise((ok) => counted.close(ok));
+});
+
 test('health, wrong paths and methods', async () => {
   assert.strictEqual((await fetch(base + '/health')).status, 200);
   assert.strictEqual((await fetch(base + '/elsewhere')).status, 404);
