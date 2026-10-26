@@ -29,8 +29,11 @@ function arabicIndex(q) {
 }
 
 function registerTools(server, q) {
-  // The directory reads a tool's name from its annotations: the one title, given in both places
-  const tool = (name, def, fn) => server.registerTool(name, { ...def, annotations: { title: def.title, ...def.annotations } }, fn);
+  // The directories read a tool's name and all three hints from its annotations, each said outright
+  const tool = (name, def, fn) => server.registerTool(name, {
+    ...def,
+    annotations: { title: def.title, readOnlyHint: true, destructiveHint: false, openWorldHint: false, ...def.annotations },
+  }, fn);
 
   tool('get_ayah', {
     title: 'Get ayahs',
