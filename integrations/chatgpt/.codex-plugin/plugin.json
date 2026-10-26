@@ -75,7 +75,7 @@
             { "description": "Everyday translation, not the Quran", "prompt": "Translate 'good morning' into Arabic." }
           ]
         },
-        "demo_recording_url": "",
+        "demo_recording_url": "https://readqurantoday.com/review/chatgpt-demo.mp4",
         "commerce": false
       }
     }
