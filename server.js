@@ -96,6 +96,11 @@ const toFeedback = (path) => (req, res) => {
 app.post('/api/feedback', (req, res) => toFeedback('/api/feedback')(req, res));
 app.use('/feedback', (req, res) => toFeedback('/feedback' + req.url)(req, res));
 
+// The mushaf opened at an ayah, as nginx serves it: /surah/2/ayah/255 is surah 2's reader
+app.get(/^\/surah\/(\d+)\/ayah\/\d+\/?$/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'surah', req.params[0], 'index.html'));
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

@@ -69,7 +69,7 @@ test('get_ayah: Ayat al-Kursi, in the Complex English by default, with its page 
   assert.strictEqual(a.page, 42);
   assert.strictEqual(value.link, 'https://readqurantoday.com/surah/2/');
   assert.strictEqual(a.link, 'https://readqurantoday.com/surah/2/255/');
-  assert.strictEqual(a.read, 'https://readqurantoday.com/surah/2/?ayah=255');
+  assert.strictEqual(a.read, 'https://readqurantoday.com/surah/2/ayah/255');
 });
 
 test('get_ayah: a run, another translation, and the Arabic alone', async () => {
@@ -101,7 +101,7 @@ test('get_tafsir and word_by_word', async () => {
   const w = await call('word_by_word', { surah: 1, ayah: 1 });
   assert.deepStrictEqual(w.value.words.map((x) => x.transliteration), ["bis'mi", 'l-lahi', 'l-raḥmāni', 'l-raḥīmi']);
   assert.strictEqual(w.value.words[0].meaning, 'In (the) name');
-  assert.strictEqual(w.value.read, 'https://readqurantoday.com/surah/1/?ayah=1');
+  assert.strictEqual(w.value.read, 'https://readqurantoday.com/surah/1/ayah/1');
   const ur = await call('word_by_word', { surah: 1, ayah: 1, language: 'ur' });
   assert.match(ur.value.words[1].meaning, /[؀-ۿ]/);
   // Turkish lacks some words of 2:255: each still has a meaning, in English and said so
@@ -170,7 +170,7 @@ test('get_recitation: a link to the recording, and to an ayah in it', async () =
   assert.match(value.startAt, /#t=\d+(\.\d+)?$/);
   assert.strictEqual(value.ayahs.length, 110);
   assert.ok(value.ayahs[9].start < value.ayahs[9].end);
-  assert.strictEqual(value.read, 'https://readqurantoday.com/surah/18/?ayah=10');
+  assert.strictEqual(value.read, 'https://readqurantoday.com/surah/18/ayah/10');
 });
 
 test('get_file: a surah as text, a link the server answers with the file', async () => {

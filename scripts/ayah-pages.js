@@ -8,7 +8,7 @@
  * Fahd Complex's English (Hilali and Muhsin Khan), the Tafsir al-Muyassar, and
  * the words one by one with their Latin reading and meaning. Enough of its own
  * that it is a page worth finding, not a stub; and from it the reader, opened
- * at the mushaf page the ayah is on (/surah/<s>/?ayah=<a>), and the ayahs
+ * at the mushaf page the ayah is on (/surah/<s>/ayah/<a>), and the ayahs
  * either side.
  *
  * Built by build-pages.js, from the files the site already serves.
@@ -128,8 +128,8 @@ ${JSON.stringify(schema)}
   <p class="ayah">${esc(surahText.hafs(arabic))} <span class="n">${ar(a)}</span></p>
 
   <p class="meta">
-    الصفحة ${ar(onPage)} من مصحف المدينة · <a href="/surah/${s.id}/?ayah=${a}">اقرأها في المصحف مع التلاوة</a><br />
-    <span lang="en" dir="ltr">Page ${onPage} of the Madinah Mushaf · <a href="/surah/${s.id}/?ayah=${a}">Read it in the mushaf, with recitation</a></span>
+    الصفحة ${ar(onPage)} من مصحف المدينة · <a href="/surah/${s.id}/ayah/${a}">اقرأها في المصحف مع التلاوة</a><br />
+    <span lang="en" dir="ltr">Page ${onPage} of the Madinah Mushaf · <a href="/surah/${s.id}/ayah/${a}">Read it in the mushaf, with recitation</a></span>
   </p>
 
   <section lang="en" dir="ltr">

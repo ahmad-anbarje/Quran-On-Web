@@ -29,6 +29,11 @@ APP_DIR=/var/www/readqurantoday
 
 install -m 644 "$APP_DIR/deploy/security-headers.conf" /etc/nginx/snippets/readquran-security.conf
 
+# The site's own address rules, which the vhost includes
+if [ -f "$APP_DIR/deploy/site-locations.conf" ]; then
+  install -m 644 "$APP_DIR/deploy/site-locations.conf" /etc/nginx/snippets/readquran-site.conf
+fi
+
 # Before umami-proxy.conf, which includes it: install them the other way round
 # and the first deploy fails `nginx -t` on a file that is not there yet.
 if [ -f "$APP_DIR/deploy/cloudflare-realip.conf" ]; then

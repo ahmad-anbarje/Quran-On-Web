@@ -84,7 +84,7 @@ function open(root) {
   function ayahLink(s, a) { return `${SITE}/surah/${s}/${a}/`; }
 
   /* The reader, opened on the mushaf page the ayah is on, to read and listen */
-  function readerLink(s, a) { return a ? `${SITE}/surah/${s}/?ayah=${a}` : link(s); }
+  function readerLink(s, a) { return a ? `${SITE}/surah/${s}/ayah/${a}` : link(s); }
 
   const whole = (v) => v;
 
