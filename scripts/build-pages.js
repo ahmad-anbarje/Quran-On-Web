@@ -264,7 +264,7 @@ function headFor(shell, title, desc, url) {
 function preloadFont(page) {
   return `  <link rel="preload" as="font" type="font/woff2" crossorigin
 ` +
-    `        href="/fonts/v2/p${page}.woff2" />
+    `        href="/fonts/v4/p${page}.woff2" />
 </head>`;
 }
 

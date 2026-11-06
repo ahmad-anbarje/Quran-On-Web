@@ -218,7 +218,7 @@
           var end = marks && marks.indexOf(word) >= 0;
           var key = s + ':' + v;
 
-          if (!end && PAIRS[key] === g) {
+          if (!end && version === 'v2' && PAIRS[key] === g) {
             el.appendChild(pairSpan(word, key, w));
             w += 2; g++;
             return;
@@ -237,7 +237,7 @@
         });
 
       } else if (line.t === 'basmalah') {
-        el.appendChild(basmalahRun(basmalah, version));
+        el.appendChild(line[version] ? basmalahGlyph(line[version], basmalah, version) : basmalahRun(basmalah, version));
 
       } else if (line.t === 'surah') {
         /* Every surah is named where it begins, whether that is partway down a
@@ -339,6 +339,18 @@
     return run;
   }
 
+  /** A v4 Basmalah: one glyph, the surah's own, in the face that holds them all */
+  function basmalahGlyph(glyph, basmalah, version) {
+    var run = document.createElement('span');
+    run.className = 'm-basmalah-run';
+    run.style.fontFamily = '"' + familyFor(version, basmalah.page) + '"';
+    var s = document.createElement('span');
+    s.className = 'm-word';
+    s.textContent = glyph;
+    run.appendChild(s);
+    return run;
+  }
+
   /* ---------- which ayah each word belongs to ----------
      The page data names no ayah: it gives words as glyphs and, apart, the
      glyphs that close one. So the numbering is recovered by counting markers
@@ -346,7 +358,7 @@
 
   /* Where each page's numbering stands as it opens, and which page each ayah
      begins on. One pass over 604 pages, when the first surah is opened. */
-  function ayahIndex(pages, marks) {
+  function ayahIndex(pages, marks, version) {
     var enter = {};                 // page -> { s, v, w, g } as the page opens
     var began = {};                 // "surah:ayah" -> the page it starts on
     var s = 0, v = 0, w = 0, g = 0;
@@ -360,14 +372,14 @@
         if (line.t === 'surah') { s = line.s; v = 1; w = 0; g = 0; }
         if (line.t !== 'ayah') continue;
 
-        var words = line.v2.split(SEP);
+        var words = line[version].split(SEP);
         for (var k = 0; k < words.length; k++) {
           var end = mk.indexOf(words[k]) >= 0;
           if (!end) {
             /* An ayah is credited to the page its first word is printed on,
                which is what the reader must turn to when it is recited. */
             if (w === 0 && !began[s + ':' + v]) began[s + ':' + v] = p;
-            w += PAIRS[s + ':' + v] === g ? 2 : 1;   // counted as fillBox numbers them
+            w += version === 'v2' && PAIRS[s + ':' + v] === g ? 2 : 1;   // counted as fillBox numbers them
             g++;
           } else { v++; w = 0; g = 0; }
         }

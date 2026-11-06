@@ -71,7 +71,7 @@ async function main() {
     await check('the boot payload fits its budget', async () => {
       let total = 0;
       const parts = [];
-      for (const p of ['/data/surahs.json', '/data/mushaf.json']) {
+      for (const p of ['/data/surahs.json', '/data/mushaf-v4.json']) {
         const res = await get(p, { 'Accept-Encoding': 'gzip' });
         assert(res.ok, `${p} returned ${res.status}`);
         const bytes = (await res.arrayBuffer()).byteLength;
@@ -93,8 +93,10 @@ async function main() {
          listen — so it is held to a size rather than to the boot budget, which
          is what stops it quietly growing into a third thing to download. The
          list of translations is the same kind of thing: fetched only when the
-         meaning window opens, and held to a size of its own. */
-      const wanted = ['mushaf.json', 'recitations.json', 'surahs.json', 'translations.json'];
+         meaning window opens, and held to a size of its own. mushaf.json, the
+         1421 printing in V1 and V2, is not read by the reader: it stays as a
+         data set for developers and as what the data checks verify. */
+      const wanted = ['mushaf-v4.json', 'mushaf.json', 'recitations.json', 'surahs.json', 'translations.json'];
       const files = fs.readdirSync(path.join(ROOT, 'public', 'data'))
         .filter((f) => f.endsWith('.json')).sort();
       assert(files.join(',') === wanted.join(','),
@@ -114,12 +116,12 @@ async function main() {
     });
 
     await check('text responses are compressed, fonts are not', async () => {
-      for (const p of ['/data/mushaf.json', '/css/style.css', '/js/app.js',
+      for (const p of ['/data/mushaf-v4.json', '/css/style.css', '/js/app.js',
                        '/data/quran-simple.txt']) {
         const res = await get(p, { 'Accept-Encoding': 'gzip' });
         assert(res.headers.get('content-encoding') === 'gzip', `${p} came back uncompressed`);
       }
-      const font = await get('/fonts/v2/p77.woff2', { 'Accept-Encoding': 'gzip' });
+      const font = await get('/fonts/v4/p77.woff2', { 'Accept-Encoding': 'gzip' });
       assert(!font.headers.get('content-encoding'),
         'woff2 is being compressed again — it is already compressed');
       return 'JSON, CSS, JS and the search text gzipped; woff2 served as-is';
@@ -142,7 +144,7 @@ async function main() {
     });
 
     await check('page fonts are cached hard', async () => {
-      const res = await get('/fonts/v2/p77.woff2');
+      const res = await get('/fonts/v4/p77.woff2');
       const cc = res.headers.get('cache-control') || '';
       assert(/immutable/.test(cc) && /max-age=\d{7,}/.test(cc),
         `page fonts carry "${cc}" — they never change and should be immutable`);
@@ -161,14 +163,14 @@ async function main() {
 
   /* ---- what the browser then has to build, measured from the data ---- */
 
-  const mushaf = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'data', 'mushaf.json'), 'utf8'));
+  const mushaf = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'data', 'mushaf-v4.json'), 'utf8'));
   const surahs = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', 'data', 'surahs.json'), 'utf8'));
 
   await check('no single page builds more spans than budgeted', async () => {
     let worst = { page: 0, words: 0 };
     for (let p = 1; p <= 604; p++) {
       const n = mushaf.pages[p].reduce(
-        (m, l) => m + (l.t === 'ayah' ? l.v2.split('|').length : 0), 0);
+        (m, l) => m + (l.t === 'ayah' ? l.v4.split('|').length : 0), 0);
       if (n > worst.words) worst = { page: p, words: n };
     }
     assert(worst.words <= BUDGET.wordsPerPage,
@@ -183,9 +185,9 @@ async function main() {
     const pages = longest.to - longest.from + 1;
     const allWords = Array.from({ length: pages }, (_, i) => longest.from + i)
       .reduce((n, p) => n + mushaf.pages[p].reduce(
-        (m, l) => m + (l.t === 'ayah' ? l.v2.split('|').length : 0), 0), 0);
+        (m, l) => m + (l.t === 'ayah' ? l.v4.split('|').length : 0), 0), 0);
     const firstPage = mushaf.pages[longest.from].reduce(
-      (m, l) => m + (l.t === 'ayah' ? l.v2.split('|').length : 0), 0);
+      (m, l) => m + (l.t === 'ayah' ? l.v4.split('|').length : 0), 0);
     assert(firstPage <= BUDGET.wordsPerPage,
       `first page of surah ${longest.id} builds ${firstPage} spans`);
     return `surah ${longest.id} spans ${pages} pages and ${allWords} words; ` +
@@ -193,11 +195,11 @@ async function main() {
   });
 
   await check('page fonts fit their budget', async () => {
-    /* The reader draws V2 only, so V1 is checked when it is on disk and skipped
-       when it is not — deleting public/fonts/v1 must not fail the suite. */
-    const present = ['v1', 'v2'].filter((v) =>
+    /* The reader draws v4; V1 and V2 are checked when they are on disk and
+       skipped when they are not — deleting either must not fail the suite. */
+    const present = ['v1', 'v2', 'v4'].filter((v) =>
       fs.existsSync(path.join(ROOT, 'public', 'fonts', v, 'p1.woff2')));
-    assert(present.includes('v2'), 'public/fonts/v2 is missing — run npm run fetch:fonts');
+    assert(present.includes('v4'), 'public/fonts/v4 is missing — run python scripts/build-qcf4.py');
 
     for (const ver of present) {
       const sizes = [];
@@ -207,9 +209,9 @@ async function main() {
       sizes.sort((a, b) => a - b);
       const max = Math.round(sizes[sizes.length - 1] / 1024);
       const mid = Math.round(sizes[Math.floor(sizes.length / 2)] / 1024);
-      if (ver === 'v2') {
-        assert(max <= BUDGET.pageFontKB, `heaviest V2 page font is ${max} KB`);
-        assert(mid <= BUDGET.medianFontKB, `median V2 page font is ${mid} KB`);
+      if (ver === 'v4') {
+        assert(max <= BUDGET.pageFontKB, `heaviest v4 page font is ${max} KB`);
+        assert(mid <= BUDGET.medianFontKB, `median v4 page font is ${mid} KB`);
       }
       results.push({ ok: true, name: `  ${ver} page fonts`, detail: `median ${mid} KB, heaviest ${max} KB` });
     }

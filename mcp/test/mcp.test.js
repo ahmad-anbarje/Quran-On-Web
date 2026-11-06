@@ -124,7 +124,7 @@ test('get_recitation opens the player: one self-contained page, fed the timings 
     assert.strictEqual(r.structuredContent.ayahs.length, 4);
     // The mushaf's own glyphs, a word each, by page: Al-Ikhlas is all on page 604
     const mushaf = r._meta['com.readqurantoday/mushaf'];
-    assert.strictEqual(mushaf.fonts, 'https://readqurantoday.com/fonts/v2/');
+    assert.strictEqual(mushaf.fonts, 'https://readqurantoday.com/fonts/v4/');
     assert.strictEqual(mushaf.ayahs.length, 4);
     assert.ok(mushaf.ayahs.every((pieces) => pieces.length === 1 && pieces[0][0] === 604 && pieces[0][1].length > 1));
   } finally {
@@ -229,8 +229,8 @@ test('get_file: a recording\'s timing file, and the mushaf\'s fonts for a surah 
   const f = (await call('get_file', { kind: 'font', surah: 2 })).value;
   assert.deepStrictEqual(f.surah.pages, [2, 49]);
   assert.strictEqual(f.fonts.length, 48);
-  assert.strictEqual(f.fonts[0].font, 'https://readqurantoday.com/fonts/v2/p2.woff2');
-  assert.strictEqual(f.fonts[0].download, 'https://readqurantoday.com/fonts/v2/p2.woff2?dl=1');
+  assert.strictEqual(f.fonts[0].font, 'https://readqurantoday.com/fonts/v4/p2.woff2');
+  assert.strictEqual(f.fonts[0].download, 'https://readqurantoday.com/fonts/v4/p2.woff2?dl=1');
   assert.strictEqual(f.ayahs.length, 286);
   assert.ok(f.ayahs.every((a) => a.glyphs.every((g) => g.page >= 2 && g.page <= 49 && g.text)));
   assert.ok((await call('get_file', { kind: 'font' })).error);
@@ -242,7 +242,7 @@ test('get_file: the data sets, and only the files it names', async () => {
   assert.ok(['quran-uthmani', 'mushaf', 'translation', 'tafsir', 'words'].every((id) => d.datasets.some((x) => x.id === id)));
   // Each whole file has a link that saves it; the server's own are attachments already
   const ds = Object.fromEntries(d.datasets.map((x) => [x.id, x]));
-  assert.strictEqual(ds.mushaf.download, 'https://readqurantoday.com/data/mushaf.json?dl=1');
+  assert.strictEqual(ds.mushaf.download, 'https://readqurantoday.com/data/mushaf-v4.json?dl=1');
   assert.strictEqual(ds['quran-uthmani'].download, 'https://readqurantoday.com/mcp/files/quran-uthmani.txt');
   assert.strictEqual(ds.timing.download, undefined);
   const uthmani = await (await fetch(base + '/mcp/files/quran-uthmani.txt')).text();

@@ -16,8 +16,8 @@
   var BUILD_MEDIAN_MS = 5;
   var BUILD_P95_MS = 30;
 
-  /* The reader draws QCF V2 only, so that is what there is to audit. */
-  var VERSION = 'v2';
+  /* The reader draws QCF v4 only, so that is what there is to audit. */
+  var VERSION = 'v4';
 
   var $ = function (s) { return document.querySelector(s); };
   var data = null, surahs = null, opensOn = {}, closesOn = {};
@@ -458,7 +458,7 @@
   });
 
   Promise.all([
-    fetch('/data/mushaf.json').then(function (r) { return r.json(); }),
+    fetch('/data/mushaf-' + VERSION + '.json').then(function (r) { return r.json(); }),
     fetch('/data/surahs.json').then(function (r) { return r.json(); }),
   ]).then(function (out) {
     data = out[0];

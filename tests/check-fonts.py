@@ -390,6 +390,24 @@ def _():
     return "; ".join(notes)
 
 
+@check("v4, which the reader draws: every glyph of every page in its page font, every Basmalah in its own")
+def _():
+    v4 = json.load(open(os.path.join(ROOT, "public", "data", "mushaf-v4.json"), encoding="utf-8"))
+    bad, bas = [], set()
+    for p in range(1, PAGES + 1):
+        cmap = set(TTFont(os.path.join(FONTS, "v4", "p%d.woff2" % p)).getBestCmap())
+        used = set()
+        for line in v4["pages"][str(p)]:
+            codes = {ord(c) for c in line.get("v4", "") if c not in "| "}
+            (bas if line["t"] == "basmalah" else used).update(codes)
+        if used - cmap:
+            bad.append(p)
+    assert not bad, "%d v4 pages ask for glyphs their font lacks (%s)" % (len(bad), bad[:5])
+    lost = bas - set(TTFont(os.path.join(FONTS, "v4", "pb.woff2")).getBestCmap())
+    assert not lost, "pb.woff2 lacks %d Basmalah glyphs" % len(lost)
+    return "604 page fonts and %d Basmalahs resolve" % len(bas)
+
+
 print("\nMushaf fonts\n")
 for ok, name, detail in results:
     print("  %s  %s" % ("PASS" if ok else "FAIL", name))

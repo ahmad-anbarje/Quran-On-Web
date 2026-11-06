@@ -72,7 +72,7 @@ swap file. Roughly what it holds:
 | **total** | **~620 MB** |
 
 Serving the site itself costs almost nothing: nginx hands files to the kernel,
-and the 95 MB of page fonts live in page cache, which is reclaimable and never
+and the page fonts (43 MB in v4) live in page cache, which is reclaimable and never
 competes with Umami for memory.
 
 The ~380 MB left is enough to run but not enough to be careless during an
@@ -672,7 +672,7 @@ the next deploy.
 
 ```bash
 curl -sI https://readqurantoday.com | grep -i "strict-transport\|content-security\|cache-control"
-curl -sI https://readqurantoday.com/fonts/v2/p1.woff2 | grep -i cache-control   # immutable
+curl -sI https://readqurantoday.com/fonts/v4/p1.woff2 | grep -i cache-control   # immutable
 curl -so /dev/null -w '%{http_code}\n' https://readqurantoday.com/data/.env      # 403 or 404
 curl -so /dev/null -w '%{http_code}\n' https://readqurantoday.com/../server.js   # 400 or 404
 ```

@@ -17,9 +17,9 @@ $(function () {
      being ignored. */
   try { localStorage.removeItem('quran-theme'); } catch (e) {}
   var scale = parseFloat(localStorage.getItem('quran-scale')) || 1;
-  /* The reader sets the Madinah Mushaf in QCF V2 throughout. The data carries
-     V1 codes too, but nothing here reads them. */
-  var VERSION = 'v2';
+  /* The reader sets the Madinah Mushaf in QCF v4 (the 1441 printing), from
+     mushaf-v4.json; mushaf.json keeps V1 and V2, which the data checks verify. */
+  var VERSION = 'v4';
   var PAGES = 604;
   var weight = localStorage.getItem('quran-weight') || '400';
   var bright = parseInt(localStorage.getItem('quran-bright')) || 100;
@@ -214,11 +214,11 @@ $(function () {
     /* Only two files: the 8 KB surah index and the page layout. quran.json is
        not loaded — its verse text is Unicode, which the mushaf fonts cannot
        render, so 1.6 MB of it would be parsed and never used. */
-    $.when($.getJSON('/data/surahs.json'), $.getJSON('/data/mushaf.json'))
+    $.when($.getJSON('/data/surahs.json'), $.getJSON('/data/mushaf-' + VERSION + '.json'))
       .done(function (q, m) {
         quran  = q[0];
         mushaf = m[0];
-        ayahs  = Mushaf.ayahIndex(mushaf.pages, mushaf.marks || {});
+        ayahs  = Mushaf.ayahIndex(mushaf.pages, mushaf.marks || {}, VERSION);
         /* Worked out from where the surah starts, not from a table: the one
            that used to live here had At-Tur in the wrong juz. */
         quran.forEach(function (s) { s.juz = juzOfPage(s.from); });
@@ -369,7 +369,7 @@ $(function () {
     $('#v-mode').text(say('mode', mode));
     $('#v-weight').text(say('weight', weight));
     $('#v-turners').text(say('onOff', turners ? 'on' : 'off'));
-    $('#v-offline').text(Offline.complete() ? T('محفوظ · ٩٥ ميغابايت', 'Saved · 95 MB')
+    $('#v-offline').text(Offline.complete() ? T('محفوظ · ٤٣ ميغابايت', 'Saved · 43 MB')
       : say('onState', Offline.on() ? 'on' : 'off'));
     $('#v-fullscreen').text(say('fullscreen', document.fullscreenElement ? 'on' : 'off'));
     $('#v-lang').text(I18n.name());
@@ -1269,13 +1269,13 @@ $(function () {
 
   $('#btn-turners').on('click', function () { applyTurners(!turners, true); });
 
-  /* 95 MB both ways: asked before it is written to the device, and before it is
+  /* 43 MB both ways: asked before it is written to the device, and before it is
      thrown away. The app has every page in its package, so it asks nothing. */
   $('#btn-offline').on('click', function () {
     var on = Offline.on();
     if (!Offline.native() && !window.confirm(on
-      ? T('حذف النسخة المحفوظة للقراءة دون اتصال (٩٥ ميغابايت)؟', 'Remove the offline copy (95 MB)?')
-      : T('حفظ المصحف كاملًا للقراءة دون اتصال؟ نحو ٩٥ ميغابايت.', 'Save the whole mushaf for offline reading? About 95 MB.'))) return;
+      ? T('حذف النسخة المحفوظة للقراءة دون اتصال (٤٣ ميغابايت)؟', 'Remove the offline copy (43 MB)?')
+      : T('حفظ المصحف كاملًا للقراءة دون اتصال؟ نحو ٤٣ ميغابايت.', 'Save the whole mushaf for offline reading? About 43 MB.'))) return;
     Offline.apply(!on, true);
   });
 

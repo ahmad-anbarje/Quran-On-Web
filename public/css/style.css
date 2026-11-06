@@ -4,9 +4,9 @@
    ========================================================================== */
 
 /* ── KFGQPC mushaf typefaces ───────────────────────────────────────────────
-   The two Quran faces are QCF V1 and V2, page fonts with one file per mushaf
-   page (public/fonts/v1, public/fonts/v2). A page's font is registered from
-   JavaScript as it is needed — 604 @font-face rules per version would mean
+   The Quran face is QCF v4, page fonts with one file per mushaf page
+   (public/fonts/v4, cut from KFGQPC's 47; V2 stays in public/fonts/v2). A page's
+   font is registered from JavaScript as it is needed — 604 @font-face rules would mean
    604 rules the browser has to keep, and only a handful are ever used.
    Only the ornamental surah-header face is global. */
 

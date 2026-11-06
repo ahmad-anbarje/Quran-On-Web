@@ -109,13 +109,13 @@ function open(root) {
       .filter((d) => fs.statSync(path.join(DATA, 'meaning', d)).isDirectory()).sort());
   }
 
-  /* Each ayah as the mushaf prints it, for the player: QCF V2 glyphs, one a word,
+  /* Each ayah as the mushaf prints it, for the player: QCF v4 glyphs, one a word,
      in pieces by page, since each page has its own font. A glyph in the page's
      marks closes an ayah, as public/js/mushaf.js reads them (ayahIndex). */
   let mushafAyahs = null;
   function mushaf(s) {
     if (!mushafAyahs) {
-      const m = json(DATA, 'mushaf.json');
+      const m = json(DATA, 'mushaf-v4.json');
       mushafAyahs = {};
       let su = 0, v = 1;
       for (let p = 1; p <= 604; p++) {
@@ -123,7 +123,7 @@ function open(root) {
         for (const line of m.pages[p] || []) {
           if (line.t === 'surah') { su = line.s; v = 1; mushafAyahs[su] = []; continue; }
           if (line.t !== 'ayah') continue;
-          for (const g of line.v2.split('|')) {
+          for (const g of line.v4.split('|')) {
             const ayah = mushafAyahs[su][v - 1] || (mushafAyahs[su][v - 1] = []);
             const last = ayah[ayah.length - 1];
             if (last && last[0] === p) last[1].push(g); else ayah.push([p, [g]]);
@@ -140,7 +140,7 @@ function open(root) {
   let pageLines = null;
   function mushafLines(s, from, to) {
     if (!pageLines) {
-      const m = json(DATA, 'mushaf.json');
+      const m = json(DATA, 'mushaf-v4.json');
       pageLines = {};
       let su = 0, v = 1;
       for (let p = 1; p <= 604; p++) {
@@ -150,7 +150,7 @@ function open(root) {
           if (line.t === 'surah') { su = line.s; v = 1; continue; }
           if (line.t !== 'ayah') continue;
           const words = [];
-          for (const g of line.v2.split('|')) {
+          for (const g of line.v4.split('|')) {
             words.push([g, su, v]);
             if (marks.indexOf(g) >= 0) v++;
           }

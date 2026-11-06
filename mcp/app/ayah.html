@@ -118,7 +118,7 @@
   }
   function note(msg) { $('note').textContent = msg || ''; $('note').hidden = !msg; }
 
-  /* Each mushaf page is a font of its own (QCF V2), fetched from the site; the lines are set once all have come */
+  /* Each mushaf page is a font of its own (QCF v4), fetched from the site; the lines are set once all have come */
   var fontBase = '', lines = null;
   function loadFaces(pages) {
     return Promise.all(pages.map(function (p) {

@@ -1,6 +1,6 @@
 /**
  * A picture of ayahs as the Madinah Mushaf prints them: the page's own lines in
- * its QCF V2 face, the ayahs around faded, for hosts that show images but not
+ * its QCF v4 face, the ayahs around faded, for hosts that show images but not
  * apps. Drawn with Skia (@napi-rs/canvas), no browser, once per run of ayahs:
  * the PNG is kept on disk ($STATE_DIRECTORY/images) and served from there after.
  */
@@ -11,7 +11,8 @@ const os = require('os');
 const path = require('path');
 
 const FONTS = path.join(__dirname, '..', '..', 'public', 'fonts');
-const CACHE = path.join(process.env.STATE_DIRECTORY || path.join(os.tmpdir(), 'readquran-mcp'), 'images');
+// Pictures are kept by edition, so a v2 one is never served for v4
+const CACHE = path.join(process.env.STATE_DIRECTORY || path.join(os.tmpdir(), 'readquran-mcp'), 'images-v4');
 const MAX_LINES = 15;   // one mushaf page
 
 const W = 1200, PAD = 56, HEAD = 84, FOOT = 64;
@@ -35,7 +36,7 @@ function draw(q, s, from, to, lines) {
   const TRY = 50, avail = W - 2 * PAD;
   const probe = createCanvas(10, 10).getContext('2d');
   const rows = lines.map((line) => {
-    probe.font = `${TRY}px ${face('qcf' + line.page, path.join('v2', `p${line.page}.woff2`))}`;
+    probe.font = `${TRY}px ${face('qcf' + line.page, path.join('v4', `p${line.page}.woff2`))}`;
     const widths = line.words.map(([g]) => probe.measureText(g).width);
     return { ...line, widths, natural: widths.reduce((a, b) => a + b, 0) };
   });

@@ -14,7 +14,7 @@
  * Bumping VERSION retires both caches, which is the escape hatch.
  */
 
-const VERSION = 'v2';
+const VERSION = 'v4';
 
 /* The mushaf is 604 pages, and that is the whole of what may be asked for. */
 const PAGES = 604;
@@ -133,7 +133,7 @@ async function cachePages(asked, port) {
   let done = 0, added = 0, failed = 0;
 
   for (const page of pages) {
-    const url = '/fonts/v2/p' + page + '.woff2';
+    const url = '/fonts/v4/p' + page + '.woff2';
     try {
       if (await cache.match(url)) { done++; }
       else {
@@ -168,7 +168,7 @@ self.addEventListener('message', (e) => {
     e.waitUntil(caches.open(ASSETS)
       .then((c) => c.keys())
       .then((keys) => {
-        const fonts = keys.filter((r) => new URL(r.url).pathname.startsWith('/fonts/v2/'));
+        const fonts = keys.filter((r) => new URL(r.url).pathname.startsWith('/fonts/v4/'));
         if (port) port.postMessage({ type: 'usage', fonts: fonts.length, files: keys.length });
       }));
   }

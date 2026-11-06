@@ -78,7 +78,7 @@ function registerTools(server, q) {
     return {
       ...reply(value),
       structuredContent: value,
-      _meta: { 'com.readqurantoday/mushaf': { fonts: `${q.SITE}/fonts/v2/`, lines: q.mushafLines(s, ayah, last) } },
+      _meta: { 'com.readqurantoday/mushaf': { fonts: `${q.SITE}/fonts/v4/`, lines: q.mushafLines(s, ayah, last) } },
     };
   });
 
@@ -86,7 +86,7 @@ function registerTools(server, q) {
     title: 'Picture of ayahs',
     description:
       'A PNG picture of one ayah or a run of them as the Madinah Mushaf prints them: the page\'s own lines ' +
-      `in its script (QCF V2), the ayahs around faded. Up to one page (${MAX_LINES} lines). Only when the ` +
+      `in its script (QCF v4), the ayahs around faded. Up to one page (${MAX_LINES} lines). Only when the ` +
       'reader asks for a picture or image; for the text, use get_ayah.',
     inputSchema: {
       surah: surahArg,
@@ -245,7 +245,7 @@ function registerTools(server, q) {
     return {
       ...reply(value),
       structuredContent: value,
-      _meta: { 'com.readqurantoday/mushaf': { fonts: `${q.SITE}/fonts/v2/`, ayahs: q.mushaf(s) } },
+      _meta: { 'com.readqurantoday/mushaf': { fonts: `${q.SITE}/fonts/v4/`, ayahs: q.mushaf(s) } },
     };
   });
 
@@ -255,7 +255,7 @@ function registerTools(server, q) {
       'Links to download a surah\'s files: "text", the Arabic (optionally with a translation and the ' +
       'Tafsir al-Muyassar) as a .txt; "audio", its recording as an MP3 (leave out the surah for all of a ' +
       'reciter\'s); "timing", where each ayah and word of a recording starts and ends, as JSON; "font", the ' +
-      'mushaf\'s fonts for the surah\'s pages (QCF V2, one a page) with the glyphs each ayah is written in; ' +
+      'mushaf\'s fonts for the surah\'s pages (QCF v4, one a page) with the glyphs each ayah is written in; ' +
       '"data", for developers, the whole data sets (the Uthmani text, a translation or the tafsir in one file, ' +
       'the mushaf layout, word by word), with their sources.',
     inputSchema: {
@@ -294,7 +294,7 @@ function registerTools(server, q) {
       const info = q.surah(s);
       const pages = [];
       for (let p = info.from; p <= info.to; p++) {
-        const font = `${q.SITE}/fonts/v2/p${p}.woff2`;
+        const font = `${q.SITE}/fonts/v4/p${p}.woff2`;
         pages.push({ page: p, font, download: saveLink(font) });
       }
       return reply({
@@ -303,7 +303,7 @@ function registerTools(server, q) {
         fonts: pages,
         ayahs: q.mushaf(s).map((pieces, i) => ({ ayah: i + 1, glyphs: pieces.map(([page, g]) => ({ page, text: g.join(' ') })) })),
         plainArabicFont: `${q.SITE}/fonts/UthmanicHafs1Ver18.woff2`,
-        note: 'The QCF V2 fonts draw the glyphs given, a page\'s in its own font; for ordinary Arabic text use plainArabicFont.',
+        note: 'The QCF v4 fonts draw the glyphs given, a page\'s in its own font; for ordinary Arabic text use plainArabicFont.',
         link: q.link(s),
       });
     }

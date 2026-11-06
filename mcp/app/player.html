@@ -168,7 +168,7 @@
     if (play) audio.play().catch(function () {});
   }
 
-  /* The mushaf's own glyphs: each page of the Madinah Mushaf is a font of its own (QCF V2),
+  /* The mushaf's own glyphs: each page of the Madinah Mushaf is a font of its own (QCF v4),
      fetched from the site as its ayahs are needed, the ones being recited first */
   var fontBase = '', loaded = {}, queue = [], busy = 0, mushafPieces = null;
   function needPage(p, first) {

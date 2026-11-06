@@ -13,11 +13,11 @@
   /** lang(), ar(), surah(), pagesOf(), showValues(), syncTips() */
   function init(host) { app = host; }
 
-  // Off by default: 94 MB is not something to start writing to someone's disk
+  // Off by default: 43 MB is not something to start writing to someone's disk
 
   var PAGES = 604;
   var offline = localStorage.getItem('quran-offline') === 'on';
-  // Every page's font is in the worker's cache: said as "Saved · 95 MB", not just "On"
+  // Every page's font is in the worker's cache: said as "Saved · 43 MB", not just "On"
   var complete = false;
 
   /** Say something to the worker, and hear back on a channel of our own. */
@@ -110,7 +110,7 @@
         $('#v-offline').text(T('تعذّر', 'failed'));
       });
     } else {
-      // Off gives the space back; leaving 94 MB behind would be a liberty
+      // Off gives the space back; leaving 43 MB behind would be a liberty
       swSend({ type: 'clear' });
       navigator.serviceWorker.getRegistrations().then(function (regs) {
         regs.forEach(function (r) { r.unregister(); });

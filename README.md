@@ -49,7 +49,7 @@
 
 **Everywhere**
 - Phones, tablets and desktops; swipe, keyboard shortcuts or the on-screen buttons
-- Offline reading (the whole mushaf, about 95 MB, asked before it is saved or removed), installable, dark and light
+- Offline reading (the whole mushaf, about 43 MB, asked before it is saved or removed), installable, dark and light
 - The site in 14 languages: Arabic, English, Urdu, Indonesian, Bengali, Turkish,
   French, Persian, Hindi, Malay, Spanish, Russian, German and Chinese, chosen in
   Settings or from the browser's language; Urdu and Persian read right to left.
@@ -94,7 +94,8 @@ docker run -p 8080:80 ahmadanbarje/quran
 
 | File | What it is |
 |---|---|
-| `public/data/mushaf.json` | The 604 pages and their lines, with QCF V1 and V2 glyph codes |
+| `public/data/mushaf-v4.json` | The 604 pages as the reader draws them: the Madinah Mushaf's 1441 printing in QCF v4, built by `python scripts/build-qcf4.py` from the Android app's v4 data, with a font a page cut from KFGQPC's 47 |
+| `public/data/mushaf.json` | The 1421 printing's pages, with QCF V1 and V2 glyph codes; the data checks verify it, and v4 against it |
 | `public/data/surahs.json` | The 114-surah index, all the reader loads to start |
 | `public/data/words/pN.json` | Each page's words as text, behind the glyphs, for search engines and screen readers |
 | `public/data/recitations.json` | The reciters, and where their recordings are |
@@ -126,13 +127,13 @@ No key; 60 requests a minute an address, 50 ayahs a call.
 
 | Tool | Answers |
 |---|---|
-| `get_ayah` | The Arabic of an ayah or a run of them, in any of the translations, with its mushaf page and link. In Claude and ChatGPT it opens a card: the ayahs in the mushaf's own script (QCF V2), each translation beneath, a button to hear them, and a link to the mushaf |
-| `get_ayah_image` | A PNG of an ayah or a run as the mushaf prints them (the page's lines in QCF V2), for apps that show pictures but not cards; drawn once and kept on disk |
+| `get_ayah` | The Arabic of an ayah or a run of them, in any of the translations, with its mushaf page and link. In Claude and ChatGPT it opens a card: the ayahs in the mushaf's own script (QCF v4), each translation beneath, a button to hear them, and a link to the mushaf |
+| `get_ayah_image` | A PNG of an ayah or a run as the mushaf prints them (the page's lines in QCF v4), for apps that show pictures but not cards; drawn once and kept on disk |
 | `search` | Ayahs containing words, in the Arabic (diacritics optional) or in a translation |
 | `get_tafsir` | The Tafsir al-Muyassar of an ayah or a run |
 | `word_by_word` | Each word's transliteration and meaning, in English and six more languages |
 | `get_recitation` | A recording's MP3 link, its length, where each ayah starts, and a link that starts at one. In Claude it opens a player: the surah's Arabic, each ayah lit as it is recited, tap an ayah to go to it, change the reciter or the speed |
-| `get_file` | Links to download a surah's files: its text as a `.txt` (with a translation or the tafsir if asked), its MP3 (or all 114 for a reciter), the recording's timing file, the mushaf's QCF V2 fonts for its pages with the glyphs each ayah is written in, or, for developers, the whole data sets (the Uthmani text, any translation or the tafsir in one file, the mushaf layout, word by word) with their sources. Each comes with a `download` link that saves the file when clicked: add `?dl=1` to any of the site's `.json`, `.txt`, `.woff2` or recording links to do the same |
+| `get_file` | Links to download a surah's files: its text as a `.txt` (with a translation or the tafsir if asked), its MP3 (or all 114 for a reciter), the recording's timing file, the mushaf's QCF v4 fonts for its pages with the glyphs each ayah is written in, or, for developers, the whole data sets (the Uthmani text, any translation or the tafsir in one file, the mushaf layout, word by word) with their sources. Each comes with a `download` link that saves the file when clicked: add `?dl=1` to any of the site's `.json`, `.txt`, `.woff2` or recording links to do the same |
 | `send_feedback` | The reader's report of a problem or a suggestion, sent to the site's inbox when they ask; the one tool that is not read-only, so the assistant asks first |
 | `list_surahs`, `list_translations`, `list_reciters` | What there is to ask for, and the ids |
 

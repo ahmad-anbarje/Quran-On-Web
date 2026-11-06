@@ -1,6 +1,7 @@
 /**
  * Builds public/data/mushaf.json — the line-by-line layout of the Madinah
- * Mushaf (604 pages) with the QCF V1 and V2 glyph codes for every word.
+ * Mushaf (604 pages, 1421 printing) with the QCF V1 and V2 glyph codes for every word.
+ * The reader draws v4 (mushaf-v4.json, scripts/build-qcf4.py); this one is what the data checks verify.
  *
  * The QCF page fonts encode one glyph per word, and a code only means anything
  * inside the font belonging to its own page, so the layout and the fonts have

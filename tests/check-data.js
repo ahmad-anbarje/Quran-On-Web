@@ -406,6 +406,47 @@ check('surahs.json page ranges match where the words actually are', () => {
   return '114 surahs, page ranges exact';
 });
 
+/* ---------- v4, which the reader draws, held to the checked V2 ------------ */
+
+const v4 = loadJSON(path.join(ROOT, 'public', 'data', 'mushaf-v4.json'));
+
+/* Each page's ayahs, first to last, by counting the ayah markers as the reader does */
+function pageSpans(pages, field, marksOf) {
+  const out = {};
+  let s = 0, v = 0;
+  for (let p = 1; p <= 604; p++) {
+    const mk = marksOf(p), seen = [];
+    for (const l of pages[p]) {
+      if (l.t === 'surah') { s = l.s; v = 1; }
+      if (l.t !== 'ayah') continue;
+      for (const w of l[field].split(SEP)) if (mk.includes(w)) { seen.push(`${s}:${v}`); v++; }
+    }
+    out[p] = seen.length ? `${seen[0]}-${seen[seen.length - 1]}` : '';
+  }
+  return out;
+}
+
+check('v4 opens and closes every page on the same ayah as V2', () => {
+  const a = pageSpans(mushaf.pages, 'v2', (p) => mushaf.marks[p] || '');
+  const b = pageSpans(v4.pages, 'v4', (p) => v4.marks[p] || '');
+  const off = Object.keys(a).filter((p) => a[p] !== b[p]);
+  assert(!off.length, `${off.length} pages differ, first ${off[0]}: V2 ${a[off[0]]}, v4 ${b[off[0]]}`);
+  return '604 pages, the same ayahs';
+});
+
+check("v4 draws as many words a page as the page's word list holds", () => {
+  /* One span a word, which the recitation lights by number: a page that drew one more or fewer would light the wrong word */
+  const off = [];
+  for (let p = 1; p <= 604; p++) {
+    // Ayah numbers count too: the list names them, as the page draws them
+    const drawn = v4.pages[p].reduce((n, l) => n + (l.t === 'ayah' ? l.v4.split(SEP).length : 0), 0);
+    const listed = loadJSON(path.join(ROOT, 'public', 'data', 'words', `p${p}.json`)).length;
+    if (drawn !== listed) off.push(`${p} (${drawn}/${listed})`);
+  }
+  assert(!off.length, `${off.length} pages differ: ${off.slice(0, 5).join(', ')}`);
+  return '604 pages, every word in its place';
+});
+
 /* ---------- report ------------------------------------------------------- */
 
 console.log('\nMushaf data\n');
