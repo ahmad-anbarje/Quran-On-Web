@@ -28,8 +28,8 @@ function build(q, version, { feedbackUrl } = {}) {
       instructions:
         `The Quran (Madinah Mushaf, Hafs) with ${q.translations.length} translations, the Tafsir ` +
         'al-Muyassar, word-by-word meanings and recitations, from readqurantoday.com. Quote the ' +
-        'text as returned and give the link with it: `link` is the ayah\'s page, `read` opens the mushaf at it ' +
-        'to read and listen. Files to save come from get_file. Surahs are 1-114; ayahs count from 1.',
+        'text as returned and give its `read` link, which opens the mushaf at it to read and listen; `link`, ' +
+        'the ayah\'s own page, is only for citing it when asked. Files to save come from get_file. Surahs are 1-114; ayahs count from 1.',
     },
   );
   registerTools(server, q);
