@@ -132,7 +132,7 @@ test('get_recitation opens the player: one self-contained page, fed the timings 
   }
 });
 
-test('get_ayah opens the ayah card, fed the glyphs of just the ayahs asked for', async () => {
+test('get_ayah opens the ayah card, fed the mushaf lines that hold the ayahs asked for', async () => {
   const client = await connect();
   try {
     const tool = (await client.listTools()).tools.find((t) => t.name === 'get_ayah');
@@ -143,8 +143,10 @@ test('get_ayah opens the ayah card, fed the glyphs of just the ayahs asked for',
     const r = await client.callTool({ name: 'get_ayah', arguments: { surah: 2, ayah: 255, to: 256, translation: 'sahih' } });
     assert.strictEqual(r.structuredContent.ayahs.length, 2);
     const mushaf = r._meta['com.readqurantoday/mushaf'];
-    assert.strictEqual(mushaf.ayahs.length, 2);
-    assert.strictEqual(mushaf.ayahs[0][0][0], 42);   // Ayat al-Kursi is on page 42
+    // Page 42's own lines: from the one where 2:255 begins, after the end of 2:254, to the last of 2:256
+    assert.ok(mushaf.lines.every((line) => line.page === 42));
+    assert.strictEqual(mushaf.lines[0].words[0][1], 254);
+    assert.ok(mushaf.lines.some((line) => line.words.some(([, a]) => a === 256)));
   } finally {
     await client.close();
   }

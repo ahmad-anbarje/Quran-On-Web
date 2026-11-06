@@ -34,24 +34,30 @@
 
   * { box-sizing: border-box; }
   html, body { margin: 0; background: transparent; color: var(--text); font-family: var(--ui); }
-  .card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); overflow: hidden; }
+  .card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); overflow: hidden; min-width: 0; }
 
   .head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--bg2); }
   .title { flex: 1; min-width: 0; }
   .surah { font-family: "Hafs", serif; font-size: 1.35rem; line-height: 1.3; color: var(--accent); }
   .sub { font-size: 0.78rem; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  .body { max-height: 460px; overflow-y: auto; overscroll-behavior: contain; }
-  .ayah { padding: 14px 16px; border-bottom: 1px solid var(--line); transition: background 0.2s; }
-  .ayah:last-child { border-bottom: 0; }
-  .ayah.on { background: var(--accent-soft); }
-  .ar { font-family: "Hafs", serif; font-size: 1.6rem; line-height: 2.2; text-align: center; }
-  /* A word of the mushaf, in its page's face; hidden until that face has come, never shown as boxes */
-  .w { display: inline-block; font-size: 1.85rem; line-height: 1.9; visibility: hidden; }
-  .w.ready { visibility: visible; }
-  .tr { margin-top: 8px; font-size: 0.95rem; line-height: 1.65; color: var(--text); text-align: start; }
-  .ref { margin-top: 6px; font-size: 0.72rem; color: var(--mute); direction: ltr; text-align: left; }
-
+  .body { max-height: 620px; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+  /* The mushaf's own lines: one row each, never wrapped, flush to both margins as the page prints them */
+  .page { padding: 16px 16px 12px; direction: rtl; overflow: hidden; }
+  .page.wait-fonts .ln { visibility: hidden; }
+  .ln { display: flex; justify-content: space-between; align-items: baseline; white-space: nowrap; line-height: 1.85; }
+  .ln.short { justify-content: center; gap: 0.25em; }
+  .page.measure .ln { width: max-content; justify-content: flex-start; gap: 0.25em; }
+  .w { flex: 0 0 auto; transition: color 0.2s, opacity 0.2s; }
+  .w.other { opacity: 0.3; }
+  .w.on { color: var(--accent); }
+  .plain { padding: 14px 16px; font-family: "Hafs", serif; font-size: 1.6rem; line-height: 2.2; text-align: center; }
+  .trs { border-top: 1px solid var(--line); }
+  .tr { display: flex; gap: 10px; padding: 10px 16px; font-size: 0.95rem; line-height: 1.65; border-bottom: 1px solid var(--line); transition: background 0.2s; }
+  .tr:last-child { border-bottom: 0; }
+  .tr.on { background: var(--accent-soft); }
+  .tr .n { flex: none; min-width: 1.9em; height: 1.9em; margin-top: 0.1em; border-radius: 50%; display: grid; place-items: center; font-size: 0.72rem; color: var(--accent); border: 1.5px solid currentColor; direction: ltr; }
+  .tr .t { flex: 1; min-width: 0; }
   .bar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-top: 1px solid var(--line); background: var(--bg2); }
   button { font: inherit; color: #fff; background: var(--accent); border: 0; border-radius: 999px; height: 34px; padding: 0 14px 0 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.84rem; font-weight: 600; }
   button:hover { filter: brightness(1.1); }
@@ -112,26 +118,36 @@
   }
   function note(msg) { $('note').textContent = msg || ''; $('note').hidden = !msg; }
 
-  /* Each mushaf page is a font of its own (QCF V2), fetched from the site */
-  var fontBase = '', loaded = {};
-  function needPage(p) {
-    if (loaded[p]) return;
-    loaded[p] = 'loading';
-    new FontFace('qcf' + p, 'url(' + fontBase + 'p' + p + '.woff2)').load().then(function (f) {
-      document.fonts.add(f);
-      loaded[p] = true;
-      document.querySelectorAll('.qp' + p).forEach(function (el) { el.classList.add('ready'); });
-    }, function () { fallback(); });
+  /* Each mushaf page is a font of its own (QCF V2), fetched from the site; the lines are set once all have come */
+  var fontBase = '', lines = null;
+  function loadFaces(pages) {
+    return Promise.all(pages.map(function (p) {
+      return new FontFace('qcf' + p, 'url(' + fontBase + 'p' + p + '.woff2)').load().then(function (f) { document.fonts.add(f); });
+    }));
   }
+
+  /* The widest line fills the card, as the page fills its measure; one much shorter is centred, as the site does */
+  function fit() {
+    var page = document.querySelector('.page');
+    if (!page) return;
+    var avail = page.clientWidth - 32;
+    page.style.fontSize = '20px';
+    page.classList.add('measure');
+    var rows = page.querySelectorAll('.ln'), widths = [], widest = 1;
+    rows.forEach(function (el) { var w = el.scrollWidth; widths.push(w); if (w > widest) widest = w; });
+    page.classList.remove('measure');
+    page.style.fontSize = Math.min(38, 20 * avail / widest) + 'px';
+    rows.forEach(function (el, i) { el.classList.toggle('short', widths[i] < widest * 0.8); });
+  }
+  if (window.ResizeObserver) new ResizeObserver(function () { fit(); }).observe(document.body);
 
   /* The Unicode text in the embedded face, where the page fonts cannot come */
   var HAFS = { 'ْ': 'ۡ', '۟': 'ْ', '۫': '۬', 'ۣ': 'ۜ' };
-  function fallback() {
-    document.querySelectorAll('.ar').forEach(function (el, i) {
-      if (el.dataset.plain) return;
-      el.dataset.plain = '1';
-      el.textContent = data.ayahs[i].arabic.replace(/[ْۣ۟۫]/g, function (c) { return HAFS[c]; }) + ' ' + '۝' + digits(i + first());
-    });
+  function plain(box) {
+    box.className = 'plain';
+    box.textContent = data.ayahs.map(function (x, i) {
+      return x.arabic.replace(/[ْۣ۟۫]/g, function (c) { return HAFS[c]; }) + ' ۝' + digits(first() + i);
+    }).join(' ');
   }
   var first = function () { return Number(data.ayahs[0].ref.split(':')[1]); };
 
@@ -139,52 +155,59 @@
     if (!result || result.isError) { note((result && result.content && result.content[0] && result.content[0].text) || say('تعذّر جلب الآية.', 'The ayah could not be loaded.')); return; }
     data = result.structuredContent || JSON.parse(result.content[0].text);
     var m = result._meta && result._meta['com.readqurantoday/mushaf'];
-    var glyphs = m && Array.isArray(m.ayahs) && m.ayahs.length === data.ayahs.length ? m.ayahs : null;
-    if (glyphs) fontBase = m.fonts;
+    lines = m && Array.isArray(m.lines) && m.lines.length ? m.lines : null;
     note('');
-    var n = data.ayahs.length, a0 = first();
+    var n = data.ayahs.length, a0 = first(), aN = a0 + n - 1;
     $('surah').textContent = data.surah.arabic ? 'سورة ' + data.surah.arabic : data.surah.name;
-    $('sub').textContent = data.surah.name + ' · ' + data.surah.number + ':' + a0 + (n > 1 ? '–' + (a0 + n - 1) : '') + ' · ' + say('صفحة ', 'page ') + digits(data.ayahs[0].page);
+    $('sub').textContent = data.surah.name + ' · ' + data.surah.number + ':' + a0 + (n > 1 ? '–' + aN : '') + ' · ' + say('صفحة ', 'page ') + digits(data.ayahs[0].page);
     $('src').textContent = data.translation || '';
     var body = $('body');
     body.textContent = '';
-    data.ayahs.forEach(function (x, i) {
-      var box = document.createElement('div');
-      box.className = 'ayah';
-      box.dataset.i = i;
-      var arEl = document.createElement('div');
-      arEl.className = 'ar';
-      if (glyphs) {
-        glyphs[i].forEach(function (piece) {
-          var p = piece[0];
-          piece[1].forEach(function (g) {
-            var w = document.createElement('span');
-            w.className = 'w qp' + p + (loaded[p] === true ? ' ready' : '');
-            w.style.fontFamily = 'qcf' + p;
-            w.textContent = g;
-            arEl.appendChild(w);
-            arEl.appendChild(document.createTextNode(' '));
-          });
-          needPage(p);
+    var page = document.createElement('div');
+    body.appendChild(page);
+    if (lines) {
+      fontBase = m.fonts;
+      page.className = 'page wait-fonts';
+      var pages = [];
+      lines.forEach(function (line) {
+        if (pages.indexOf(line.page) < 0) pages.push(line.page);
+        var row = document.createElement('div');
+        row.className = 'ln';
+        row.style.fontFamily = 'qcf' + line.page;
+        line.words.forEach(function (w) {
+          var el = document.createElement('span');
+          el.className = 'w' + (w[1] >= a0 && w[1] <= aN ? '' : ' other');
+          el.dataset.a = w[1];
+          el.textContent = w[0];
+          row.appendChild(el);
         });
-      }
-      box.appendChild(arEl);
-      if (x.translation) {
-        var tr = document.createElement('div');
-        tr.className = 'tr';
-        tr.dir = 'auto';
-        tr.textContent = x.translation;
-        box.appendChild(tr);
-      }
-      if (n > 1) {
-        var ref = document.createElement('div');
-        ref.className = 'ref';
-        ref.textContent = x.ref;
-        box.appendChild(ref);
-      }
-      body.appendChild(box);
-    });
-    if (!glyphs) fallback();
+        page.appendChild(row);
+      });
+      loadFaces(pages).then(function () { page.classList.remove('wait-fonts'); fit(); }, function () { plain(page); });
+    } else {
+      plain(page);
+    }
+    if (data.ayahs.some(function (x) { return x.translation; })) {
+      var trs = document.createElement('div');
+      trs.className = 'trs';
+      data.ayahs.forEach(function (x, i) {
+        if (!x.translation) return;
+        var row = document.createElement('div');
+        row.className = 'tr';
+        row.dataset.a = a0 + i;
+        var num = document.createElement('span');
+        num.className = 'n';
+        num.textContent = digits(a0 + i);
+        var t = document.createElement('div');
+        t.className = 't';
+        t.dir = 'auto';
+        t.textContent = x.translation;
+        row.appendChild(num);
+        row.appendChild(t);
+        trs.appendChild(row);
+      });
+      body.appendChild(trs);
+    }
     $('wait').hidden = true;
     body.hidden = false;
     rec = null;
@@ -196,9 +219,10 @@
   /* The run in the site's own recitation, fetched when first asked for, and stopped at its end */
   function mark() {
     if (!rec) return;
-    var t = audio.currentTime, i = -1;
-    rec.ayahs.forEach(function (x, k) { if (k >= rec.from && k <= rec.to && x.start <= t) i = k - rec.from; });
-    document.querySelectorAll('.ayah').forEach(function (el) { el.classList.toggle('on', !audio.paused && Number(el.dataset.i) === i); });
+    var t = audio.currentTime, a = 0;
+    rec.ayahs.forEach(function (x, k) { if (k >= rec.from && k <= rec.to && x.start <= t) a = k + 1; });
+    if (audio.paused) a = 0;
+    document.querySelectorAll('.w, .tr').forEach(function (el) { el.classList.toggle('on', Number(el.dataset.a) === a); });
   }
   $('play').onclick = function () {
     if (!audio.paused) { audio.pause(); return; }

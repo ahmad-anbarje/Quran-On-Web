@@ -77,7 +77,7 @@ function registerTools(server, q) {
     return {
       ...reply(value),
       structuredContent: value,
-      _meta: { 'com.readqurantoday/mushaf': { fonts: `${q.SITE}/fonts/v2/`, ayahs: q.mushaf(s).slice(ayah - 1, last) } },
+      _meta: { 'com.readqurantoday/mushaf': { fonts: `${q.SITE}/fonts/v2/`, lines: q.mushafLines(s, ayah, last) } },
     };
   });
 
