@@ -28,7 +28,8 @@ function build(q, version, { feedbackUrl } = {}) {
       instructions:
         `The Quran (Madinah Mushaf, Hafs) with ${q.translations.length} translations, the Tafsir ` +
         'al-Muyassar, word-by-word meanings and recitations, from readqurantoday.com. Quote the ' +
-        'text as returned and give its `read` link, which opens the mushaf at it to read and listen; `link`, ' +
+        'text as returned and give its `read` link, which opens the mushaf at it to read and listen, as a link ' +
+        'named for the ayah (e.g. "Al-Baqarah 2:255 in the mushaf") rather than the bare address; `link`, ' +
         'the ayah\'s own page, is only for citing it when asked. Files to save come from get_file. Surahs are 1-114; ayahs count from 1.',
     },
   );
