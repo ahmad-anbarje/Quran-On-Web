@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light dark">
+<title>Read Quran Today · Ayah</title>
+<style>
+  /* The mushaf's own face, for the Arabic when the glyphs do not come */
+  @font-face { font-family: "Hafs"; src: url(data:font/woff2;base64,@@FONT@@) format("woff2"); font-display: block; }
+
+  :root {
+    --bg: var(--color-background-primary, #ffffff);
+    --bg2: var(--color-background-secondary, #f4f7fa);
+    --text: var(--color-text-primary, #16283a);
+    --mute: var(--color-text-secondary, #5a7589);
+    --line: var(--color-border-tertiary, #dce8f2);
+    --accent: #1a6fa3;
+    --accent-soft: rgba(26, 111, 163, 0.12);
+    --radius: var(--border-radius-lg, 12px);
+    --ui: var(--font-sans, system-ui, "Segoe UI", Tahoma, sans-serif);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: var(--color-background-primary, #1a1f25); --bg2: var(--color-background-secondary, #20262d);
+      --text: var(--color-text-primary, #d7dce1); --mute: var(--color-text-secondary, #8b939c);
+      --line: var(--color-border-tertiary, #2d353e); --accent: #3f9bd1; --accent-soft: rgba(63, 155, 209, 0.18);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: var(--color-background-primary, #1a1f25); --bg2: var(--color-background-secondary, #20262d);
+    --text: var(--color-text-primary, #d7dce1); --mute: var(--color-text-secondary, #8b939c);
+    --line: var(--color-border-tertiary, #2d353e); --accent: #3f9bd1; --accent-soft: rgba(63, 155, 209, 0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: transparent; color: var(--text); font-family: var(--ui); }
+  .card { border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); overflow: hidden; }
+
+  .head { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--bg2); }
+  .title { flex: 1; min-width: 0; }
+  .surah { font-family: "Hafs", serif; font-size: 1.35rem; line-height: 1.3; color: var(--accent); }
+  .sub { font-size: 0.78rem; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .body { max-height: 460px; overflow-y: auto; overscroll-behavior: contain; }
+  .ayah { padding: 14px 16px; border-bottom: 1px solid var(--line); transition: background 0.2s; }
+  .ayah:last-child { border-bottom: 0; }
+  .ayah.on { background: var(--accent-soft); }
+  .ar { font-family: "Hafs", serif; font-size: 1.6rem; line-height: 2.2; text-align: center; }
+  /* A word of the mushaf, in its page's face; hidden until that face has come, never shown as boxes */
+  .w { display: inline-block; font-size: 1.85rem; line-height: 1.9; visibility: hidden; }
+  .w.ready { visibility: visible; }
+  .tr { margin-top: 8px; font-size: 0.95rem; line-height: 1.65; color: var(--text); text-align: start; }
+  .ref { margin-top: 6px; font-size: 0.72rem; color: var(--mute); direction: ltr; text-align: left; }
+
+  .bar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-top: 1px solid var(--line); background: var(--bg2); }
+  button { font: inherit; color: #fff; background: var(--accent); border: 0; border-radius: 999px; height: 34px; padding: 0 14px 0 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.84rem; font-weight: 600; }
+  button:hover { filter: brightness(1.1); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  button svg { width: 16px; height: 16px; fill: currentColor; }
+  .src { flex: 1; min-width: 0; font-size: 0.74rem; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+  .note { padding: 10px 14px; font-size: 0.82rem; color: var(--color-text-danger, #b3261e); border-top: 1px solid var(--line); }
+  .note[hidden], .wait[hidden] { display: none; }
+  .wait { padding: 24px 16px; text-align: center; color: var(--mute); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="title">
+      <div class="surah" id="surah">&nbsp;</div>
+      <div class="sub" id="sub">&nbsp;</div>
+    </div>
+  </div>
+  <div class="wait" id="wait">…</div>
+  <div class="body" id="body" hidden></div>
+  <div class="note" id="note" role="alert" hidden></div>
+  <div class="bar">
+    <button id="play" disabled><svg viewBox="0 0 24 24"><path id="playIcon" d="M8 5v14l11-7z"/></svg><span id="playText">استمع</span></button>
+    <span class="src" id="src">&nbsp;</span>
+    <a id="open">readqurantoday.com</a>
+  </div>
+</div>
+<audio id="audio" preload="none"></audio>
+<script>/*@@CLIENT@@*/</script>
+<script>
+(function () {
+  'use strict';
+  var A = window.McpApps;
+  var $ = function (id) { return document.getElementById(id); };
+  var audio = $('audio');
+  var app = new A.App({ name: 'Read Quran Today ayah', version: '1.0.0' });
+
+  var data = null;          // get_ayah's answer
+  var rec = null;           // the run's recording, fetched on the first listen
+  var ar = true;
+  var PLAY = 'M8 5v14l11-7z', PAUSE = 'M6 5h4v14H6zM14 5h4v14h-4z';
+  var say = function (a, e) { return ar ? a : e; };
+  var digits = function (n) { return ar ? String(n).replace(/\d/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'[d]; }) : String(n); };
+
+  function theme(ctx) {
+    if (!ctx) return;
+    if (ctx.theme) { A.applyDocumentTheme(ctx.theme); document.documentElement.setAttribute('data-theme', ctx.theme); }
+    if (ctx.styles && ctx.styles.variables) A.applyHostStyleVariables(ctx.styles.variables);
+    if (ctx.styles && ctx.styles.css && ctx.styles.css.fonts) A.applyHostFonts(ctx.styles.css.fonts);
+    if (ctx.locale) ar = /^ar\b/i.test(ctx.locale);
+    labels();
+  }
+  function labels() {
+    $('playText').textContent = audio.paused ? say('استمع', 'Listen') : say('إيقاف', 'Pause');
+    $('open').textContent = say('اقرأ في المصحف', 'Read in the mushaf');
+  }
+  function note(msg) { $('note').textContent = msg || ''; $('note').hidden = !msg; }
+
+  /* Each mushaf page is a font of its own (QCF V2), fetched from the site */
+  var fontBase = '', loaded = {};
+  function needPage(p) {
+    if (loaded[p]) return;
+    loaded[p] = 'loading';
+    new FontFace('qcf' + p, 'url(' + fontBase + 'p' + p + '.woff2)').load().then(function (f) {
+      document.fonts.add(f);
+      loaded[p] = true;
+      document.querySelectorAll('.qp' + p).forEach(function (el) { el.classList.add('ready'); });
+    }, function () { fallback(); });
+  }
+
+  /* The Unicode text in the embedded face, where the page fonts cannot come */
+  var HAFS = { 'ْ': 'ۡ', '۟': 'ْ', '۫': '۬', 'ۣ': 'ۜ' };
+  function fallback() {
+    document.querySelectorAll('.ar').forEach(function (el, i) {
+      if (el.dataset.plain) return;
+      el.dataset.plain = '1';
+      el.textContent = data.ayahs[i].arabic.replace(/[ْۣ۟۫]/g, function (c) { return HAFS[c]; }) + ' ' + '۝' + digits(i + first());
+    });
+  }
+  var first = function () { return Number(data.ayahs[0].ref.split(':')[1]); };
+
+  function show(result) {
+    if (!result || result.isError) { note((result && result.content && result.content[0] && result.content[0].text) || say('تعذّر جلب الآية.', 'The ayah could not be loaded.')); return; }
+    data = result.structuredContent || JSON.parse(result.content[0].text);
+    var m = result._meta && result._meta['com.readqurantoday/mushaf'];
+    var glyphs = m && Array.isArray(m.ayahs) && m.ayahs.length === data.ayahs.length ? m.ayahs : null;
+    if (glyphs) fontBase = m.fonts;
+    note('');
+    var n = data.ayahs.length, a0 = first();
+    $('surah').textContent = data.surah.arabic ? 'سورة ' + data.surah.arabic : data.surah.name;
+    $('sub').textContent = data.surah.name + ' · ' + data.surah.number + ':' + a0 + (n > 1 ? '–' + (a0 + n - 1) : '') + ' · ' + say('صفحة ', 'page ') + digits(data.ayahs[0].page);
+    $('src').textContent = data.translation || '';
+    var body = $('body');
+    body.textContent = '';
+    data.ayahs.forEach(function (x, i) {
+      var box = document.createElement('div');
+      box.className = 'ayah';
+      box.dataset.i = i;
+      var arEl = document.createElement('div');
+      arEl.className = 'ar';
+      if (glyphs) {
+        glyphs[i].forEach(function (piece) {
+          var p = piece[0];
+          piece[1].forEach(function (g) {
+            var w = document.createElement('span');
+            w.className = 'w qp' + p + (loaded[p] === true ? ' ready' : '');
+            w.style.fontFamily = 'qcf' + p;
+            w.textContent = g;
+            arEl.appendChild(w);
+            arEl.appendChild(document.createTextNode(' '));
+          });
+          needPage(p);
+        });
+      }
+      box.appendChild(arEl);
+      if (x.translation) {
+        var tr = document.createElement('div');
+        tr.className = 'tr';
+        tr.dir = 'auto';
+        tr.textContent = x.translation;
+        box.appendChild(tr);
+      }
+      if (n > 1) {
+        var ref = document.createElement('div');
+        ref.className = 'ref';
+        ref.textContent = x.ref;
+        box.appendChild(ref);
+      }
+      body.appendChild(box);
+    });
+    if (!glyphs) fallback();
+    $('wait').hidden = true;
+    body.hidden = false;
+    rec = null;
+    audio.pause();
+    $('play').disabled = false;
+    labels();
+  }
+
+  /* The run in the site's own recitation, fetched when first asked for, and stopped at its end */
+  function mark() {
+    if (!rec) return;
+    var t = audio.currentTime, i = -1;
+    rec.ayahs.forEach(function (x, k) { if (k >= rec.from && k <= rec.to && x.start <= t) i = k - rec.from; });
+    document.querySelectorAll('.ayah').forEach(function (el) { el.classList.toggle('on', !audio.paused && Number(el.dataset.i) === i); });
+  }
+  $('play').onclick = function () {
+    if (!audio.paused) { audio.pause(); return; }
+    if (rec) {
+      if (audio.currentTime >= rec.end - 0.3 || audio.currentTime < rec.begin) audio.currentTime = rec.begin;
+      audio.play().catch(function () {});
+      return;
+    }
+    var a0 = first(), last = a0 + data.ayahs.length - 1;
+    $('play').disabled = true;
+    app.callServerTool({ name: 'get_recitation', arguments: { surah: data.surah.number, ayah: a0, to: last } }).then(function (r) {
+      var d = r.structuredContent || JSON.parse(r.content[0].text);
+      rec = { ayahs: d.ayahs, from: a0 - 1, to: last - 1, begin: d.ayahs[a0 - 1].start, end: d.ayahs[last - 1].end };
+      $('src').textContent = (data.translation ? data.translation + ' · ' : '') + (ar ? d.reciter.arabic || d.reciter.name : d.reciter.name);
+      audio.src = d.audio;
+      audio.onloadedmetadata = function () { audio.currentTime = rec.begin; audio.play().catch(function () {}); audio.onloadedmetadata = null; };
+      audio.load();
+    }).catch(function () {
+      note(say('تعذّر جلب التلاوة.', 'The recitation could not be loaded.'));
+    }).then(function () { $('play').disabled = false; });
+  };
+  audio.onplay = function () { $('playIcon').setAttribute('d', PAUSE); labels(); mark(); };
+  audio.onpause = function () { $('playIcon').setAttribute('d', PLAY); labels(); mark(); };
+  audio.ontimeupdate = function () {
+    if (rec && !audio.paused && audio.currentTime >= rec.end) audio.pause();
+    mark();
+  };
+  audio.onerror = function () {
+    if (audio.src) note(say('تعذّر تشغيل الصوت هنا. افتح الآية في المصحف للاستماع.', 'The audio could not play here. Open the ayah in the mushaf to listen.'));
+  };
+  $('open').onclick = function () {
+    var url = data ? data.ayahs[0].read : 'https://readqurantoday.com/';
+    app.openLink({ url: url }).catch(function () {});
+  };
+
+  app.ontoolinput = function () { $('wait').textContent = say('جارٍ التحميل…', 'Loading…'); };
+  app.ontoolresult = show;
+  app.onhostcontextchanged = theme;
+  app.connect().then(function () { theme(app.getHostContext()); }).catch(function () { note('Not connected to a host.'); });
+  labels();
+})();
+</script>
+</body>
+</html>

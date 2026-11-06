@@ -132,6 +132,24 @@ test('get_recitation opens the player: one self-contained page, fed the timings 
   }
 });
 
+test('get_ayah opens the ayah card, fed the glyphs of just the ayahs asked for', async () => {
+  const client = await connect();
+  try {
+    const tool = (await client.listTools()).tools.find((t) => t.name === 'get_ayah');
+    assert.strictEqual(tool._meta.ui.resourceUri, 'ui://readqurantoday/ayah');
+    const page = (await client.readResource({ uri: 'ui://readqurantoday/ayah' })).contents[0];
+    assert.strictEqual(page.mimeType, 'text/html;profile=mcp-app');
+    assert.doesNotMatch(page.text, /@@(CLIENT|FONT)@@/);
+    const r = await client.callTool({ name: 'get_ayah', arguments: { surah: 2, ayah: 255, to: 256, translation: 'sahih' } });
+    assert.strictEqual(r.structuredContent.ayahs.length, 2);
+    const mushaf = r._meta['com.readqurantoday/mushaf'];
+    assert.strictEqual(mushaf.ayahs.length, 2);
+    assert.strictEqual(mushaf.ayahs[0][0][0], 42);   // Ayat al-Kursi is on page 42
+  } finally {
+    await client.close();
+  }
+});
+
 test('get_recitation: a run of ayahs plays by its link alone, and stops at its end', async () => {
   const { value } = await call('get_recitation', { surah: 1, ayah: 1, to: 5 });
   assert.strictEqual(value.startAyah, 1);
