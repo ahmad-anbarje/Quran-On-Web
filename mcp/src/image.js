@@ -47,7 +47,6 @@ function draw(q, s, from, to, lines) {
   x.fillStyle = PAPER; x.fillRect(0, 0, W, H);
 
   // The surah and the ayahs, as a heading above the page's lines
-  const ar = (n) => String(n).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
   x.fillStyle = ACCENT; x.textBaseline = 'middle';
   x.font = `600 34px ${ui}`; x.direction = 'rtl'; x.textAlign = 'right';
   x.fillText(`سورة ${info.name}`, W - PAD, HEAD / 2 + 6);
