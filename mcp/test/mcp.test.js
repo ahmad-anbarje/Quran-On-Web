@@ -355,6 +355,25 @@ test('usage is counted for the admin page: calls by tool, connections by app, no
   await new Promise((ok) => counted.close(ok));
 });
 
+test('users are counted once a day by a keyed hash, by country and app, and no address is kept', () => {
+  const { createStats } = require('../src/stats');
+  const s = createStats(null);
+  const init = (name) => ({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name } } });
+  const call = { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'get_ayah' } };
+  s.message(init('claude-code'), { ip: '203.0.113.7', country: 'SA' });
+  s.message(call, { ip: '203.0.113.7', country: 'SA' });
+  s.message(init('claude-code'), { ip: '203.0.113.7', country: 'SA' });   // the same caller again
+  s.message(init('cursor'), { ip: '203.0.113.7', country: 'SA' });        // and in another app
+  s.message(init('claude-ai'), { ip: '198.51.100.2', country: 'US' });
+  s.message(call, { ip: '192.0.2.9', country: 'T1' });
+  const snap = s.snapshot();
+  const day = snap.days[new Date().toISOString().slice(0, 10)];
+  assert.strictEqual(day.users, 3);
+  assert.deepStrictEqual(day.countries, { SA: 1, US: 1, '??': 1 });
+  assert.deepStrictEqual(day.userClients, { 'claude-code': 1, cursor: 1, 'claude-ai': 1 });
+  assert.doesNotMatch(JSON.stringify(snap), /203\.0|198\.51|192\.0/);
+});
+
 test('health, wrong paths and methods', async () => {
   assert.strictEqual((await fetch(base + '/health')).status, 200);
   assert.strictEqual((await fetch(base + '/elsewhere')).status, 404);

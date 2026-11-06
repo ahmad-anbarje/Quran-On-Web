@@ -111,7 +111,7 @@ function createServer(options = {}) {
       try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch (e) {
         return send(res, 400, rpcError(-32700, 'Parse error'));
       }
-      stats.message(body);
+      stats.message(body, { ip, country: req.headers['x-country'] });
       const server = build(q, VERSION, { feedbackUrl: reports });
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
       res.on('close', () => { transport.close(); server.close(); });
