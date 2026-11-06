@@ -19,9 +19,15 @@
   table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
   td, th { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
   th { font-weight: 600; opacity: 0.7; font-size: 0.78rem; }
-  td.n { text-align: right; font-variant-numeric: tabular-nums; width: 6rem; }
+  td.n { font-variant-numeric: tabular-nums; width: 6rem; }
   tr:last-child td { border-bottom: 0; }
-  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 14px; }
+  .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 14px; }
+  .card.hi { border-color: var(--primary); }
+  td.n, th.n { text-align: right; white-space: nowrap; }
+  td small { display: block; opacity: 0.6; font-size: 0.74rem; }
+  .more { margin-top: 22px; }
+  .more summary { cursor: pointer; font-weight: 600; font-size: 1rem; }
+  .more table { margin-top: 8px; }
   .note { font-size: 0.8rem; opacity: 0.7; margin-top: 18px; }
   .err { color: var(--bad); }
   .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-left: 8px; vertical-align: middle; }
@@ -45,13 +51,12 @@
   <p class="crumb"><a href="../">Admin</a> · how much readqurantoday.com/mcp is used, by AI assistants and developers' apps</p>
 
   <div class="cards">
-    <div class="card"><b id="usersToday">–</b><span>users today</span></div>
-    <div class="card"><b id="usersAvg">–</b><span>users a day, on average</span></div>
+    <div class="card hi"><b id="peopleToday">–</b><span>users today, through AI assistants</span></div>
+    <div class="card"><b id="peopleAvg">–</b><span>a day, on average</span></div>
     <div class="card"><b id="calls">–</b><span>tool calls</span></div>
-    <div class="card"><b id="conns">–</b><span>connections</span></div>
+    <div class="card"><b id="bots">–</b><span>scanners &amp; directories today</span></div>
     <div class="card"><b id="files">–</b><span>files downloaded</span></div>
-    <div class="card"><b id="limited">–</b><span>refused, too many</span></div>
-    <div class="card"><b id="errors">–</b><span>errors</span></div>
+    <div class="card"><b id="problems">–</b><span>errors · refused</span></div>
   </div>
 
   <h2><span id="chartTitle">Users a day</span>
@@ -61,20 +66,25 @@
 
   <div class="two">
     <div>
+      <h2>AI assistants</h2>
+      <table><thead><tr><th>Assistant</th><th class="n">Users</th><th class="n">Connections</th></tr></thead><tbody id="assistants"></tbody></table>
+    </div>
+    <div>
       <h2>Users by country</h2>
       <table><thead><tr><th>Country</th><th class="n">Users</th></tr></thead><tbody id="countries"></tbody></table>
     </div>
-    <div>
-      <h2>By app</h2>
-      <table><thead><tr><th>App (as it names itself)</th><th class="n">Users</th><th class="n">Connections</th></tr></thead><tbody id="clients"></tbody></table>
-    </div>
-    <div>
-      <h2>By tool</h2>
-      <table><thead><tr><th>Tool</th><th class="n">Calls</th></tr></thead><tbody id="tools"></tbody></table>
-    </div>
   </div>
 
-  <p class="note">Users are callers told apart by a code made from their address with a key that changes every day and is never saved, so they are counted per day and added up over a period; no address, no list of people and nothing asked is kept. Apps that run in the cloud (ChatGPT, claude.ai) call from their own servers, so their many readers show as a few users, in the country of those servers; apps on a reader's own computer (Claude Code, Cursor, VS Code) show the reader's country. A connection is an assistant opening the server, about once a conversation.</p>
+  <h2>By tool</h2>
+  <table><thead><tr><th>Tool</th><th class="n">Calls</th></tr></thead><tbody id="tools"></tbody></table>
+
+  <details class="more">
+    <summary>Scanners &amp; directories <span id="botCount"></span></summary>
+    <p class="note">Directories, health checkers and security scanners that test MCP servers. Not readers.</p>
+    <table><thead><tr><th>Name it gives</th><th class="n">Users</th><th class="n">Connections</th></tr></thead><tbody id="scanners"></tbody></table>
+  </details>
+
+  <p class="note">"Users through AI assistants" counts the callers whose app is a known assistant (Claude, ChatGPT, Gemini, VS Code, Cursor…); the rest are scanners. By country covers both. Users are callers told apart by a code made from their address with a key that changes every day and is never saved, so they are counted per day and added up over a period; no address, no list of people and nothing asked is kept. Apps that run in the cloud (ChatGPT, claude.ai) call from their own servers, so their many readers show as a few users, in the country of those servers; apps on a reader's own computer (Claude Code, Cursor, VS Code) show the reader's country. A connection is an assistant opening the server, about once a conversation.</p>
   <p class="note" id="note"></p>
 </main>
 <script src="mcp.js"></script>
