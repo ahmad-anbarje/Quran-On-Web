@@ -1291,11 +1291,32 @@ $(function () {
     Offline.apply(!on, true);
   });
 
-  /* The other edition is other data and other fonts: the page is read again in it, where the reader was */
-  $('#btn-tajweed').on('click', function () {
-    localStorage.setItem('quran-tajweed', VERSION === 'tj' ? 'off' : 'on');
+  /* The palette by the page: off, it turns Tajweed on; on, it shows what the colours mean,
+     by itself the first time */
+  function showLegend(on) {
+    $('#tajweed-legend').prop('hidden', !on);
+    $('#btn-legend').attr('aria-expanded', String(on));
+  }
+  function setTajweed(on) {
+    localStorage.setItem('quran-tajweed', on ? 'on' : 'off');
     location.reload();
+  }
+  $('body').toggleClass('tajweed-on', VERSION === 'tj');
+  if (VERSION === 'tj' && !localStorage.getItem('quran-legend-seen')) {
+    showLegend(true);
+    localStorage.setItem('quran-legend-seen', '1');
+  }
+  $('#btn-legend').on('click', function () {
+    if (VERSION !== 'tj') { setTajweed(true); return; }
+    showLegend($('#tajweed-legend').prop('hidden'));
   });
+  $('#btn-close-legend').on('click', function () { showLegend(false); });
+  $('#btn-theme-corner').on('click', function () { $('#btn-theme').trigger('click'); });
+  $('#btn-tajweed-off').on('click', function () { setTajweed(false); });
+  $(document).on('keydown', function (e) { if (e.key === 'Escape') showLegend(false); });
+
+  /* The other edition is other data and other fonts: the page is read again in it, where the reader was */
+  $('#btn-tajweed').on('click', function () { setTajweed(VERSION !== 'tj'); });
 
   $('#btn-weight').on('click', function () {
     applyWeight(WEIGHTS[(WEIGHTS.indexOf(weight) + 1) % WEIGHTS.length]);

@@ -54,7 +54,7 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v4/ -->
   <link rel="stylesheet" href="/css/fonts.min.css?v=dc96e96b71" />
-  <link rel="stylesheet" href="/css/style.min.css?v=55aa7a3149" />
+  <link rel="stylesheet" href="/css/style.min.css?v=664cc6a19e" />
   <link rel="stylesheet" href="/css/recite.min.css?v=afd4d8c4ae" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
@@ -354,6 +354,31 @@
       <svg class="ic ic-fs-enter" viewBox="0 0 24 24"><use href="#i-expand"/></svg>
       <svg class="ic ic-fs-exit" viewBox="0 0 24 24"><use href="#i-collapse"/></svg>
     </button>
+    <!-- Tajweed by the page: turns the colours on, and once on shows what they mean -->
+    <button id="btn-legend" aria-label="ألوان التجويد | Tajweed colours" aria-expanded="false" aria-controls="tajweed-legend">
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-tajweed"/></svg>
+    </button>
+    <!-- Light and dark, by the page as well as in Settings -->
+    <button id="btn-theme-corner" aria-label="المظهر | Theme">
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-theme"/></svg>
+    </button>
+    <div id="tajweed-legend" role="dialog" aria-labelledby="tj-legend-title" hidden>
+      <div class="tj-head">
+        <h2 id="tj-legend-title"><span class="lang-ar">ألوان التجويد</span><span class="lang-en">Tajweed colours</span></h2>
+        <button id="btn-close-legend" class="ghost-btn" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><use href="#i-close"/></svg></button>
+      </div>
+      <ul>
+        <li><span class="tj-sw" style="--c: #b50000; --cd: #e30000"></span><span class="lang-ar">المد اللازم (٦ حركات)</span><span class="lang-en">Necessary madd (6 counts)</span></li>
+        <li><span class="tj-sw" style="--c: #f40000; --cd: #ff5e8e"></span><span class="lang-ar">المد المتصل (٤ أو ٥ حركات)</span><span class="lang-en">Connected madd (4 or 5 counts)</span></li>
+        <li><span class="tj-sw" style="--c: #ff7b00; --cd: #ff8e3b"></span><span class="lang-ar">المد المنفصل (٢ / ٤ / ٦ حركات)</span><span class="lang-en">Separated madd (2 / 4 / 6 counts)</span></li>
+        <li><span class="tj-sw" style="--c: #ce9e00; --cd: #ffc1e0"></span><span class="lang-ar">مدّ حركتان</span><span class="lang-en">Madd of 2 counts</span></li>
+        <li><span class="tj-sw" style="--c: #09b000; --cd: #26b55d"></span><span class="lang-ar">غنة / إخفاء</span><span class="lang-en">Ghunnah / ikhfa</span></li>
+        <li><span class="tj-sw" style="--c: #2fadff; --cd: #00deff"></span><span class="lang-ar">قلقلة</span><span class="lang-en">Qalqalah</span></li>
+        <li><span class="tj-sw" style="--c: #3f48e6; --cd: #3c84d5"></span><span class="lang-ar">تفخيم الصوت</span><span class="lang-en">Heavy sound (tafkhim)</span></li>
+        <li><span class="tj-sw" style="--c: #a5a5a5; --cd: #9d9999"></span><span class="lang-ar">حرف لا يُلفظ</span><span class="lang-en">Silent letter</span></li>
+      </ul>
+      <button id="btn-tajweed-off" class="tj-off"><span class="lang-ar">إيقاف الألوان</span><span class="lang-en">Turn the colours off</span></button>
+    </div>
     <!-- The magnifier's slider: drag up to come closer; the level below goes back to 100%.
          The steps and the level are for the pointer, so they are not buttons:
          a control inside a slider is one a screen reader cannot reach. -->
@@ -637,6 +662,7 @@
         <li><span class="lang-ar">بلا كوكيز، وبلا بصمة للمتصفح، ولا شيء يغادر خادم هذا الموقع</span>
             <span class="lang-en">No cookies, no browser fingerprinting, and nothing leaves this site's own server</span></li>
       </ul>
+      <button id="btn-tajweed-off" class="tj-off"><span class="lang-ar">إيقاف الألوان</span><span class="lang-en">Turn the colours off</span></button>
     </div>
 
     <div class="panel-footer">
@@ -679,7 +705,7 @@
   <script defer src="/js/pager.min.js?v=73fed4459e"></script>
   <script defer src="/js/offline.min.js?v=f633109224"></script>
   <script defer src="/js/leaves.min.js?v=964a1ade72"></script>
-  <script defer src="/js/app.min.js?v=5403b3f072"></script>
+  <script defer src="/js/app.min.js?v=d687fe6221"></script>
   <script defer src="/js/appcard.min.js?v=942fa5f409"></script>
   <article class="sr-only" lang="ar" dir="rtl">
     <h1>جزء قد سمع · Juz 28</h1>

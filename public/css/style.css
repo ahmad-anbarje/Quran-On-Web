@@ -318,6 +318,72 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
   #btn-fullscreen-row { display: none; }
 }
 
+/* --- Tajweed legend ---
+   Dressed like the full-screen button, in the corner under it where that is
+   shown; the card opens beside it. Swatches take the dark palette on dark pages,
+   as the letters do. */
+/* The corner's buttons, one under another: full screen where it is shown, Tajweed, then light and dark */
+:root { --corner-step: calc(var(--corner-btn) + 8px); --corner-top: 10px; }
+#btn-legend, #btn-theme-corner {
+  position: fixed;
+  top: var(--corner-top);
+  left: 10px;
+  z-index: 125;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--corner-btn);
+  height: var(--corner-btn);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-mute);
+  cursor: pointer;
+}
+#btn-theme-corner { top: calc(var(--corner-top) + var(--corner-step)); }
+#btn-legend:hover, #btn-legend[aria-expanded="true"], #btn-theme-corner:hover {
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
+}
+#btn-legend .ic, #btn-theme-corner .ic { width: 22px; height: 22px; }
+#tajweed-legend {
+  position: fixed;
+  top: calc(var(--corner-top) + 2 * var(--corner-step));
+  left: 10px;
+  /* Above the dimming the index lays over the page, so it can always be closed */
+  z-index: 155;
+  width: min(300px, calc(100vw - 20px));
+  padding: 10px 14px 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+}
+#tajweed-legend[hidden] { display: none; }
+#tajweed-legend .tj-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+#tajweed-legend h2 { margin: 0; font-size: 0.95rem; }
+#tajweed-legend ul { list-style: none; margin: 8px 0 0; padding: 0; }
+#tajweed-legend .tj-off { width: 100%; margin-top: 8px; padding: 8px; font: inherit; font-size: 0.84rem; color: var(--text-mute); background: transparent; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+#tajweed-legend .tj-off:hover { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 35%, var(--line)); }
+/* On, the button says so: the palette in the accent colour */
+body.tajweed-on #btn-legend { color: var(--primary); }
+#tajweed-legend li { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 0.86rem; }
+.tj-sw { flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--c); }
+body.dark-mode .tj-sw { background: var(--cd); }
+/* A phone's page runs edge to edge, its head band at the top: the buttons sit at the foot instead, the card above them */
+@media (max-width: 767px) {
+  #btn-legend { top: auto; bottom: calc(14px + var(--corner-step)); }
+  #btn-theme-corner { top: auto; bottom: 14px; }
+  #tajweed-legend { top: auto; bottom: calc(14px + 2 * var(--corner-step)); }
+}
+@media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
+  :root { --corner-top: calc(10px + var(--corner-btn) + 8px); }
+  #tajweed-legend { top: var(--corner-top); left: calc(10px + var(--corner-step)); }
+}
+
 /* --- zoom rail ---
    The magnifier's slider, in the bottom-left corner, dressed like the full-screen button.
    The track gives way on a short window, so the rail never climbs to the turner at mid-height. */

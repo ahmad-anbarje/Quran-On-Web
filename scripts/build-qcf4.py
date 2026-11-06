@@ -57,17 +57,14 @@ def cut(n, codes, out):
 
 os.makedirs(OUT_FONTS, exist_ok=True)
 glyphs = lambda s: {ord(c) for c in s if c not in '| '}
-total, bas = 0, set()
+total = 0
 for p in range(1, 605):
     rows = app['pages'][str(p)]
     codes = set()
     for r in rows:
         if r['t'] == 'ayah':
             codes |= glyphs(r['v4'])
-        elif r['t'] == 'basmalah':
-            bas |= glyphs(r['v4'])
     total += cut(app['fonts'][p - 1], sorted(codes), f'p{p}.woff2')
-total += cut(app['basmalah']['font'], sorted(bas), 'pb.woff2')
 
 
 def drawn(word):
@@ -76,10 +73,22 @@ def drawn(word):
     return word[::-1]
 
 
+# Every surah's Basmalah as the opening page prints it: the long forms the font holds for the rest
+# (U+F8D6, and U+F8D7 with its shadda) draw as overlapping strokes in browsers at every size
+COMPACT = next(r['v4'] for r in app['pages']['2'] if r['t'] == 'basmalah')
+
 pages = {}
 for p in range(1, 605):
-    pages[str(p)] = [{**r, 'v4': '|'.join(drawn(w) for w in r['v4'].split('|'))} if r['t'] == 'ayah' else r
-                     for r in app['pages'][str(p)]]
+    rows = []
+    for r in app['pages'][str(p)]:
+        if r['t'] == 'ayah':
+            r = {**r, 'v4': '|'.join(drawn(w) for w in r['v4'].split('|'))}
+        elif r['t'] == 'basmalah':
+            r = {**r, 'v4': COMPACT}
+        rows.append(r)
+    pages[str(p)] = rows
+
+total += cut(app['basmalah']['font'], sorted(glyphs(COMPACT)), 'pb.woff2')
 
 # The reader's shape: the Basmalah drawn from its own face ("page" b), each Basmalah line with its glyph
 data = {
