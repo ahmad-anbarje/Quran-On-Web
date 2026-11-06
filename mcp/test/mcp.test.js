@@ -52,7 +52,7 @@ async function call(name, args) {
 test('offers its tools and file addresses', async () => {
   const client = await connect();
   const tools = (await client.listTools()).tools.map((t) => t.name).sort();
-  assert.deepStrictEqual(tools, ['get_ayah', 'get_file', 'get_recitation', 'get_tafsir', 'list_reciters',
+  assert.deepStrictEqual(tools, ['get_ayah', 'get_ayah_image', 'get_file', 'get_recitation', 'get_tafsir', 'list_reciters',
     'list_surahs', 'list_translations', 'search', 'send_feedback', 'word_by_word']);
   const templates = (await client.listResourceTemplates()).resourceTemplates.map((t) => t.uriTemplate).sort();
   assert.deepStrictEqual(templates, ['quran://recitation/{reciter}/{surah}', 'quran://surah/{surah}',
@@ -147,6 +147,22 @@ test('get_ayah opens the ayah card, fed the mushaf lines that hold the ayahs ask
     assert.ok(mushaf.lines.every((line) => line.page === 42));
     assert.strictEqual(mushaf.lines[0].words[0][1], 254);
     assert.ok(mushaf.lines.some((line) => line.words.some(([, a]) => a === 256)));
+  } finally {
+    await client.close();
+  }
+});
+
+test('get_ayah_image: a PNG of the mushaf lines, drawn once and refused past one page', async () => {
+  const client = await connect();
+  try {
+    const r = await client.callTool({ name: 'get_ayah_image', arguments: { surah: 112, ayah: 1, to: 4 } });
+    const png = Buffer.from(r.content[0].data, 'base64');
+    assert.strictEqual(r.content[0].mimeType, 'image/png');
+    assert.strictEqual(png.subarray(1, 4).toString(), 'PNG');
+    assert.strictEqual(JSON.parse(r.content[1].text).read, 'https://readqurantoday.com/surah/112/ayah/1');
+    const again = await client.callTool({ name: 'get_ayah_image', arguments: { surah: 112, ayah: 1, to: 4 } });
+    assert.strictEqual(again.content[0].data, r.content[0].data);
+    assert.ok((await client.callTool({ name: 'get_ayah_image', arguments: { surah: 2, ayah: 1, to: 40 } })).isError);
   } finally {
     await client.close();
   }

@@ -18,6 +18,7 @@ const { z } = require('zod');
 const { MAX_RESULTS, DEFAULT_TRANSLATION, fold, reply, fail, checkAyahs, translationName, saveLink } = require('./shared');
 const { playerMeta, ayahMeta } = require('./app');
 const { fileUrl, fileName, datasets } = require('./files');
+const { ayahImage, MAX_LINES } = require('./image');
 
 const surahArg = z.number().int().min(1).max(114).describe('Surah number, 1-114');
 
@@ -78,6 +79,32 @@ function registerTools(server, q) {
       ...reply(value),
       structuredContent: value,
       _meta: { 'com.readqurantoday/mushaf': { fonts: `${q.SITE}/fonts/v2/`, lines: q.mushafLines(s, ayah, last) } },
+    };
+  });
+
+  tool('get_ayah_image', {
+    title: 'Picture of ayahs',
+    description:
+      'A PNG picture of one ayah or a run of them as the Madinah Mushaf prints them: the page\'s own lines ' +
+      `in its script (QCF V2), the ayahs around faded. Up to one page (${MAX_LINES} lines). Only when the ` +
+      'reader asks for a picture or image; for the text, use get_ayah.',
+    inputSchema: {
+      surah: surahArg,
+      ayah: z.number().int().min(1).describe('First ayah'),
+      to: z.number().int().min(1).optional().describe('Last ayah, for a run; defaults to the first'),
+    },
+  }, async ({ surah: s, ayah, to }) => {
+    const last = to || ayah;
+    const bad = checkAyahs(q, s, ayah, last);
+    if (bad) return fail(bad);
+    const r = await ayahImage(q, s, ayah, last);
+    if (r.error) return fail(r.error);
+    const info = q.surah(s);
+    return {
+      content: [
+        { type: 'image', data: r.png.toString('base64'), mimeType: 'image/png' },
+        { type: 'text', text: JSON.stringify({ ref: `${s}:${ayah}${last > ayah ? '-' + last : ''}`, surah: info.en, page: q.page(s, ayah), read: q.readerLink(s, ayah) }) },
+      ],
     };
   });
 
