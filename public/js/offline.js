@@ -17,7 +17,7 @@
 
   var PAGES = 604;
   var offline = localStorage.getItem('quran-offline') === 'on';
-  // Every page's font is in the worker's cache: said as "Saved · 43 MB", not just "On"
+  // Every page's font of the edition read is in the worker's cache: said as "Saved · 43 MB", not just "On"
   var complete = false;
 
   /** Say something to the worker, and hear back on a channel of our own. */
@@ -30,7 +30,7 @@
   }
 
   /** Keep these pages' fonts, quietly. */
-  function keepPages(pages) { swSend({ type: 'cache-pages', pages: pages }); }
+  function keepPages(pages) { swSend({ type: 'cache-pages', pages: pages, version: app.version }); }
 
   /* The worker is in charge now, so fill it — the whole mushaf, not just the
      pages opened. The surah on screen goes first, so reading stops waiting. */
@@ -41,7 +41,7 @@
 
     /* One question instead of six hundred: walking every page again finds
        nothing to do, but still counts 0-100 and reads as a fresh download. */
-    swSend({ type: 'usage' }, function (u) {
+    swSend({ type: 'usage', version: app.version }, function (u) {
       if (u.type !== 'usage') return;
       if (u.fonts >= PAGES) { complete = true; app.showValues(); return; }
       fillMushaf();
@@ -53,7 +53,7 @@
     var pages = [];
     for (var p = 1; p <= PAGES; p++) pages.push(p);
 
-    swSend({ type: 'cache-pages', pages: pages }, function (m) {
+    swSend({ type: 'cache-pages', pages: pages, version: app.version }, function (m) {
       if (!offline) return;
       if (m.type === 'progress') {
         var pct = Math.round(m.done / m.total * 100);

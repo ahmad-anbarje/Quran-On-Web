@@ -447,6 +447,20 @@ check("v4 draws as many words a page as the page's word list holds", () => {
   return '604 pages, every word in its place';
 });
 
+check('Tajweed sets every page in v4\'s lines, as many words a line', () => {
+  /* Its fonts number their glyphs as V2's, but its rows are the 1441 printing's: the recitation lights the same word either way */
+  const tj = loadJSON(path.join(ROOT, 'public', 'data', 'mushaf-tj.json'));
+  const off = [];
+  for (let p = 1; p <= 604; p++) {
+    const a = v4.pages[p], b = tj.pages[p];
+    const same = a.length === b.length && a.every((l, i) => l.t === b[i].t &&
+      (l.t !== 'ayah' || l.v4.split(SEP).length === b[i].tj.split(SEP).length));
+    if (!same) off.push(p);
+  }
+  assert(!off.length, `${off.length} pages differ from v4, first ${off[0]}`);
+  return '604 pages, line for line';
+});
+
 /* ---------- report ------------------------------------------------------- */
 
 console.log('\nMushaf data\n');

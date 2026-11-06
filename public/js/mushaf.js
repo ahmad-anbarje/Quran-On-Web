@@ -339,15 +339,17 @@
     return run;
   }
 
-  /** A v4 Basmalah: one glyph, the surah's own, in the face that holds them all */
-  function basmalahGlyph(glyph, basmalah, version) {
+  /** A Basmalah the line carries: v4's one glyph, the surah's own, or Tajweed's four words, in the face that holds them */
+  function basmalahGlyph(glyphs, basmalah, version) {
     var run = document.createElement('span');
     run.className = 'm-basmalah-run';
     run.style.fontFamily = '"' + familyFor(version, basmalah.page) + '"';
-    var s = document.createElement('span');
-    s.className = 'm-word';
-    s.textContent = glyph;
-    run.appendChild(s);
+    glyphs.split(SEP).forEach(function (word, i) {
+      var s = document.createElement('span');
+      s.className = 'm-word';
+      s.textContent = (i ? ' ' : '') + word;
+      run.appendChild(s);
+    });
     return run;
   }
 

@@ -117,7 +117,10 @@ self.addEventListener('fetch', (e) => {
 /* Take a list of pages and put their fonts in the cache, reporting progress:
    96 MB with no sign of movement is indistinguishable from nothing happening.
    Files already held are skipped, so a cancelled run resumes. */
-async function cachePages(asked, port) {
+/* The edition the reader draws, of the two it may save: plain v4, or Tajweed */
+const edition = (v) => (v === 'tj' ? 'tj' : 'v4');
+
+async function cachePages(asked, port, version) {
   /* Only page numbers, and only real ones: the url below is built by joining
      strings, and a list without a ceiling is a loop that never ends. */
   const seen = new Set();
@@ -133,7 +136,7 @@ async function cachePages(asked, port) {
   let done = 0, added = 0, failed = 0;
 
   for (const page of pages) {
-    const url = '/fonts/v4/p' + page + '.woff2';
+    const url = '/fonts/' + version + '/p' + page + '.woff2';
     try {
       if (await cache.match(url)) { done++; }
       else {
@@ -156,7 +159,7 @@ self.addEventListener('message', (e) => {
   const port = e.ports && e.ports[0];
 
   if (msg.type === 'cache-pages') {
-    e.waitUntil(cachePages(msg.pages || [], port));
+    e.waitUntil(cachePages(msg.pages || [], port, edition(msg.version)));
   } else if (msg.type === 'clear') {
     e.waitUntil(caches.keys()
       .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
@@ -168,7 +171,7 @@ self.addEventListener('message', (e) => {
     e.waitUntil(caches.open(ASSETS)
       .then((c) => c.keys())
       .then((keys) => {
-        const fonts = keys.filter((r) => new URL(r.url).pathname.startsWith('/fonts/v4/'));
+        const fonts = keys.filter((r) => new URL(r.url).pathname.startsWith('/fonts/' + edition(msg.version) + '/'));
         if (port) port.postMessage({ type: 'usage', fonts: fonts.length, files: keys.length });
       }));
   }

@@ -18,8 +18,19 @@ $(function () {
   try { localStorage.removeItem('quran-theme'); } catch (e) {}
   var scale = parseFloat(localStorage.getItem('quran-scale')) || 1;
   /* The reader sets the Madinah Mushaf in QCF v4 (the 1441 printing), from
-     mushaf-v4.json; mushaf.json keeps V1 and V2, which the data checks verify. */
-  var VERSION = 'v4';
+     mushaf-v4.json, or its Tajweed edition (mushaf-tj.json) when the reader
+     turns that on; mushaf.json keeps V1 and V2, which the data checks verify. */
+  var VERSION = localStorage.getItem('quran-tajweed') === 'on' ? 'tj' : 'v4';
+  // What the whole edition weighs, said before it is saved for reading offline
+  var OFFLINE_MB = { v4: 43, tj: 51 }[VERSION];
+  /* Tajweed's fonts are coloured, a palette for light pages and one for dark:
+     the dark one is named for every page's face at once */
+  if (VERSION === 'tj') {
+    var faces = [];
+    for (var f = 1; f <= 604; f++) faces.push('"QCF-tj-' + f + '"');
+    $('<style>').text('@font-palette-values --tj-dark { font-family: ' + faces.join(', ') + '; base-palette: 1; }' +
+      'body.dark-mode .mushaf { font-palette: --tj-dark; }').appendTo('head');
+  }
   var PAGES = 604;
   var weight = localStorage.getItem('quran-weight') || '400';
   var bright = parseInt(localStorage.getItem('quran-bright')) || 100;
@@ -369,7 +380,8 @@ $(function () {
     $('#v-mode').text(say('mode', mode));
     $('#v-weight').text(say('weight', weight));
     $('#v-turners').text(say('onOff', turners ? 'on' : 'off'));
-    $('#v-offline').text(Offline.complete() ? T('محفوظ · ٤٣ ميغابايت', 'Saved · 43 MB')
+    $('#v-tajweed').text(say('onState', VERSION === 'tj' ? 'on' : 'off'));
+    $('#v-offline').text(Offline.complete() ? T('محفوظ · ' + ar(OFFLINE_MB) + ' ميغابايت', 'Saved · ' + OFFLINE_MB + ' MB')
       : say('onState', Offline.on() ? 'on' : 'off'));
     $('#v-fullscreen').text(say('fullscreen', document.fullscreenElement ? 'on' : 'off'));
     $('#v-lang').text(I18n.name());
@@ -1269,14 +1281,20 @@ $(function () {
 
   $('#btn-turners').on('click', function () { applyTurners(!turners, true); });
 
-  /* 43 MB both ways: asked before it is written to the device, and before it is
+  /* Some 40 MB both ways: asked before it is written to the device, and before it is
      thrown away. The app has every page in its package, so it asks nothing. */
   $('#btn-offline').on('click', function () {
     var on = Offline.on();
     if (!Offline.native() && !window.confirm(on
-      ? T('حذف النسخة المحفوظة للقراءة دون اتصال (٤٣ ميغابايت)؟', 'Remove the offline copy (43 MB)?')
-      : T('حفظ المصحف كاملًا للقراءة دون اتصال؟ نحو ٤٣ ميغابايت.', 'Save the whole mushaf for offline reading? About 43 MB.'))) return;
+      ? T('حذف النسخة المحفوظة للقراءة دون اتصال (' + ar(OFFLINE_MB) + ' ميغابايت)؟', 'Remove the offline copy (' + OFFLINE_MB + ' MB)?')
+      : T('حفظ المصحف كاملًا للقراءة دون اتصال؟ نحو ' + ar(OFFLINE_MB) + ' ميغابايت.', 'Save the whole mushaf for offline reading? About ' + OFFLINE_MB + ' MB.'))) return;
     Offline.apply(!on, true);
+  });
+
+  /* The other edition is other data and other fonts: the page is read again in it, where the reader was */
+  $('#btn-tajweed').on('click', function () {
+    localStorage.setItem('quran-tajweed', VERSION === 'tj' ? 'off' : 'on');
+    location.reload();
   });
 
   $('#btn-weight').on('click', function () {

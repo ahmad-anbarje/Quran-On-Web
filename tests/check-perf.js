@@ -95,8 +95,9 @@ async function main() {
          list of translations is the same kind of thing: fetched only when the
          meaning window opens, and held to a size of its own. mushaf.json, the
          1421 printing in V1 and V2, is not read by the reader: it stays as a
-         data set for developers and as what the data checks verify. */
-      const wanted = ['mushaf-v4.json', 'mushaf.json', 'recitations.json', 'surahs.json', 'translations.json'];
+         data set for developers and as what the data checks verify. mushaf-tj.json
+         is read instead of mushaf-v4.json when the reader turns Tajweed on. */
+      const wanted = ['mushaf-tj.json', 'mushaf-v4.json', 'mushaf.json', 'recitations.json', 'surahs.json', 'translations.json'];
       const files = fs.readdirSync(path.join(ROOT, 'public', 'data'))
         .filter((f) => f.endsWith('.json')).sort();
       assert(files.join(',') === wanted.join(','),

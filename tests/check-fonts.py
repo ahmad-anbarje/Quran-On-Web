@@ -408,6 +408,23 @@ def _():
     return "604 page fonts and %d Basmalahs resolve" % len(bas)
 
 
+@check("Tajweed: every glyph in its page's colour font, with the palettes for light and dark")
+def _():
+    tj = json.load(open(os.path.join(ROOT, "public", "data", "mushaf-tj.json"), encoding="utf-8"))
+    bad, flat = [], []
+    for p in range(1, PAGES + 1):
+        font = TTFont(os.path.join(FONTS, "tj", "p%d.woff2" % p))
+        if "COLR" not in font or len(font["CPAL"].palettes) < 2:
+            flat.append(p)
+        used = {ord(c) for line in tj["pages"][str(p)] if line["t"] != "surah" and (p == 1 or line["t"] == "ayah")
+                for c in line["tj"] if c not in "| "}
+        if used - set(font.getBestCmap()):
+            bad.append(p)
+    assert not flat, "%d Tajweed fonts lost their colours (%s)" % (len(flat), flat[:5])
+    assert not bad, "%d Tajweed pages ask for glyphs their font lacks (%s)" % (len(bad), bad[:5])
+    return "604 colour page fonts resolve"
+
+
 print("\nMushaf fonts\n")
 for ok, name, detail in results:
     print("  %s  %s" % ("PASS" if ok else "FAIL", name))

@@ -49,7 +49,8 @@
 
 **Everywhere**
 - Phones, tablets and desktops; swipe, keyboard shortcuts or the on-screen buttons
-- Offline reading (the whole mushaf, about 43 MB, asked before it is saved or removed), installable, dark and light
+- Tajweed colours, turned on in Settings: the same pages with each rule of recitation in its colour, a palette for light and one for dark
+- Offline reading (the whole mushaf, about 43 MB, or the Tajweed edition's own size, asked before it is saved or removed), installable, dark and light
 - The site in 14 languages: Arabic, English, Urdu, Indonesian, Bengali, Turkish,
   French, Persian, Hindi, Malay, Spanish, Russian, German and Chinese, chosen in
   Settings or from the browser's language; Urdu and Persian read right to left.
@@ -95,6 +96,7 @@ docker run -p 8080:80 ahmadanbarje/quran
 | File | What it is |
 |---|---|
 | `public/data/mushaf-v4.json` | The 604 pages as the reader draws them: the Madinah Mushaf's 1441 printing in QCF v4, built by `python scripts/build-qcf4.py` from the Android app's v4 data, with a font a page cut from KFGQPC's 47 |
+| `public/data/mushaf-tj.json` | The Tajweed edition, in the same lines, with colour page fonts in `public/fonts/tj/`; built by `python scripts/build-tajweed.py` from the Android app's |
 | `public/data/mushaf.json` | The 1421 printing's pages, with QCF V1 and V2 glyph codes; the data checks verify it, and v4 against it |
 | `public/data/surahs.json` | The 114-surah index, all the reader loads to start |
 | `public/data/words/pN.json` | Each page's words as text, behind the glyphs, for search engines and screen readers |

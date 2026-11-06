@@ -342,6 +342,30 @@ async function main() {
       return 'five pages, light and dark, wide and phone';
     });
 
+    await check('Tajweed colours: turned on from Settings, the pages draw from the colour fonts, light and dark', async () => {
+      const { ctx, page, errors } = await visit(DESKTOP, 'en', { colorScheme: 'dark' });
+      const fonts = [];
+      page.on('request', (r) => { const m = /\/fonts\/(tj|v4)\/p\d+\.woff2/.exec(r.url()); if (m) fonts.push(m[1]); });
+      await open(page, '/surah/112/');
+      await page.evaluate(() => document.getElementById('btn-tajweed').click());
+      await page.waitForLoadState('networkidle');
+      await page.waitForFunction(() => document.querySelectorAll('.m-word').length > 20, null, { timeout: 30000 });
+      const st = await page.evaluate(() => ({
+        value: document.getElementById('v-tajweed').textContent,
+        family: [...document.querySelectorAll('.mushaf')].map((m) => m.style.fontFamily).find(Boolean) || '',
+        palette: getComputedStyle(document.querySelector('.mushaf')).fontPalette,
+      }));
+      assert(st.value === 'On' && /QCF-tj-/.test(st.family), `after turning it on: ${JSON.stringify(st)}`);
+      assert(fonts.includes('tj'), 'no Tajweed page font was fetched');
+      assert(st.palette === '--tj-dark', `dark pages use palette ${st.palette}`);
+      await page.evaluate(() => document.getElementById('btn-tajweed').click());
+      await page.waitForLoadState('networkidle');
+      assert(await page.evaluate(() => document.getElementById('v-tajweed').textContent) === 'Off', 'it did not turn off again');
+      assert(!errors.length, errors.join(' | '));
+      await ctx.close();
+      return 'on and off from Settings, drawn from /fonts/tj/, the dark palette on dark pages';
+    });
+
     await check('an ayah has its own page, and the reader opens at it', async () => {
       const { ctx, page, errors } = await visit(DESKTOP, 'en');
       await page.goto(base + '/surah/2/255/', { waitUntil: 'networkidle' });
