@@ -268,6 +268,8 @@ $(function () {
             '<span class="lang-en">Choose a surah from the index to begin</span>');
           setSidebar(true, true);
         }
+        // readqurantoday.com/#ai opens the AI panel, as a link to share; after the surah, which closes panels
+        if (location.hash === '#ai') showPanel('ai');
       })
       .fail(function () {
         /* The splash would otherwise sit there loading for ever. */
