@@ -1397,6 +1397,12 @@ $(function () {
   $('#btn-lang, #btn-lang-corner, #btn-bar-lang').on('click', function () { showLangMenu($('#lang-menu').prop('hidden')); });
   $('#btn-close-lang').on('click', function () { showLangMenu(false); });
   $(document).on('keydown', function (e) { if (e.key === 'Escape' && !$('#lang-menu').prop('hidden')) showLangMenu(false); });
+  // A click anywhere else puts it away, as a menu does; the buttons that open it toggle it themselves
+  document.addEventListener('click', function (e) {
+    if ($('#lang-menu').prop('hidden')) return;
+    if (e.target.closest('#lang-menu, #btn-lang, #btn-lang-corner, #btn-bar-lang')) return;
+    showLangMenu(false);
+  }, true);
   $(document).on('click', '#lang-list .lang-opt', function () {
     var code = $(this).attr('data-code');
     showLangMenu(false);

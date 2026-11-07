@@ -241,16 +241,13 @@ body[data-lang="en"] .lang-ar { display: none !important; }
   width: 50px;
   height: auto;
   padding: 10px 0 8px;
-  border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--line));
+  border: 1px solid var(--line);
   border-right: none;
-  border-radius: 16px 0 0 16px;
-  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  border-radius: 14px 0 0 14px;
+  background: var(--surface);
   color: var(--primary);
   cursor: pointer;
   box-shadow: -2px 0 8px rgba(20, 60, 95, 0.08);
-  /* `right` on the drawer's own timing, so the two move as one piece. */
-  transition: right var(--t-drawer-in), color var(--t), background var(--t),
-              transform var(--t), box-shadow var(--t);
 }
 
 /* The tab itself never moves under the pointer. Leaning it out took its own
@@ -259,25 +256,18 @@ body[data-lang="en"] .lang-ar { display: none !important; }
    instead: it is inside the button, so the hit area never changes. */
 #sidebar-handle:hover {
   color: var(--primary);
-  /* Solid, so the page does not show through it */
-  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
-  box-shadow: -4px 0 14px rgba(20, 60, 95, 0.14);
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
 }
 
-#sidebar-handle:hover .ic { transform: translateX(-2px); }
-#sidebar.hidden ~ #sidebar-handle:hover .ic { transform: rotate(180deg) translateX(-2px); }
-
-#sidebar-handle .ic { width: 16px; height: 16px; transition: transform var(--t); }
+#sidebar-handle .ic { width: 16px; height: 16px; }
 #sidebar-handle .sh-book { width: 22px; height: 22px; }
 #sidebar-handle .cb-label { font-size: 0.66rem; }
 
 /* Shut: the tab sits against the screen edge, and its chevron turns to point the
    way it will open. */
-#sidebar.hidden ~ #sidebar-handle {
-  right: 0;
-  transition: right var(--t-drawer-out), color var(--t), background var(--t),
-              transform var(--t), box-shadow var(--t);
-}
+#sidebar.hidden ~ #sidebar-handle { right: 0; color: var(--text-mute); }
+#sidebar.hidden ~ #sidebar-handle:hover { color: var(--primary); }
 #sidebar.hidden ~ #sidebar-handle .ic { transform: rotate(180deg); }
 /* A finger needs more than a pointer: on a touch screen the tab is a target, not a hint */
 @media (pointer: coarse) {
@@ -296,11 +286,13 @@ body[data-lang="en"] .lang-ar { display: none !important; }
   display: none;
   align-items: center;
   justify-content: center;
-  width: var(--corner-btn);
-  height: var(--corner-btn);
+  flex-direction: column;
+  gap: 2px;
+  width: 58px;
+  height: 52px;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 50%;
+  border-radius: 14px;
   background: var(--surface);
   color: var(--text-mute);
   cursor: pointer;
@@ -315,7 +307,7 @@ body[data-lang="en"] .lang-ar { display: none !important; }
   border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
 }
 #btn-fullscreen:active { transform: scale(0.95); }
-#btn-fullscreen .ic { width: 22px; height: 22px; }
+#btn-fullscreen .ic { width: 20px; height: 20px; }
 
 
 .fs-toggle .ic-fs-exit { display: none; }
@@ -417,7 +409,7 @@ body.dark-mode .tj-sw { background: var(--cd); }
   #tajweed-legend { top: auto; bottom: calc(14px + 3 * var(--corner-step)); }
 }
 @media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
-  :root { --corner-top: calc(10px + var(--corner-btn) + 8px); }
+  :root { --corner-top: calc(10px + var(--corner-step)); }
   #tajweed-legend { top: var(--corner-top); left: 76px; }
 }
 
@@ -2313,24 +2305,25 @@ body.is-reading #page-nav { display: flex; }
   justify-content: center;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 50%;
+  /* A tile, as the buttons in the corner are */
+  border-radius: 14px;
   /* Solid, not frosted: a blur here smears the type the button sits over. */
   background: var(--surface);
-  color: var(--primary);
+  color: var(--text-mute);
   cursor: pointer;
   pointer-events: auto;
-  box-shadow: var(--sh-2);
+  box-shadow: var(--sh-1);
   transition: background var(--t), color var(--t), transform var(--t);
 }
 
 #page-nav .ic {
-  width: min(26px, calc(var(--turn-lane) * 0.42));
-  height: min(26px, calc(var(--turn-lane) * 0.42));
+  width: min(24px, calc(var(--turn-lane) * 0.4));
+  height: min(24px, calc(var(--turn-lane) * 0.4));
 }
 
 /* The chevron points the way the page moves: up and down when one page
    scrolls, left and right when two face each other and turn as a leaf.
-   #i-chev points left, so the rotations are from there. */
+   #i-arrow points left, so the rotations are from there. */
 #page-nav #btn-page-prev .ic { transform: rotate(90deg); }    /* up */
 #page-nav #btn-page-next .ic { transform: rotate(-90deg); }   /* down */
 
