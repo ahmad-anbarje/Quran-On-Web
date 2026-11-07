@@ -247,7 +247,7 @@ body[data-lang="en"] .lang-ar { display: none !important; }
   border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--line));
   border-right: none;
   border-radius: 16px 0 0 16px;
-  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  background: var(--surface);
   color: var(--primary);
   cursor: pointer;
   box-shadow: var(--sh-1);
