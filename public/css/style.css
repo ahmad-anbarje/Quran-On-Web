@@ -1567,8 +1567,8 @@ body[data-lang="en"] .mushaf.failed::after {
                               transparent 0.37em);
 }
 .m-end.m-medal, body.dark-mode .m-end.m-medal { background: none; }
-/* Dark pages turn the medallion's light over and keep its hue: a deep blue disc, white numerals, pale outline */
-body.dark-mode .m-medal { filter: invert(1) hue-rotate(180deg); }
+/* Dark pages take the medallion's colours to their dark set through #medal-dark in index.html */
+body.dark-mode .m-medal { filter: url(#medal-dark); }
 /* The Tajweed edition's white, which reads clearer on the dark sheet than the interface's grey */
 body.dark-mode .mushaf { color: #ffffff; }
 body.dark-mode .m-end {
