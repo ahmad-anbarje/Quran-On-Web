@@ -27,15 +27,24 @@
     box.dataset.pending = version;
     box.classList.remove('font-missing', 'failed');
     var data = app.data(), ayahs = app.ayahs();
+    var ends = version === 'v4' && data.ends && data.ends[p] ? { glyphs: data.ends[p], page: p } : null;
     Mushaf.fill(box, data.pages[p], version, data.basmalah,
-                data.marks && data.marks[p], ayahs && ayahs.enter[p]);
+                data.marks && data.marks[p], ayahs && ayahs.enter[p], ends);
 
     // Text beside the glyphs; the page draws without it, so a failed fetch costs nothing
     Mushaf.loadWords(p).then(function (list) {
       if (section.isConnected && (box.dataset.pending === version || box.dataset.version === version)) Mushaf.setWords(box, list);
     }, function () {});
 
-    Mushaf.loadPageFont(version, p).then(function (family) {
+    var medals = !ends ? Promise.resolve() : Mushaf.loadPageFont('tjm', p).catch(function () {
+      [].forEach.call(box.querySelectorAll('.m-medal'), function (s) {
+        s.textContent = s.dataset.plain;
+        s.style.fontFamily = '';
+        s.classList.remove('m-medal');
+      });
+    });
+    Promise.all([Mushaf.loadPageFont(version, p), medals]).then(function (faces) {
+      var family = faces[0];
       if (!section.isConnected || box.dataset.pending !== version) return;
       box.style.fontFamily = '"' + family + '"';
       // Not document.fonts.ready: it waits on the neighbours being fetched too

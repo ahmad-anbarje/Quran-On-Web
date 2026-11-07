@@ -22,7 +22,7 @@ $(function () {
      turns that on; mushaf.json keeps V1 and V2, which the data checks verify. */
   var VERSION = localStorage.getItem('quran-tajweed') === 'on' ? 'tj' : 'v4';
   // What the whole edition weighs, said before it is saved for reading offline
-  var OFFLINE_MB = { v4: 43, tj: 51 }[VERSION];
+  var OFFLINE_MB = { v4: 47, tj: 51 }[VERSION];
   /* Tajweed's fonts are coloured, a palette for light pages and one for dark:
      the dark one is named for every page's face at once, the first time the edition is drawn */
   function darkPalette() {
@@ -339,13 +339,8 @@ $(function () {
   function syncFullscreenTip() {
     var on = !!document.fullscreenElement;
     var text = on ? T('الخروج من ملء الشاشة', 'Exit full screen') : T('ملء الشاشة', 'Full screen');
-    var $b = $('#btn-fullscreen');
-    var $tip = $b.children('.tip');
-    if (!$tip.length) {
-      $tip = $('<span class="tip" aria-hidden="true"><span></span><kbd>F</kbd></span>').appendTo($b);
-    }
-    $tip.children('span').text(text);
-    $b.attr('aria-label', text + ' (F)');
+    // The tile names itself, so no tip repeats it; the key stays in what a screen reader says
+    $('#btn-fullscreen').attr('aria-label', text + ' (F)');
   }
 
   /* The label opens away from the page, turned round where that would put it
@@ -408,6 +403,7 @@ $(function () {
 
   /* The page's own words follow I18n; what the script wrote is written again. */
   function applyLang() {
+    scheduleFit();  // the turners' names change length with the language
     lang = I18n.lang() === 'ar' ? 'ar' : 'en';
     syncTips();
 
@@ -875,7 +871,7 @@ $(function () {
     var sheets = [];
     document.querySelectorAll('.page-section').forEach(function (el) {
       var r = el.getBoundingClientRect();
-      if (r.width > 1 && r.bottom > 0 && r.top < window.innerHeight) sheets.push(r);
+      if (r.width > 1 && r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth) sheets.push(r);
     });
 
     /* Nothing measurable: an absence of evidence, not evidence of an overlap.
@@ -885,15 +881,29 @@ $(function () {
       return;
     }
 
-    var over = false;
-    nav.querySelectorAll('button').forEach(function (b) {
-      var r = b.getBoundingClientRect();
-      if (r.width < 1) return;
-      sheets.forEach(function (s) {
-        if (r.right > s.left && r.left < s.right) over = true;
-      });
-    });
-    document.body.classList.toggle('turners-noroom', over);
+    // Beside the sheets, never on them: one gap from each outer edge, the mushaf's next page on the left
+    var GAP = 24, EDGE = 8;
+    var left = Math.min.apply(null, sheets.map(function (s) { return s.left; }));
+    var right = Math.max.apply(null, sheets.map(function (s) { return s.right; }));
+    var next = document.getElementById('btn-page-next'), prev = document.getElementById('btn-page-prev');
+    var limit = window.innerWidth - EDGE;
+    var tab = document.getElementById('sidebar-handle');
+    var tr = tab && tab.getBoundingClientRect();
+    var place = function () {
+      var nw = next.offsetWidth, pw = prev.offsetWidth;
+      var nx = left - GAP - nw, px = right + GAP;
+      next.style.left = nx + 'px';
+      prev.style.left = px + 'px';
+      if (nx < EDGE || px + pw > limit) return false;
+      // The index's tab, where it rides at the same height
+      var py = window.innerHeight / 2;
+      return !(tr && tr.width && tr.top < py + 30 && tr.bottom > py - 30 && px + pw > tr.left - EDGE);
+    };
+    // Named first; a name too long for the room goes, then the arrow if even that has none
+    document.body.classList.remove('turners-short', 'turners-noroom');
+    if (!place()) document.body.classList.add('turners-short');
+    document.body.classList.toggle('turners-noroom', !place());
+    document.body.classList.add('turners-placed');
   }
 
   /* Keep --sheet-w true by watching the sheet rather than by being told: the

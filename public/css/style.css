@@ -103,6 +103,9 @@
   --sheet-pad-t: 7px;
   --sheet-pad-b: 6px;
   --sheet-chrome: clamp(92px, calc(92px + (100vw - 1000px) * 0.015), 98px);
+  /* The sheet's chrome as a fixed part and a part per unit of type (the head and folio, where they scale with it) */
+  --chrome-f: var(--sheet-chrome);
+  --chrome-k: 0;
   /* The screen a page is sized against: what is visible now (installed apps: see the media rule below) */
   --screen-h: 100dvh;
   /* A line's height, as a multiple of the type size, and the mushaf's line
@@ -227,20 +230,20 @@ body[data-lang="en"] .lang-ar { display: none !important; }
    edge: `right` follows the sidebar's width, so it slides with it and stays
    reachable when the index is shut. */
 
+/* At the top, as the corner's buttons are on the left: the middle of the edge is the turner's */
 #sidebar-handle {
   position: fixed;
-  top: 50%;
+  top: 10px;
   right: var(--sidebar-w);
-  transform: translateY(-50%);
   z-index: 170;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 3px;
-  width: 50px;
+  gap: 4px;
+  width: 60px;
   height: auto;
-  padding: 10px 0 8px;
+  padding: 10px 0 9px;
   border: 1px solid var(--line);
   border-right: none;
   border-radius: 14px 0 0 14px;
@@ -261,18 +264,19 @@ body[data-lang="en"] .lang-ar { display: none !important; }
 }
 
 #sidebar-handle .ic { width: 16px; height: 16px; }
-#sidebar-handle .sh-book { width: 22px; height: 22px; }
-#sidebar-handle .cb-label { font-size: 0.66rem; }
+#sidebar-handle .sh-book { width: 24px; height: 24px; }
+#sidebar-handle .cb-label { font-size: 0.72rem; font-weight: 600; }
+/* Open, the list has its own way out; the tab comes back when it closes */
+#sidebar:not(.hidden) ~ #sidebar-handle { display: none; }
 
 /* Shut: the tab sits against the screen edge, and its chevron turns to point the
    way it will open. */
 #sidebar.hidden ~ #sidebar-handle { right: 0; color: var(--text-mute); }
 #sidebar.hidden ~ #sidebar-handle:hover { color: var(--primary); }
-#sidebar.hidden ~ #sidebar-handle .ic { transform: rotate(180deg); }
 /* A finger needs more than a pointer: on a touch screen the tab is a target, not a hint */
 @media (pointer: coarse) {
-  #sidebar-handle { width: 56px; padding: 12px 0 10px; }
-  #sidebar-handle .sh-book { width: 24px; height: 24px; }
+  #sidebar-handle { width: 62px; padding: 12px 0 10px; }
+  #sidebar-handle .sh-book { width: 26px; height: 26px; }
 }
 
 /* --- full screen ---
@@ -316,7 +320,7 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
 
 @media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
   #btn-fullscreen { display: flex; }
-  #btn-fullscreen-row { display: none; }
+  body:not(.turners-off) #btn-fullscreen-row { display: none; }
 }
 
 /* --- Tajweed legend ---
@@ -362,9 +366,14 @@ body.dark-mode .cb-dark { display: inline; }
 @media (max-width: 480px) {
   #btn-legend, #btn-theme-corner, #btn-lang-corner { display: none; }
 }
-/* "On-screen buttons" off takes these with the rest; Settings still has both */
+/* "On-screen buttons" off takes these with the rest; Settings then has them again */
 body.turners-off #btn-legend, body.turners-off #btn-theme-corner,
 body.turners-off #btn-lang-corner { display: none; }
+/* Where the corner has them, Settings does not say them twice */
+@media (min-width: 481px) {
+  body:not(.turners-off) #btn-tajweed, body:not(.turners-off) #btn-theme,
+  body:not(.turners-off) #btn-lang { display: none; }
+}
 
 /* The theme the page is in, chosen or the system's: the sun on a light page, the moon on a dark one */
 /* Everywhere the theme is offered (Settings, the corner, the phone's bar): one icon, the sun or the moon of the page's theme */
@@ -1357,8 +1366,8 @@ button,
     var(--page-measure) * var(--quran-scale) / var(--m-base, 15.98),
     (100cqw / var(--m-cols, 1) - var(--sheet-pad-x) * 2) / var(--m-base, 15.98),
     max(
-      (var(--screen-h) - var(--sheet-chrome)) * var(--fit-scale, 1)
-        / (var(--m-grid) * var(--m-line-ratio)),
+      (var(--screen-h) - var(--chrome-f)) * var(--fit-scale, 1)
+        / (var(--m-grid) * var(--m-line-ratio) + var(--chrome-k)),
       13px
     )
   );
@@ -1557,6 +1566,11 @@ body[data-lang="en"] .mushaf.failed::after {
                               color-mix(in srgb, var(--primary) 28%, var(--paper, #fffdf7)) 0 0.36em,
                               transparent 0.37em);
 }
+.m-end.m-medal, body.dark-mode .m-end.m-medal { background: none; }
+/* The medallion fonts carry the site's blues, a second palette for dark pages */
+body.dark-mode .m-medal { font-palette: dark; }
+/* The Tajweed edition's white, which reads clearer on the dark sheet than the interface's grey */
+body.dark-mode .mushaf { color: #ffffff; }
 body.dark-mode .m-end {
   color: #8cc8ee;
   background: radial-gradient(circle at 50% 56%,
@@ -2285,11 +2299,12 @@ body[data-shell="android"] #btn-app { display: none; }
   /* Centred on the page rather than the window, so the buttons stay beside the
      sheet. --sheet-w is published by the app after each fit: the width comes
      from a container query that only resolves inside #ayahs-container. */
-  max-width: calc(var(--sheet-w, var(--page-measure)) + var(--turn-lane) * 2);
-  margin-inline: auto;
-  justify-content: space-between;
+  height: 0;
   pointer-events: none;
 }
+/* Placed in script, the same gap from each sheet's edge; unplaced, not shown */
+body #page-nav button { position: absolute; top: 0; translate: 0 -50%; }
+body:not(.turners-placed) #page-nav { visibility: hidden; }
 
 body.is-reading #page-nav { display: flex; }
 
@@ -2319,6 +2334,15 @@ body.is-reading #page-nav { display: flex; }
 #page-nav .ic {
   width: min(24px, calc(var(--turn-lane) * 0.4));
   height: min(24px, calc(var(--turn-lane) * 0.4));
+}
+/* Named under the arrow where the lane beside the page has room, the words on one line */
+#page-nav .cb-label { display: none; }
+@media (min-width: 1200px) {
+  #page-nav button { flex-direction: column; gap: 5px; width: auto; min-width: 60px; height: 60px; padding: 0 10px; }
+  #page-nav .cb-label { display: block; white-space: nowrap; font-size: 0.66rem; }
+  body.turners-short #page-nav .cb-label { display: none; }
+  /* Named, they need no tip saying the same */
+  #page-nav button .tip { display: none; }
 }
 
 /* The chevron points the way the page moves: up and down when one page
@@ -2506,7 +2530,7 @@ body[data-mode="spread"] .mushaf {
      16px is #reading-area's padding above and below. At most 30% more, or a tall screen pulls the lines apart */
   --m-line-h: clamp(
     calc(var(--m-line-ratio) * 1em),
-    calc((var(--screen-h) - var(--sheet-chrome) - 16px) / var(--m-grid)),
+    calc((var(--screen-h) - var(--chrome-f) - var(--chrome-k) * 1em - 16px) / var(--m-grid)),
     calc(var(--m-line-ratio) * 1.3em)
   );
   min-height: calc(var(--m-grid) * var(--m-line-h));
@@ -2626,6 +2650,13 @@ body[data-mode="spread"] .spread-right .page-ribbon {
 /* ==========================================================================
    Responsive
    ========================================================================== */
+
+/* Beside a pointer, the head and folio are a share of the line's type, so zooming moves them with the words.
+   Their height, 3 labels' size + 12px, is budgeted per unit of type: 0.55 x 3 = 1.65, with a little to spare */
+@media (min-width: 901px) {
+  :root { --chrome-f: 59px; --chrome-k: 1.7; }
+  .page-section { --folio-size: calc(var(--m-size) * 0.55); }
+}
 
 @media (max-width: 900px) {
   :root {

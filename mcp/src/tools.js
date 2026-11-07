@@ -29,12 +29,17 @@ function arabicIndex(q) {
   return foldedArabic.get(q);
 }
 
-function registerTools(server, q) {
-  // The directories read a tool's name and all three hints from its annotations, each said outright
+function registerTools(server, q, stats) {
+  // The directories read a tool's name and all three hints from its annotations, each said outright;
+  // a refusal is told to the counts, for the admin page's failures
   const tool = (name, def, fn) => server.registerTool(name, {
     ...def,
     annotations: { title: def.title, readOnlyHint: true, destructiveHint: false, openWorldHint: false, ...def.annotations },
-  }, fn);
+  }, async (...a) => {
+    const r = await fn(...a);
+    if (r && r.isError && stats) stats.failed(name, r.content && r.content[0] && r.content[0].text);
+    return r;
+  });
 
   tool('get_ayah', {
     title: 'Get ayahs',

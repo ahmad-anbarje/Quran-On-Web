@@ -132,6 +132,43 @@
     Object.keys(tools).forEach(function (t) { if (TOOLS.indexOf(t) >= 0) mine[t] = tools[t]; else other += tools[t]; });
     if (other) mine['Other names (scanners’ probes)'] = other;
     rows($('tools'), Object.keys(mine), [mine]);
+
+    // What readers asked, summed over the tools: surahs by name, the rest by id
+    var asked = { surah: {}, translation: {}, reciter: {}, other: {} };
+    days.forEach(function (k) {
+      var d = data.days[k];
+      Object.keys((d && d.asked) || {}).forEach(function (tool) {
+        var by = d.asked[tool];
+        Object.keys(by).forEach(function (key) {
+          var into = asked[key] || asked.other;
+          Object.keys(by[key]).forEach(function (v) {
+            var name = asked[key] ? v : (key === 'language' ? 'word by word: ' + v : key + ': ' + v);
+            into[name] = (into[name] || 0) + by[key][v];
+          });
+        });
+      });
+    });
+    var top = function (m) { return Object.keys(m).sort(function (x, y) { return m[y] - m[x]; }).slice(0, 12); };
+    rows($('askSurah'), top(asked.surah), [asked.surah], function (n, td) {
+      var s = surahs && surahs[+n - 1];
+      td.textContent = n + (s ? ' · ' + s.en : '');
+    });
+    rows($('askTranslation'), top(asked.translation), [asked.translation]);
+    rows($('askReciter'), top(asked.reciter), [asked.reciter]);
+    rows($('askOther'), top(asked.other), [asked.other]);
+
+    // Why calls were refused, by tool, the quoted parts taken out on the server
+    var failures = {};
+    days.forEach(function (k) {
+      var d = data.days[k];
+      Object.keys((d && d.failed) || {}).forEach(function (tool) {
+        Object.keys(d.failed[tool]).forEach(function (why) {
+          var key = tool + ' · ' + why;
+          failures[key] = (failures[key] || 0) + d.failed[tool][why];
+        });
+      });
+    });
+    rows($('failures'), Object.keys(failures), [failures]);
   }
 
   function show(which) {
@@ -143,6 +180,10 @@
   $('showUsers').onclick = function () { show('users'); };
   $('showCalls').onclick = function () { show('calls'); };
   $('range').onchange = draw;
+
+  // The surahs' names, for the asked surahs; the counts are drawn without them if they cannot come
+  var surahs = null;
+  fetch('/data/surahs.json').then(function (r) { return r.json(); }).then(function (l) { surahs = l; draw(); }).catch(function () {});
 
   fetch('stats.json', { cache: 'no-store' })
     .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })

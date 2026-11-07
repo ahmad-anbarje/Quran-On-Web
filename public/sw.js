@@ -136,14 +136,20 @@ async function cachePages(asked, port, version) {
   let done = 0, added = 0, failed = 0;
 
   for (const page of pages) {
-    const url = '/fonts/' + version + '/p' + page + '.woff2';
+    // The plain edition's ayah medallions come from a face of their own, kept beside the page's
+    const urls = ['/fonts/' + version + '/p' + page + '.woff2'];
+    if (version === 'v4') urls.push('/fonts/tjm/p' + page + '.woff2');
     try {
-      if (await cache.match(url)) { done++; }
-      else {
+      let fresh = false;
+      for (const url of urls) {
+        if (await cache.match(url)) continue;
         const res = await fetch(url);
-        if (res.ok) { await cache.put(url, res); added++; done++; }
-        else failed++;
+        if (!res.ok) throw new Error(res.status);
+        await cache.put(url, res);
+        fresh = true;
       }
+      done++;
+      if (fresh) added++;
     } catch (err) { failed++; }
 
     if (port && (done + failed) % 5 === 0) {

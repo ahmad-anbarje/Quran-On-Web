@@ -88,6 +88,50 @@ for p in range(1, 605):
     open(os.path.join(OUT_FONTS, f'p{p}.woff2'), 'wb').write(b.getvalue())
     total += len(b.getvalue())
 
+# The plain edition's ayah numbers, drawn as this edition's medallions (outline, ornament, disc, numerals in
+# layers of their own) so the reader can paint them in the site's blues: each page's, in order, into
+# mushaf-v4.json, and a font a page holding only them, public/fonts/tjm/p<page>.woff2
+OUT_ENDS = os.path.join(ROOT, 'public', 'fonts', 'tjm')
+os.makedirs(OUT_ENDS, exist_ok=True)
+ends = {}
+for p in range(1, 605):
+    marks = app['marks'][str(p)]
+    seq = [w for r in pages[str(p)] if r['t'] == 'ayah' for w in r['tj'].split('|') if w in marks]
+    assert len(seq) == sum(1 for r in v4['pages'][str(p)] if r['t'] == 'ayah' for w in r['v4'].split('|') if w in v4['marks'].get(str(p), '')), p
+    ends[str(p)] = ''.join(seq)
+    out = os.path.join(OUT_ENDS, f'p{p}.woff2')
+    if seq and (CUT or not os.path.exists(out)):
+        f = TTFont(os.path.join(SRC, 'fonts-tajweed', f'tj{p}.otf'))
+        sub = subset.Subsetter(opts)
+        sub.populate(unicodes=sorted({ord(c) for c in seq}))
+        sub.subset(f)
+        # One palette on every page, each layer named by its colour (outline, ornament, disc, numerals = 0-3)
+        cpal = f['CPAL']
+        hexes = ['#%02x%02x%02x' % (c.red, c.green, c.blue) for c in cpal.palettes[0]]
+        role = {h: k for k, h in enumerate(['#2ca4ab', '#ff0080', '#d8e9d8', '#000000'])}
+        first = {}
+        for l in f['COLR'].ColorLayers.values():
+            for x in l:
+                k = role[hexes[x.colorID]]
+                first.setdefault(k, x.colorID)
+                x.colorID = k
+        assert sorted(first) == [0, 1, 2, 3], p
+        # The site's blues, built in: palette 0 for light pages, 1 (flagged dark) for dark (outline, ornament, disc, numerals)
+        from fontTools.ttLib.tables.C_P_A_L_ import Color
+        rgb = lambda h: Color(red=int(h[1:3], 16), green=int(h[3:5], 16), blue=int(h[5:7], 16), alpha=255)
+        cpal.palettes = [[rgb(h) for h in ('#0d4a73', '#0d4a73', '#1a6fa3', '#ffffff')],
+                         [rgb(h) for h in ('#3f9bd1', '#3f9bd1', '#1d5d8a', '#ffffff')]]
+        cpal.numPaletteEntries = 4
+        cpal.version = 1
+        cpal.paletteTypes = [1, 2]
+        cpal.paletteLabels = [0xFFFF, 0xFFFF]
+        cpal.paletteEntryLabels = [0xFFFF] * 4
+        f.flavor = 'woff2'
+        f.save(out)
+v4['ends'] = ends
+json.dump(v4, open(os.path.join(ROOT, 'public', 'data', 'mushaf-v4.json'), 'w', encoding='utf-8', newline='\n'),
+          ensure_ascii=False, separators=(',', ':'))
+
 data = {
     'fit': {'body': {'tj': app['fit']['body']['v2']}, 'centreBelow': {'tj': app['fit']['centreBelow']['v2']}},
     'juzPages': v4['juzPages'],

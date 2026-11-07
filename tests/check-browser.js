@@ -218,9 +218,9 @@ async function main() {
 
       // Settings: the theme and the reading mode
       const dark = await page.evaluate(() => document.body.classList.contains('dark-mode'));
-      await click('#btn-theme');
+      await click('#btn-theme-corner');
       assert(await page.evaluate(() => document.body.classList.contains('dark-mode')) !== dark, 'the theme did not change');
-      await click('#btn-theme');
+      await click('#btn-theme-corner');
       const mode = await page.evaluate(() => document.body.dataset.mode);
       await click('#btn-mode');
       await page.waitForTimeout(500);
@@ -290,12 +290,12 @@ async function main() {
       return `${LANGS.length} languages, ${[...RTL].join(', ')} right to left`;
     });
 
-    await check('the language is switched from Settings, and kept', async () => {
+    await check('the language is switched from its menu, and kept', async () => {
       const { ctx, page, errors } = await visit(DESKTOP, 'en');
-      // The index, where Settings is on screen, rather than a surah, which puts it away
       await page.goto(base + '/', { waitUntil: 'networkidle' });
-      await page.evaluate(() => document.querySelector('.drawer-tab[data-pane="settings"]').click());
-      await page.click('#btn-lang');
+      // Where the corner has the language, Settings does not; the index is closed to reach it
+      await page.evaluate(() => { const o = document.getElementById('overlay'); if (o && getComputedStyle(o).display !== 'none') o.click(); });
+      await page.click('#btn-lang-corner');
       await page.click('#lang-list [data-code="fr"]');
       await page.waitForFunction(() => document.documentElement.lang === 'fr', null, { timeout: 5000 });
       await page.reload({ waitUntil: 'networkidle' });
@@ -310,11 +310,11 @@ async function main() {
       const { ctx, page } = await visit(DESKTOP, 'en');
       await page.goto(base + '/', { waitUntil: 'networkidle' });
       await page.evaluate(() => document.querySelector('.drawer-tab[data-pane="settings"]').click());
-      // The switch asks before saving 43 MB; the reader says yes
+      // The switch asks before saving 47 MB; the reader says yes
       let asked = '';
       page.once('dialog', (d) => { asked = d.message(); d.accept(); });
       await page.click('#btn-offline');
-      if (!/43/.test(asked)) throw new Error('turning offline reading on did not ask first');
+      if (!/47/.test(asked)) throw new Error('turning offline reading on did not ask first');
       await page.waitForFunction(() => navigator.serviceWorker && navigator.serviceWorker.controller, null, { timeout: 20000 });
       await open(page, '/surah/1/');
       await ctx.setOffline(true);

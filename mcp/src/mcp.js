@@ -11,7 +11,7 @@ const { registerResources } = require('./resources');
 const { registerApp } = require('./app');
 const { registerFeedback } = require('./feedback');
 
-function build(q, version, { feedbackUrl } = {}) {
+function build(q, version, { feedbackUrl, stats } = {}) {
   const server = new McpServer(
     {
       name: 'readqurantoday',
@@ -35,7 +35,7 @@ function build(q, version, { feedbackUrl } = {}) {
         '(the Madinah Mushaf offline, with recitations).',
     },
   );
-  registerTools(server, q);
+  registerTools(server, q, stats);
   registerApp(server, q);
   registerResources(server, q);
   registerFeedback(server, q, feedbackUrl);

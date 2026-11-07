@@ -196,8 +196,10 @@
    * { s, v, w }. The page data gives glyphs and end-of-ayah marks but no
    * numbers, so the caller counts them once and this carries them forward.
    */
-  function fillBox(box, lines, version, basmalah, marks, at) {
+  function fillBox(box, lines, version, basmalah, marks, at, ends) {
     var frag = document.createDocumentFragment();
+    // The plain edition's ayah numbers as the Tajweed edition's medallions, in their own face (scripts/build-tajweed.py)
+    var medal = ends ? Array.from(ends.glyphs) : null, m = 0;
     // w numbers the words, g the glyph slots holding them; they part only at a pair
     var s = at ? at.s : 0, v = at ? at.v : 0, w = at ? at.w : 0, g = at ? (at.g || 0) : 0;
 
@@ -226,6 +228,12 @@
 
           var span = wordSpan(word);
           if (end) span.classList.add('m-end');
+          if (end && medal && medal[m]) {
+            span.dataset.plain = word;
+            span.textContent = medal[m++];
+            span.classList.add('m-medal');
+            span.style.fontFamily = '"' + familyFor('tjm', ends.page) + '"';
+          }
 
           span.dataset.a = key;
           /* The closing number is drawn, not recited, so it is part of its

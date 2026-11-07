@@ -112,7 +112,7 @@ function createServer(options = {}) {
         return send(res, 400, rpcError(-32700, 'Parse error'));
       }
       stats.message(body, { ip, country: req.headers['x-country'] });
-      const server = build(q, VERSION, { feedbackUrl: reports });
+      const server = build(q, VERSION, { feedbackUrl: reports, stats });
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
       res.on('close', () => { transport.close(); server.close(); });
       try {

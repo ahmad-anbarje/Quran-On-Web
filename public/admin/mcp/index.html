@@ -22,6 +22,9 @@
   td.n { font-variant-numeric: tabular-nums; width: 6rem; }
   tr:last-child td { border-bottom: 0; }
   .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 14px; }
+  .four { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 14px; }
+  h2.sec { font-size: 1.1rem; margin: 30px 0 4px; padding-top: 14px; border-top: 1px solid var(--line); }
+  h3 { font-size: 0.92rem; margin: 14px 0 8px; }
   .card.hi { border-color: var(--primary); }
   td.n, th.n { text-align: right; white-space: nowrap; }
   td small { display: block; opacity: 0.6; font-size: 0.74rem; }
@@ -64,19 +67,38 @@
   <div class="bars" id="bars"></div>
   <div class="axis"><span id="from"></span><span id="to"></span></div>
 
+  <h2 class="sec">Who uses it</h2>
   <div class="two">
     <div>
-      <h2>AI assistants</h2>
+      <h3>AI assistants</h3>
       <table><thead><tr><th>Assistant</th><th class="n">Users</th><th class="n">Connections</th></tr></thead><tbody id="assistants"></tbody></table>
     </div>
     <div>
-      <h2>Users by country</h2>
+      <h3>Users by country</h3>
       <table><thead><tr><th>Country</th><th class="n">Users</th></tr></thead><tbody id="countries"></tbody></table>
     </div>
   </div>
 
-  <h2>By tool</h2>
-  <table><thead><tr><th>Tool</th><th class="n">Calls</th></tr></thead><tbody id="tools"></tbody></table>
+  <h2 class="sec">What readers ask</h2>
+  <p class="note">From AI assistants' calls only, as totals of the choices made: which surah, translation, reciter, language, kind of file. Nothing typed is kept.</p>
+  <div class="four">
+    <div><h3>Surahs</h3><table><thead><tr><th>Surah</th><th class="n">Asked</th></tr></thead><tbody id="askSurah"></tbody></table></div>
+    <div><h3>Translations</h3><table><thead><tr><th>Translation</th><th class="n">Asked</th></tr></thead><tbody id="askTranslation"></tbody></table></div>
+    <div><h3>Reciters</h3><table><thead><tr><th>Reciter</th><th class="n">Asked</th></tr></thead><tbody id="askReciter"></tbody></table></div>
+    <div><h3>Languages &amp; files</h3><table><thead><tr><th>Choice</th><th class="n">Asked</th></tr></thead><tbody id="askOther"></tbody></table></div>
+  </div>
+
+  <h2 class="sec">Tools</h2>
+  <div class="two">
+    <div>
+      <h3>Calls</h3>
+      <table><thead><tr><th>Tool</th><th class="n">Calls</th></tr></thead><tbody id="tools"></tbody></table>
+    </div>
+    <div>
+      <h3>Failures</h3>
+      <table><thead><tr><th>Tool · why</th><th class="n">Times</th></tr></thead><tbody id="failures"></tbody></table>
+    </div>
+  </div>
 
   <details class="more">
     <summary>Scanners &amp; directories <span id="botCount"></span></summary>
@@ -84,7 +106,7 @@
     <table><thead><tr><th>Name it gives</th><th class="n">Users</th><th class="n">Connections</th></tr></thead><tbody id="scanners"></tbody></table>
   </details>
 
-  <p class="note">"Users through AI assistants" counts the callers whose app is a known assistant (Claude, ChatGPT, Gemini, VS Code, Cursor…); the rest are scanners. By country covers both. Users are callers told apart by a code made from their address with a key that changes every day and is never saved, so they are counted per day and added up over a period; no address, no list of people and nothing asked is kept. Apps that run in the cloud (ChatGPT, claude.ai) call from their own servers, so their many readers show as a few users, in the country of those servers; apps on a reader's own computer (Claude Code, Cursor, VS Code) show the reader's country. A connection is an assistant opening the server, about once a conversation.</p>
+  <p class="note">"Users through AI assistants" counts the callers whose app is a known assistant (Claude, ChatGPT, Gemini, VS Code, Cursor…); the rest are scanners. By country covers both. Users are callers told apart by a code made from their address with a key that changes every day and is never saved, so they are counted per day and added up over a period; no address, no list of people and nothing anyone typed is kept; what assistants ask is kept only as totals of the choices made. Apps that run in the cloud (ChatGPT, claude.ai) call from their own servers, so their many readers show as a few users, in the country of those servers; apps on a reader's own computer (Claude Code, Cursor, VS Code) show the reader's country. A connection is an assistant opening the server, about once a conversation.</p>
   <p class="note" id="note"></p>
 </main>
 <script src="mcp.js"></script>
