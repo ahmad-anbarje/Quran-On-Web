@@ -645,13 +645,14 @@ button.set-row:hover .set-ico, a.set-row:hover .set-ico { color: var(--primary);
 
 /* The languages, opened under their row: two to a line, each in its own words,
    the one in use filled so it reads as chosen at a glance */
+/* Opens beside its button, level with it */
 #lang-menu {
   position: fixed;
-  top: 10px;
+  top: calc(var(--corner-top) + 2 * var(--corner-step));
   left: 76px;
   z-index: 165;
-  width: min(380px, calc(100vw - 20px));
-  max-height: calc(100vh - 20px);
+  width: min(300px, calc(100vw - 20px));
+  max-height: calc(100vh - var(--corner-top) - 2 * var(--corner-step) - 10px);
   overflow-y: auto;
   padding: 10px 6px 4px;
   background: var(--surface);
