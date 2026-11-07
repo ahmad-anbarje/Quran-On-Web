@@ -116,7 +116,7 @@ for p in range(1, 605):
                 first.setdefault(k, x.colorID)
                 x.colorID = k
         assert sorted(first) == [0, 1, 2, 3], p
-        # The site's blues, built in (outline, ornament, disc, numerals); a dark page turns them in CSS (outline, ornament, disc, numerals)
+        # The site's blues, built in (outline, ornament, disc, numerals); dark pages map them in CSS (#medal-dark) (outline, ornament, disc, numerals)
         from fontTools.ttLib.tables.C_P_A_L_ import Color
         rgb = lambda h: Color(red=int(h[1:3], 16), green=int(h[3:5], 16), blue=int(h[5:7], 16), alpha=255)
         cpal.numPaletteEntries = 4

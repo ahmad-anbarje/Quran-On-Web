@@ -358,8 +358,8 @@ $(function () {
     var t = {
       mode:    { ar: { pages: 'صفحة واحدة', spread: 'صفحتان' },
                  en: { pages: 'One page', spread: 'Two pages' } },
-      weight:  { ar: { '400': 'عادي', '500': 'متوسط', '700': 'عريض' },
-                 en: { '400': 'Regular', '500': 'Medium', '700': 'Bold' } },
+      weight:  { ar: { '300': 'رفيع', '400': 'عادي', '500': 'متوسط', '700': 'عريض' },
+                 en: { '300': 'Thin', '400': 'Regular', '500': 'Medium', '700': 'Bold' } },
       onOff:   { ar: { on: 'ظاهرة', off: 'مخفية' },
                  en: { on: 'Shown', off: 'Hidden' } },
       /* The arrows are shown or hidden; offline reading is switched on or off.
@@ -436,17 +436,19 @@ $(function () {
 
   /* QCF page fonts ship a single weight, so a heavier setting is drawn as a
      hairline stroke rather than a font-weight the face does not have. */
-  var WEIGHTS = ['400', '500', '700'];
+  var WEIGHTS = ['400', '500', '700', '300'];   // after bold, lighter than regular, then back
 
   function applyWeight(w) {
     weight = WEIGHTS.indexOf(String(w)) >= 0 ? String(w) : '400';
     localStorage.setItem('quran-weight', weight);
     document.documentElement.style.setProperty('--quran-stroke',
-      weight === '700' ? '0.6px' : weight === '500' ? '0.3px' : '0');
+      weight === '700' ? '0.6px' : weight === '500' ? '0.3px' : weight === '300' ? '0.45px' : '0');
+    // Lighter than regular: a stroke in the paper's colour pares the letters' edges
+    document.documentElement.classList.toggle('weight-light', weight === '300');
     $('#btn-weight-corner').toggleClass('on', weight !== '400').attr('data-w', weight);
     $('#btn-weight').toggleClass('on', weight !== '400')
-      .attr('data-tip-ar', 'سماكة الخط — ' + (weight === '700' ? 'عريض' : weight === '500' ? 'متوسط' : 'عادي'))
-      .attr('data-tip-en', 'Text weight — ' + (weight === '700' ? 'bold' : weight === '500' ? 'medium' : 'regular'));
+      .attr('data-tip-ar', 'سماكة الخط — ' + (weight === '700' ? 'عريض' : weight === '500' ? 'متوسط' : weight === '300' ? 'رفيع' : 'عادي'))
+      .attr('data-tip-en', 'Text weight — ' + (weight === '700' ? 'bold' : weight === '500' ? 'medium' : weight === '300' ? 'thin' : 'regular'));
     syncTips();
   }
 
@@ -506,18 +508,81 @@ $(function () {
 
   /* The way back to where the reading stopped: opening on the index made
      carrying on the one hard thing, so it is offered at the head of it. */
-  function showResume() {
-    var id = +localStorage.getItem('quran-last-surah');
-    var page = +localStorage.getItem('quran-last-page');
-    var s = id && quran && quran.find(function (x) { return x.id === id; });
-
-    if (!s || !page) { $('#btn-resume').prop('hidden', true); return; }
-
-    $('#btn-resume').prop('hidden', false)
-      .find('.resume-where')
-      .text((lang === 'ar' ? s.full : s.en)
-        + ' · ' + T('صفحة {n}', 'page {n}', { n: num(page) }));
+  /* ---------- reading history ----------
+     Each day's surahs and the pages read in them, newest first, kept in this browser for 30 days. */
+  function dayKey(back) {
+    var d = new Date();
+    d.setDate(d.getDate() - (back || 0));
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   }
+  function readHistory() {
+    try { return JSON.parse(localStorage.getItem('quran-history')) || {}; } catch (e) { return {}; }
+  }
+  function logPages(pages) {
+    if (!surah) return;
+    var h = readHistory(), key = dayKey(), day = h[key] = h[key] || [];
+    var at = -1;
+    day.forEach(function (e, i) { if (e.s === surah.id) at = i; });
+    var entry = at >= 0 ? day.splice(at, 1)[0] : { s: surah.id, p: [] };
+    pages.forEach(function (p) { if (p && entry.p.indexOf(p) < 0) entry.p.push(p); });
+    entry.last = pages[0];
+    day.unshift(entry);
+    Object.keys(h).sort().reverse().slice(30).forEach(function (k) { delete h[k]; });
+    try { localStorage.setItem('quran-history', JSON.stringify(h)); } catch (e) { /* full or blocked: the reading goes on */ }
+    if (!$('.drawer-pane[data-pane="history"]').prop('hidden')) showHistory();
+  }
+  function showHistory() {
+    var list = document.getElementById('history-list');
+    if (!list || !quran) return;
+    list.textContent = '';
+    var h = readHistory(), days = Object.keys(h).sort().reverse();
+    if (!days.length) {
+      var none = document.createElement('p');
+      none.className = 'hist-none';
+      none.textContent = T('لا قراءة بعد', 'Nothing read yet');
+      list.appendChild(none);
+      return;
+    }
+    days.forEach(function (k) {
+      var total = h[k].reduce(function (n, e) { return n + e.p.length; }, 0);
+      var head = document.createElement('div');
+      head.className = 'hist-day';
+      var name = k === dayKey() ? T('اليوم', 'Today') : k === dayKey(1) ? T('أمس', 'Yesterday')
+        : new Date(k + 'T12:00:00').toLocaleDateString(I18n.lang(), { weekday: 'long', day: 'numeric', month: 'long' });
+      var n = document.createElement('span');
+      n.textContent = name;
+      var c = document.createElement('span');
+      c.className = 'hist-count';
+      c.textContent = T('{n} صفحة', '{n} pages', { n: num(total) });
+      head.appendChild(n);
+      head.appendChild(c);
+      list.appendChild(head);
+      h[k].forEach(function (e) {
+        var s = quran.find(function (x) { return x.id === e.s; });
+        if (!s) return;
+        var row = document.createElement('button');
+        row.className = 'hist-row';
+        row.dataset.s = e.s;
+        row.dataset.p = e.last;
+        var t = document.createElement('span');
+        t.className = 'hist-name';
+        t.textContent = num(s.id) + '. ' + (lang === 'ar' ? s.full : s.en);
+        var where = document.createElement('span');
+        where.className = 'hist-where';
+        where.textContent = T('صفحة {n}', 'Page {n}', { n: num(e.last) }) + ' · ' + T('{n} صفحة', '{n} pages', { n: num(e.p.length) });
+        row.appendChild(t);
+        row.appendChild(where);
+        list.appendChild(row);
+      });
+    });
+  }
+  $(document).on('click', '.hist-row', function () {
+    var id = +this.dataset.s, s = quran.find(function (x) { return x.id === id; });
+    if (!s) return;
+    open(s, +this.dataset.p || null);
+    history.pushState({ surah: s.id }, '', '/surah/' + s.id + '/');
+    setSidebar(false);
+  });
 
   /* ---------- surah index ---------- */
 
@@ -596,7 +661,6 @@ $(function () {
     sideOpen = on;
     $('#sidebar').toggleClass('quiet', !!quiet).toggleClass('hidden', !on);
     $('#overlay').prop('hidden', !on);
-    if (on) showResume();
     /* Opening the index is leaving the page, so the page's chrome goes with
        it rather than waiting underneath to be found again on the way back. */
     if (on) showChrome(false);
@@ -1006,6 +1070,7 @@ $(function () {
     page = p;
     if (mode === 'pages') singlePage = p;
     localStorage.setItem('quran-last-page', p);
+    logPages(mode === 'spread' ? [p, p + 1] : [p]);
     /* Nothing before page 1 or after 604, so the turner that would go nowhere
        is taken away rather than left to do nothing. */
     var step = mode === 'spread' ? 2 : 1;
@@ -1135,6 +1200,7 @@ $(function () {
     /* 114 rows and the list of reciters, built the first time they are asked
        for rather than on every load. */
     if (pane === 'listen') Listen.render();
+    if (pane === 'history') showHistory();
   });
   $('#btn-bookmarks').on('click', function () {
     showPanel($('#bookmarks-panel').prop('hidden') ? 'saved' : null);
@@ -1473,7 +1539,6 @@ $(function () {
   document.addEventListener('ui:lang', function () {
     applyLang();
     if (window.Recite) Recite.relabel();
-    showResume();
     $('.page-section[data-page]').each(function () {
       var p = +this.getAttribute('data-page');
       $(this).find('.ph-juz').text(T('الجزء {n}', 'Juz {n}', { n: num(juzOfPage(p)) }));
@@ -1488,16 +1553,6 @@ $(function () {
     if (sideOpen) setSidebar(false);
   });
 
-  $('#btn-resume').on('click', function () {
-    var id = +localStorage.getItem('quran-last-surah');
-    var page = +localStorage.getItem('quran-last-page');
-    var s = id && quran.find(function (x) { return x.id === id; });
-    if (!s) return;
-
-    open(s, page || null);
-    history.pushState({ surah: s.id }, '', '/surah/' + s.id + '/');
-    setSidebar(false);
-  });
 
   $(document).on('click', '.surah-item', function (e) {
     var id = +$(this).data('id');
