@@ -543,6 +543,7 @@ $(function () {
     if (!list || !quran) return;
     list.textContent = '';
     var h = readHistory(), days = Object.keys(h).sort().reverse();
+    $('#btn-clear-history').prop('hidden', !days.length);
     if (!days.length) {
       var none = document.createElement('p');
       none.className = 'hist-none';
@@ -587,6 +588,11 @@ $(function () {
       });
     });
   }
+  $('#btn-clear-history').on('click', function () {
+    if (!window.confirm(T('مسح سجل القراءة كله؟', 'Clear all of your reading history?'))) return;
+    try { localStorage.removeItem('quran-reads'); } catch (e) { /* nothing to clear */ }
+    showHistory();
+  });
   $(document).on('click', '.hist-row', function () {
     var id = +this.dataset.s, s = quran.find(function (x) { return x.id === id; });
     if (!s) return;

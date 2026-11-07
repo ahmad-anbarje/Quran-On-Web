@@ -855,7 +855,15 @@ body.ui-rtl #sidebar { direction: rtl; }
    before it starts down the list. Accented, because it is the one row here
    that is about what the reader was already doing. */
 /* --- reading history --- */
-#history-list { padding: 4px 12px 16px; direction: ltr; }
+/* Scrolls on its own, under a head that stays */
+.drawer-pane[data-pane="history"] { overflow-y: auto; }
+.hist-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; padding: 10px 14px 6px 16px; background: var(--surface-2); direction: ltr; }
+body.ui-rtl .hist-head { direction: rtl; }
+.hist-title { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+#btn-clear-history { color: var(--text-mute); }
+#btn-clear-history:hover { color: #c0392b; }
+#btn-clear-history[hidden] { display: none; }
+#history-list { padding: 0 12px 16px; direction: ltr; }
 body.ui-rtl #history-list { direction: rtl; }
 .hist-day { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 4px 6px; font-weight: 700; font-size: 0.9rem; color: var(--text); }
 .hist-count { font-weight: 500; font-size: 0.78rem; color: var(--text-mute); opacity: 0.8; }
