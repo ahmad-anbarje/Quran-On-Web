@@ -565,10 +565,6 @@
   function lang() { return document.body.getAttribute('data-lang') || 'ar'; }
   function num(n) { return lang() === 'ar' ? ar(n) : String(n); }
 
-  function clock(ms) {
-    var s = Math.max(0, Math.round(ms / 1000));
-    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
-  }
 
   var MENU =
     '<div id="r-menu" hidden>' +
@@ -597,19 +593,9 @@
         '</button>' +
       '</div>' +
 
-      /* The transport, shown only once there is a place in the recitation to
-         be at. Before that it would be three buttons that do nothing. */
+      /* How far the recitation is, shown once there is a place in it to be at */
       '<div class="r-now" hidden>' +
         '<div class="r-seek"><i class="r-played"></i></div>' +
-        '<div class="r-transport">' +
-          '<button class="r-btn" data-act="prev" aria-label="الآية السابقة">' +
-            '<svg class="ic" viewBox="0 0 24 24"><path d="M8 6h2v12H8zm9 0v12l-8-6z"/></svg>' +
-          '</button>' +
-          '<button class="r-btn" data-act="next" aria-label="الآية التالية">' +
-            '<svg class="ic" viewBox="0 0 24 24"><path d="M14 6h2v12h-2zm-7 0l8 6-8 6z"/></svg>' +
-          '</button>' +
-          '<span class="r-time"></span>' +
-        '</div>' +
       '</div>' +
 
       '<div class="r-acts">' +
@@ -808,7 +794,6 @@
       seek: menu.querySelector('.r-seek'),
       played: menu.querySelector('.r-played'),
       play: menu.querySelector('.r-ayah'),
-      time: menu.querySelector('.r-time'),
       repeat: menu.querySelector('.r-repeat'),
       repeatValue: menu.querySelector('.r-repeat-value'),
       voice: menu.querySelector('.r-voice'),
@@ -1128,7 +1113,6 @@
     var whole = timing.duration * 1000;
     var through = whole > 0 ? Math.max(0, Math.min(1, t / whole)) : 0;
     el.played.style.width = (through * 100) + '%';
-    el.time.textContent = clock(t) + ' / ' + clock(whole);
     /* The same figure the bar draws, drawn round instead — it is the only
        thing the minimised circle has to say that anything is happening. */
     if (el.ring) el.ring.style.strokeDashoffset = String(RING * (1 - through));

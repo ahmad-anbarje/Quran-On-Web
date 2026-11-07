@@ -153,7 +153,11 @@
    */
   function prepareFonts(version, pages) {
     surahFaces = {};
-    pages.forEach(function (p) { surahFaces[familyFor(version, p)] = true; });
+    pages.forEach(function (p) {
+      surahFaces[familyFor(version, p)] = true;
+      // The plain edition's ayah medallions are the surah's too, and as unwelcome to lose from a page on show
+      if (version === 'v4') surahFaces[familyFor('tjb', p)] = true;
+    });
     order.slice().forEach(function (f) { if (!pinned[f] && !surahFaces[f]) drop(f); });
     pages.forEach(function (p) {
       var family = familyFor(version, p);
@@ -233,7 +237,6 @@
             span.textContent = medal[m++];
             span.classList.add('m-medal');
             span.style.fontFamily = '"' + familyFor('tjb', ends.page) + '"';
-            span.dataset.mp = ends.page;
           }
 
           span.dataset.a = key;

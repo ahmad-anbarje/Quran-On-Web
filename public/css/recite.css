@@ -175,62 +175,16 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   transition: width 120ms linear;
 }
 
-#r-menu .r-transport {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  padding: 2px 4px 0;
-}
-#r-menu .r-transport .r-time:empty { display: none; }
-/* No ayah-to-ayah steps in the player: the page and the ayah tile do that */
-#r-menu .r-transport { display: none; }
 
-#r-menu .r-btn {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--text-mute);
-  cursor: pointer;
-  transition: background var(--t, 160ms), color var(--t, 160ms);
-}
 
-#r-menu .r-btn:hover { background: var(--primary-soft); color: var(--primary); }
-#r-menu .r-btn .ic { width: 18px; height: 18px; fill: currentColor; color: inherit; }
 
-#r-menu .r-play {
-  width: 36px;
-  height: 36px;
-  background: var(--primary);
-  color: var(--on-dark);
-}
 
-#r-menu .r-play:hover { background: var(--primary-dark); color: var(--on-dark); }
-#r-menu .r-play .ic { color: inherit; }
 
 /* One button, two glyphs: whichever the state does not call for is not drawn. */
 #r-menu .r-ic-pause { display: none; }
 #r-menu.r-playing .r-ic-play { display: none; }
 #r-menu.r-playing .r-ic-pause { display: block; }
 
-#r-menu .r-time {
-  /* "0:00 / 134:35" is digits either side of a slash, and a slash carries no
-     direction of its own — so in an RTL menu the two times swapped places and
-     the elapsed time read as the total. The clock sets its own direction. */
-  direction: ltr;
-  margin-inline-start: auto;
-  padding-inline: 4px;
-  font-size: 0.74rem;
-  color: var(--text-mute);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
 
 /* What the repeat is currently set to, written on its own row so the row says
    what it will do rather than only what it is called. */
@@ -868,8 +822,7 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   }
 
   #r-menu .r-menu-bar,
-  #r-menu .r-acts,
-  #r-menu .r-transport { display: none; }
+  #r-menu .r-acts { display: none; }
 
   #r-menu .r-now { padding: 0; margin: 0; border: 0; }
   #r-menu .r-panel { margin: 8px 10px 0; }

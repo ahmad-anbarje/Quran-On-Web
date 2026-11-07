@@ -518,6 +518,7 @@ $(function () {
   function readHistory() {
     try { return JSON.parse(localStorage.getItem('quran-reads')) || {}; } catch (e) { return {}; }
   }
+  try { localStorage.removeItem('quran-history'); } catch (e) { /* the first list's key, not used since */ }
   function logPages(pages) {
     if (!surah) return;
     var h = readHistory(), key = dayKey(), day = h[key] = h[key] || [];
@@ -1009,6 +1010,15 @@ $(function () {
     };
     // Named first; a name too long for the room goes, then the arrow if even that has none
     document.body.classList.remove('turners-short', 'turners-noroom');
+    // In the middle, unless the left column of tiles reaches it: then both just below the column
+    nav.style.top = '';
+    place();
+    var nr = next.getBoundingClientRect(), low = 0;
+    ['btn-fullscreen', 'btn-legend', 'btn-theme-corner', 'btn-lang-corner', 'btn-weight-corner', 'btn-mode-corner', 'btn-saved-corner'].forEach(function (id) {
+      var r = document.getElementById(id).getBoundingClientRect();
+      if (r.width && r.right > nr.left && r.left < nr.right && r.bottom > nr.top && r.top < nr.bottom) low = Math.max(low, r.bottom);
+    });
+    if (low) nav.style.top = (low + 10 + nr.height / 2) + 'px';
     if (!place() && tr && tr.width) {
       document.body.classList.add('tab-top');
       tr = tab.getBoundingClientRect();

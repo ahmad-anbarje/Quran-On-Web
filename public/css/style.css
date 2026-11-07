@@ -357,9 +357,9 @@ body.dark-mode .cb-dark { display: inline; }
 #btn-lang-corner { top: calc(var(--corner-top) + 2 * var(--corner-step)); }
 #btn-weight-corner { top: calc(var(--corner-top) + 3 * var(--corner-step)); }
 #btn-mode-corner { top: calc(var(--corner-top) + 4 * var(--corner-step)); }
-/* The saved pages at the top right, clear of the left column and the turners; below the Surah list tab when that is up there */
-#btn-saved-corner { top: 10px; left: auto; right: 10px; }
-body.tab-top #btn-saved-corner { top: 104px; }
+#btn-saved-corner { top: calc(var(--corner-top) + 5 * var(--corner-step)); }
+/* Where two pages cannot open the mode tile is gone, and the saved pages take its place */
+body.no-spread #btn-saved-corner { top: calc(var(--corner-top) + 4 * var(--corner-step)); }
 #btn-saved-corner:hover { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 35%, var(--line)); }
 #btn-saved-corner .ic { width: 20px; height: 20px; }
 
@@ -378,7 +378,7 @@ body[data-mode="pages"] #btn-mode-corner .cb-pages, body[data-mode="spread"] #bt
 /* The text size, one page at a time's zoom, under the mode tile */
 #size-corner {
   position: fixed;
-  top: calc(var(--corner-top) + 5 * var(--corner-step));
+  top: calc(var(--corner-top) + 6 * var(--corner-step));
   left: 10px;
   z-index: 125;
   display: none;
@@ -462,7 +462,8 @@ body.dark-mode .tj-sw { background: var(--cd); }
   #btn-lang-corner { top: auto; bottom: calc(14px + 2 * var(--corner-step)); }
   #btn-weight-corner { top: auto; bottom: calc(14px + 3 * var(--corner-step)); }
   #btn-mode-corner { top: auto; bottom: calc(14px + 4 * var(--corner-step)); }
-  #size-corner { top: auto; bottom: calc(14px + 5 * var(--corner-step)); }
+  #btn-saved-corner, body.no-spread #btn-saved-corner { top: auto; bottom: calc(14px + 5 * var(--corner-step)); }
+  #size-corner { top: auto; bottom: calc(14px + 6 * var(--corner-step)); }
   #btn-legend { top: auto; bottom: calc(14px + var(--corner-step)); }
   #btn-theme-corner { top: auto; bottom: 14px; }
   #tajweed-legend { top: auto; bottom: calc(14px + 5 * var(--corner-step)); }
@@ -873,35 +874,6 @@ body.ui-rtl #history-list { direction: rtl; }
 .hist-name { font-weight: 600; font-size: 0.9rem; }
 .hist-where { font-size: 0.78rem; color: var(--text-mute); opacity: 0.85; }
 .hist-none { padding: 24px 8px; text-align: center; color: var(--text-mute); }
-.resume-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 11px 14px;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--primary) 12%, var(--surface-2));
-  color: var(--primary);
-  font-family: var(--ui-font);
-  text-align: start;
-  cursor: pointer;
-}
-
-.resume-row:hover { background: color-mix(in srgb, var(--primary) 20%, var(--surface-2)); }
-.resume-row .ic { width: 18px; height: 18px; }
-.resume-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.resume-label { font-size: 0.82rem; font-weight: 600; }
-
-.resume-where {
-  font-family: var(--ui-font);
-  font-size: 0.76rem;
-  color: var(--text-mute);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 #sidebar-header {
   padding: 12px;
   flex-shrink: 0;
