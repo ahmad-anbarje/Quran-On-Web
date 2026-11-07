@@ -443,6 +443,7 @@ $(function () {
     localStorage.setItem('quran-weight', weight);
     document.documentElement.style.setProperty('--quran-stroke',
       weight === '700' ? '0.6px' : weight === '500' ? '0.3px' : '0');
+    $('#btn-weight-corner').toggleClass('on', weight !== '400').attr('data-w', weight);
     $('#btn-weight').toggleClass('on', weight !== '400')
       .attr('data-tip-ar', 'سماكة الخط — ' + (weight === '700' ? 'عريض' : weight === '500' ? 'متوسط' : 'عادي'))
       .attr('data-tip-en', 'Text weight — ' + (weight === '700' ? 'bold' : weight === '500' ? 'medium' : 'regular'));
@@ -859,6 +860,7 @@ $(function () {
    * horizontal space? Hidden with visibility, not display — one taken out of
    * the flow has no box, so the two would swap places for ever.
    */
+  var turnAt = null;
   function fitTurners() {
     var nav = document.getElementById('page-nav');
     if (!nav) return;
@@ -885,9 +887,15 @@ $(function () {
     var GAP = 24, EDGE = 8;
     var left = Math.min.apply(null, sheets.map(function (s) { return s.left; }));
     var right = Math.max.apply(null, sheets.map(function (s) { return s.right; }));
+    // Held where they were for this window and mode, so a narrower page does not move them under the pointer
+    var key = window.innerWidth + 'x' + window.innerHeight + mode + getComputedStyle(document.documentElement).getPropertyValue('--quran-scale');
+    if (turnAt && turnAt.key === key) { left = Math.min(left, turnAt.left); right = Math.max(right, turnAt.right); }
+    turnAt = { key: key, left: left, right: right };
     var next = document.getElementById('btn-page-next'), prev = document.getElementById('btn-page-prev');
     var limit = window.innerWidth - EDGE;
     var tab = document.getElementById('sidebar-handle');
+    // The menu's tab in the middle unless the turner beside the page needs it; then at the top right
+    document.body.classList.remove('tab-top');
     var tr = tab && tab.getBoundingClientRect();
     var place = function () {
       var nw = next.offsetWidth, pw = prev.offsetWidth;
@@ -895,12 +903,16 @@ $(function () {
       next.style.left = nx + 'px';
       prev.style.left = px + 'px';
       if (nx < EDGE || px + pw > limit) return false;
-      // The index's tab, where it rides at the same height
-      var py = window.innerHeight / 2;
-      return !(tr && tr.width && tr.top < py + 30 && tr.bottom > py - 30 && px + pw > tr.left - EDGE);
+      // The Surah list tile, should the two meet at one height
+      var pr = prev.getBoundingClientRect();
+      return !(tr && tr.width && tr.top < pr.bottom && tr.bottom > pr.top && px + pw > tr.left - EDGE);
     };
     // Named first; a name too long for the room goes, then the arrow if even that has none
     document.body.classList.remove('turners-short', 'turners-noroom');
+    if (!place() && tr && tr.width) {
+      document.body.classList.add('tab-top');
+      tr = tab.getBoundingClientRect();
+    }
     if (!place()) document.body.classList.add('turners-short');
     document.body.classList.toggle('turners-noroom', !place());
     document.body.classList.add('turners-placed');
@@ -1352,6 +1364,8 @@ $(function () {
   });
   $('#btn-close-legend').on('click', function () { $('#tajweed-legend').prop('hidden', true); });
   $('#btn-theme-corner, #btn-bar-theme').on('click', function () { $('#btn-theme').trigger('click'); });
+  $('#btn-weight-corner').on('click', function () { $('#btn-weight').trigger('click'); });
+  $('#btn-mode-corner').on('click', function () { $('#btn-mode').trigger('click'); });
   $('#btn-bar-meaning').on('click', function () { if (window.Recite && Recite.meaning) Recite.meaning(); });
 
   /* The other edition is other data and other fonts: the page is read again in it, where the reader was */
@@ -1943,7 +1957,7 @@ $(function () {
     function glide(now) {
       var dt = last ? Math.min(64, now - last) : 16.7;
       last = now;
-      var next = s + (target - s) * (1 - Math.pow(0.7, dt / 16.7));
+      var next = s + (target - s) * (1 - Math.pow(0.82, dt / 16.7));   // eased over a few more frames, for a smooth glide
       if (Math.abs(target - next) < 0.002) next = target;
       zoomAt(next, ax, ay);
       frame = next === target ? null : requestAnimationFrame(glide);
@@ -1975,7 +1989,7 @@ $(function () {
 
     function wheelBy(e) {
       var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
-      return target * Math.exp(-dy * 0.002);   // about 22% a notch
+      return target * Math.exp(-dy * 0.0008);   // about 8% a notch
     }
 
     area.addEventListener('wheel', function (e) {

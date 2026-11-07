@@ -38,7 +38,7 @@
   --text-mute: var(--text);
   --on-dark:   #ffffff;
   /* The panels' ink: menus and windows are read in short glances, at small sizes */
-  --ui-ink:    #0e1c29;
+  --ui-ink:    var(--text);
 
   --line:      #dce8f2;
 
@@ -119,9 +119,9 @@
   /* The drawer crosses its own width, where the rest of the interface moves
      a few pixels, so it takes longer and lands rather than stops. */
   /* In slowly enough to be followed, out quickly: it is the reader's page coming back */
-  --t-drawer-in: 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  --t-drawer-in: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   --corner-btn: 50px;   /* full screen, the zoom rail, the folded player: one size */
-  --t-drawer-out: 0.26s cubic-bezier(0.55, 0, 0.9, 0.45);
+  --t-drawer-out: 0.2s cubic-bezier(0.55, 0, 0.9, 0.45);
 }
 
 /* A browser tab keeps its toolbar (the page never scrolls), so only an installed app sizes against the large viewport */
@@ -146,10 +146,10 @@ body.dark-mode {
   --surface-2: #1e242a;
   --paper:     #1a1f25;
 
-  --text:      #a2a7ad;
+  /* One ink for every label and icon on a dark page, the panels' as well */
+  --text:      #e3e7eb;
   --text-mute: var(--text);
-  /* The page's grey is for a long read; a panel's few words want to stand out */
-  --ui-ink:    #e3e7eb;
+  --ui-ink:    var(--text);
 
   --line:      #2a3138;
 
@@ -230,28 +230,29 @@ body[data-lang="en"] .lang-ar { display: none !important; }
    edge: `right` follows the sidebar's width, so it slides with it and stays
    reachable when the index is shut. */
 
-/* At the top, as the corner's buttons are on the left: the middle of the edge is the turner's */
+/* The menu's own tab, on the right edge in the middle, in the accent colour; at the top right where the turner needs the middle */
 #sidebar-handle {
   position: fixed;
-  top: 10px;
-  right: var(--sidebar-w);
+  top: 50%;
+  translate: 0 -50%;
+  right: 0;
   z-index: 170;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   gap: 4px;
-  width: 60px;
-  height: auto;
-  padding: 10px 0 9px;
-  border: 1px solid var(--line);
+  width: 66px;
+  padding: 14px 4px 12px;
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--line));
   border-right: none;
-  border-radius: 14px 0 0 14px;
-  background: var(--surface);
+  border-radius: 16px 0 0 16px;
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
   color: var(--primary);
   cursor: pointer;
-  box-shadow: -2px 0 8px rgba(20, 60, 95, 0.08);
+  box-shadow: var(--sh-1);
 }
+body.tab-top #sidebar-handle { top: 10px; translate: none; }
 
 /* The tab itself never moves under the pointer. Leaning it out took its own
    edge out from under the cursor, which unhovered it, which moved it back —
@@ -264,19 +265,20 @@ body[data-lang="en"] .lang-ar { display: none !important; }
 }
 
 #sidebar-handle .ic { width: 16px; height: 16px; }
-#sidebar-handle .sh-book { width: 24px; height: 24px; }
-#sidebar-handle .cb-label { font-size: 0.72rem; font-weight: 600; }
+#sidebar-handle .sh-book { width: 26px; height: 26px; }
+#sidebar-handle .cb-label { font-size: 0.68rem; font-weight: 600; text-align: center; white-space: normal; line-height: 1.15; }
 /* Open, the list has its own way out; the tab comes back when it closes */
-#sidebar:not(.hidden) ~ #sidebar-handle { display: none; }
+#sidebar:not(.hidden) ~ #sidebar-handle { opacity: 0; visibility: hidden; pointer-events: none; transition: none; }
+/* Back only once the list has slid away (--t-drawer-out), not over it */
+#sidebar.hidden ~ #sidebar-handle { transition: opacity 0.15s ease 0.2s, visibility 0s linear 0.2s; }
 
 /* Shut: the tab sits against the screen edge, and its chevron turns to point the
    way it will open. */
-#sidebar.hidden ~ #sidebar-handle { right: 0; color: var(--text-mute); }
+#sidebar.hidden ~ #sidebar-handle { color: var(--primary); }
 #sidebar.hidden ~ #sidebar-handle:hover { color: var(--primary); }
 /* A finger needs more than a pointer: on a touch screen the tab is a target, not a hint */
 @media (pointer: coarse) {
-  #sidebar-handle { width: 62px; padding: 12px 0 10px; }
-  #sidebar-handle .sh-book { width: 26px; height: 26px; }
+  #sidebar-handle { width: 70px; }
 }
 
 /* --- full screen ---
@@ -329,7 +331,7 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
    as the letters do. */
 /* The corner's buttons, one under another: full screen where it is shown, Tajweed, then light and dark */
 :root { --corner-step: 60px; --corner-top: 10px; }
-#btn-legend, #btn-theme-corner, #btn-lang-corner {
+#btn-legend, #btn-theme-corner, #btn-lang-corner, #btn-weight-corner, #btn-mode-corner {
   position: fixed;
   top: var(--corner-top);
   left: 10px;
@@ -353,6 +355,22 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
 body.dark-mode .cb-dark { display: inline; }
 #btn-theme-corner { top: calc(var(--corner-top) + var(--corner-step)); }
 #btn-lang-corner { top: calc(var(--corner-top) + 2 * var(--corner-step)); }
+#btn-weight-corner { top: calc(var(--corner-top) + 3 * var(--corner-step)); }
+#btn-mode-corner { top: calc(var(--corner-top) + 4 * var(--corner-step)); }
+#btn-weight-corner:hover, #btn-mode-corner:hover, #btn-weight-corner.on {
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
+}
+#btn-weight-corner .ic, #btn-mode-corner .ic { width: 20px; height: 20px; }
+/* The mode in force: its icon and its name */
+#btn-mode-corner .ic, #btn-mode-corner .cb-label { display: none; }
+body[data-mode="pages"] #btn-mode-corner .ic-mode-pages, body[data-mode="spread"] #btn-mode-corner .ic-mode-spread { display: block; }
+body[data-mode="pages"] #btn-mode-corner .cb-pages, body[data-mode="spread"] #btn-mode-corner .cb-spread { display: block; }
+/* The weight in force, of the three Settings steps through */
+#btn-weight-corner .cb-label { display: none; }
+#btn-weight-corner[data-w="400"] .cb-w400, #btn-weight-corner[data-w="500"] .cb-w500, #btn-weight-corner[data-w="700"] .cb-w700 { display: block; }
+/* Where two pages cannot open, there is no mode to switch */
+body.no-spread #btn-mode-corner { display: none; }
 #btn-legend:hover, #btn-legend[aria-pressed="true"], #btn-theme-corner:hover,
 #btn-lang-corner:hover, #btn-lang-corner[aria-expanded="true"] {
   background: color-mix(in srgb, var(--primary) 14%, var(--surface));
@@ -362,17 +380,18 @@ body.dark-mode .cb-dark { display: inline; }
 #btn-legend .ic, #btn-theme-corner .ic, #btn-lang-corner .ic { width: 20px; height: 20px; }
 /* The phone's top bar carries them instead, at its far end; nothing floats over the words */
 #page-bar .bar-tools { margin-inline-start: auto; display: flex; gap: 4px; }
-#page-bar .bar-tools .ghost-btn { flex-direction: column; gap: 1px; width: auto; height: auto; min-width: 48px; padding: 2px 4px; color: var(--primary); }
+#page-bar .bar-tools .ghost-btn { flex-direction: column; gap: 1px; width: auto; height: auto; min-width: 48px; padding: 2px 4px; color: var(--text-mute); }
 @media (max-width: 480px) {
-  #btn-legend, #btn-theme-corner, #btn-lang-corner { display: none; }
+  #btn-legend, #btn-theme-corner, #btn-lang-corner, #btn-weight-corner, #btn-mode-corner { display: none; }
 }
 /* "On-screen buttons" off takes these with the rest; Settings then has them again */
 body.turners-off #btn-legend, body.turners-off #btn-theme-corner,
-body.turners-off #btn-lang-corner { display: none; }
+body.turners-off #btn-lang-corner, body.turners-off #btn-weight-corner, body.turners-off #btn-mode-corner { display: none; }
 /* Where the corner has them, Settings does not say them twice */
 @media (min-width: 481px) {
   body:not(.turners-off) #btn-tajweed, body:not(.turners-off) #btn-theme,
-  body:not(.turners-off) #btn-lang { display: none; }
+  body:not(.turners-off) #btn-lang, body:not(.turners-off) #btn-weight,
+  body:not(.turners-off):not(.no-spread) #btn-mode { display: none; }
 }
 
 /* The theme the page is in, chosen or the system's: the sun on a light page, the moon on a dark one */
@@ -389,7 +408,7 @@ body.dark-mode .ic-moon { display: block; }
 .r-tj-plain { margin: 2px 0 0; font-size: 0.84rem; color: var(--text-mute); text-align: center; unicode-bidi: plaintext; }
 #tajweed-legend {
   position: fixed;
-  top: calc(var(--corner-top) + 3 * var(--corner-step));
+  top: calc(var(--corner-top) + 5 * var(--corner-step));
   left: 10px;
   /* Above the dimming the index lays over the page, so it can always be closed */
   z-index: 155;
@@ -413,9 +432,11 @@ body.dark-mode .tj-sw { background: var(--cd); }
 /* A small tablet's page runs near the edge: the buttons sit at its foot instead, the card above them */
 @media (min-width: 481px) and (max-width: 767px) {
   #btn-lang-corner { top: auto; bottom: calc(14px + 2 * var(--corner-step)); }
+  #btn-weight-corner { top: auto; bottom: calc(14px + 3 * var(--corner-step)); }
+  #btn-mode-corner { top: auto; bottom: calc(14px + 4 * var(--corner-step)); }
   #btn-legend { top: auto; bottom: calc(14px + var(--corner-step)); }
   #btn-theme-corner { top: auto; bottom: 14px; }
-  #tajweed-legend { top: auto; bottom: calc(14px + 3 * var(--corner-step)); }
+  #tajweed-legend { top: auto; bottom: calc(14px + 5 * var(--corner-step)); }
 }
 @media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
   :root { --corner-top: calc(10px + var(--corner-step)); }
@@ -2854,7 +2875,7 @@ body[data-mode="spread"] .spread-right .page-ribbon {
     color: var(--primary);
   }
 
-  #btn-to-index { color: var(--primary); }
+  #btn-to-index { color: var(--text-mute); }
 
   /* One page at a time, turned rather than scrolled.
    *

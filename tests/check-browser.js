@@ -222,10 +222,10 @@ async function main() {
       assert(await page.evaluate(() => document.body.classList.contains('dark-mode')) !== dark, 'the theme did not change');
       await click('#btn-theme-corner');
       const mode = await page.evaluate(() => document.body.dataset.mode);
-      await click('#btn-mode');
+      await click('#btn-mode-corner');
       await page.waitForTimeout(500);
       assert(await page.evaluate(() => document.body.dataset.mode) !== mode, 'the reading mode did not change');
-      await click('#btn-mode');
+      await click('#btn-mode-corner');
       await page.waitForTimeout(500);
       done.push('settings');
 
