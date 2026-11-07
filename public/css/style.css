@@ -368,7 +368,7 @@ body[data-mode="pages"] #btn-mode-corner .ic-mode-pages, body[data-mode="spread"
 body[data-mode="pages"] #btn-mode-corner .cb-pages, body[data-mode="spread"] #btn-mode-corner .cb-spread { display: block; }
 /* The weight in force, of the three Settings steps through */
 #btn-weight-corner .cb-label { display: none; }
-#btn-weight-corner[data-w="300"] .cb-w300, #btn-weight-corner[data-w="400"] .cb-w400, #btn-weight-corner[data-w="500"] .cb-w500, #btn-weight-corner[data-w="700"] .cb-w700 { display: block; }
+#btn-weight-corner[data-w="400"] .cb-w400, #btn-weight-corner[data-w="500"] .cb-w500, #btn-weight-corner[data-w="700"] .cb-w700 { display: block; }
 /* Where two pages cannot open, there is no mode to switch */
 body.no-spread #btn-mode-corner { display: none; }
 #btn-legend:hover, #btn-legend[aria-pressed="true"], #btn-theme-corner:hover,
@@ -1501,9 +1501,6 @@ body[data-mode="spread"] .spread-right .ph-juz {
 
   contain: layout style;
 }
-/* Thinner than regular: a stroke in the paper's colour pares the letters' edges; the medallions keep theirs */
-.weight-light .mushaf { -webkit-text-stroke-color: var(--paper); }
-.weight-light .mushaf .m-medal { -webkit-text-stroke-width: 0; }
 
 /* Until the page's font is registered the glyph codes would show as tofu, so
    the lines are held invisible — still taking their space, so nothing jumps. */

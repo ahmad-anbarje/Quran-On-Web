@@ -358,8 +358,8 @@ $(function () {
     var t = {
       mode:    { ar: { pages: 'صفحة واحدة', spread: 'صفحتان' },
                  en: { pages: 'One page', spread: 'Two pages' } },
-      weight:  { ar: { '300': 'رفيع', '400': 'عادي', '500': 'متوسط', '700': 'عريض' },
-                 en: { '300': 'Thin', '400': 'Regular', '500': 'Medium', '700': 'Bold' } },
+      weight:  { ar: { '400': 'عادي', '500': 'متوسط', '700': 'عريض' },
+                 en: { '400': 'Regular', '500': 'Medium', '700': 'Bold' } },
       onOff:   { ar: { on: 'ظاهرة', off: 'مخفية' },
                  en: { on: 'Shown', off: 'Hidden' } },
       /* The arrows are shown or hidden; offline reading is switched on or off.
@@ -436,19 +436,17 @@ $(function () {
 
   /* QCF page fonts ship a single weight, so a heavier setting is drawn as a
      hairline stroke rather than a font-weight the face does not have. */
-  var WEIGHTS = ['400', '500', '700', '300'];   // after bold, lighter than regular, then back
+  var WEIGHTS = ['400', '500', '700'];
 
   function applyWeight(w) {
     weight = WEIGHTS.indexOf(String(w)) >= 0 ? String(w) : '400';
     localStorage.setItem('quran-weight', weight);
     document.documentElement.style.setProperty('--quran-stroke',
-      weight === '700' ? '0.6px' : weight === '500' ? '0.3px' : weight === '300' ? '0.45px' : '0');
-    // Lighter than regular: a stroke in the paper's colour pares the letters' edges
-    document.documentElement.classList.toggle('weight-light', weight === '300');
+      weight === '700' ? '0.6px' : weight === '500' ? '0.3px' : '0');
     $('#btn-weight-corner').toggleClass('on', weight !== '400').attr('data-w', weight);
     $('#btn-weight').toggleClass('on', weight !== '400')
-      .attr('data-tip-ar', 'سماكة الخط — ' + (weight === '700' ? 'عريض' : weight === '500' ? 'متوسط' : weight === '300' ? 'رفيع' : 'عادي'))
-      .attr('data-tip-en', 'Text weight — ' + (weight === '700' ? 'bold' : weight === '500' ? 'medium' : weight === '300' ? 'thin' : 'regular'));
+      .attr('data-tip-ar', 'سماكة الخط — ' + (weight === '700' ? 'عريض' : weight === '500' ? 'متوسط' : 'عادي'))
+      .attr('data-tip-en', 'Text weight — ' + (weight === '700' ? 'bold' : weight === '500' ? 'medium' : 'regular'));
     syncTips();
   }
 
@@ -498,7 +496,8 @@ $(function () {
     if (anchor) {
       var keep = function () {
         var r = anchor.el.getBoundingClientRect();
-        area.scrollTop += r.top + anchor.f * r.height - area.getBoundingClientRect().top;
+        // Instant: the area scrolls smoothly by default, which would show every correction as a glide
+        area.scrollTo({ top: area.scrollTop + r.top + anchor.f * r.height - area.getBoundingClientRect().top, behavior: 'instant' });
       };
       keep();
       requestAnimationFrame(keep);
@@ -1481,8 +1480,8 @@ $(function () {
   systemDark.addEventListener('change', function () {
     if (themeChoice === null) applyTheme(null);
   });
-  $('#btn-font-inc').on('click', function () { applyScale(scale + 0.05); });
-  $('#btn-font-dec').on('click', function () { applyScale(scale - 0.05); });
+  $('#btn-font-inc').on('click', function () { applyScale(scale + 0.1); });
+  $('#btn-font-dec').on('click', function () { applyScale(scale - 0.1); });
 
   /* The languages, a menu of their own, from Settings, the corner or the phone's bar: each by its
      own name, and under it the name the site's language gives it */
@@ -1854,8 +1853,8 @@ $(function () {
              !$('body').hasClass('no-fullscreen')) $('#btn-fullscreen').trigger('click');
     else if (e.key === 'Escape') { showPanel(null); magnify.reset(); }
     // The text size shows only on one page; in a spread it would change unseen and surprise later
-    else if ((e.key === '+' || e.key === '=') && mode !== 'spread') applyScale(scale + 0.05);
-    else if (e.key === '-' && mode !== 'spread') applyScale(scale - 0.05);
+    else if ((e.key === '+' || e.key === '=') && mode !== 'spread') applyScale(scale + 0.1);
+    else if (e.key === '-' && mode !== 'spread') applyScale(scale - 0.1);
     else if (e.key === '0') { applyScale(1); magnify.reset(); }   // back to a whole page
   });
 

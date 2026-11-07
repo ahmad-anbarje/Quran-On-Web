@@ -54,7 +54,7 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v4/ -->
   <link rel="stylesheet" href="/css/fonts.min.css?v=dc96e96b71" />
-  <link rel="stylesheet" href="/css/style.min.css?v=038a526763" />
+  <link rel="stylesheet" href="/css/style.min.css?v=faabc1e159" />
   <link rel="stylesheet" href="/css/recite.min.css?v=8cabe8a444" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
@@ -390,7 +390,7 @@
     </button>
     <!-- Bold text and the reading mode by the page too, as in Settings -->
     <button id="btn-weight-corner" aria-label="سماكة الخط | Text weight">
-      <svg class="ic" viewBox="0 0 24 24"><use href="#i-weight"/></svg><span class="cb-label cb-w300"><span class="lang-ar">رفيع</span><span class="lang-en">Thin</span></span><span class="cb-label cb-w400"><span class="lang-ar">عادي</span><span class="lang-en">Regular</span></span><span class="cb-label cb-w500"><span class="lang-ar">متوسط</span><span class="lang-en">Medium</span></span><span class="cb-label cb-w700"><span class="lang-ar">عريض</span><span class="lang-en">Bold</span></span>
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-weight"/></svg><span class="cb-label cb-w400"><span class="lang-ar">عادي</span><span class="lang-en">Regular</span></span><span class="cb-label cb-w500"><span class="lang-ar">متوسط</span><span class="lang-en">Medium</span></span><span class="cb-label cb-w700"><span class="lang-ar">عريض</span><span class="lang-en">Bold</span></span>
     </button>
     <button id="btn-mode-corner" aria-label="طريقة العرض | Reading mode">
       <svg class="ic ic-mode-pages" viewBox="0 0 24 24"><use href="#i-mode-pages"/></svg>
@@ -662,7 +662,7 @@
         <dt><kbd class="k-pages">↑</kbd><kbd class="k-spread">→</kbd><kbd>Page Up</kbd></dt>
         <dd><span class="lang-ar">الصفحة السابقة</span><span class="lang-en">Previous page</span></dd>
         <dt><kbd>+</kbd><kbd>−</kbd></dt>
-        <dd><span class="lang-ar">خط أكبر وأصغر، بخطوة ٥٪ (في وضع الصفحة الواحدة)</span><span class="lang-en">Larger and smaller text, 5% a step (one-page mode)</span></dd>
+        <dd><span class="lang-ar">خط أكبر وأصغر، بخطوة ١٠٪ (في وضع الصفحة الواحدة)</span><span class="lang-en">Larger and smaller text, 10% a step (one-page mode)</span></dd>
         <dt><kbd>0</kbd></dt>
         <dd><span class="lang-ar">العودة إلى الحجم الطبيعي (١٠٠٪)</span><span class="lang-en">Back to normal size (100%)</span></dd>
         <dt><kbd>Space</kbd></dt>
@@ -763,7 +763,7 @@
   <script defer src="/js/pager.min.js?v=73fed4459e"></script>
   <script defer src="/js/offline.min.js?v=946ef23f48"></script>
   <script defer src="/js/leaves.min.js?v=ed29c02f2b"></script>
-  <script defer src="/js/app.min.js?v=5e3b7da6a5"></script>
+  <script defer src="/js/app.min.js?v=1e4f25079b"></script>
   <script defer src="/js/appcard.min.js?v=0795da197f"></script>
   <article class="sr-only" lang="ar" dir="rtl" aria-label="نص سورة ابراهيم">
     <h1>سورة ابراهيم · Surah Ibrahim</h1>
