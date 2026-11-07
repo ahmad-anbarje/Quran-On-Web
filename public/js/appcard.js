@@ -6,7 +6,6 @@
   'use strict';
 
   var KEY = 'quran-app-card';
-  var QUIET_FOR = 30 * 24 * 3600 * 1000;   /* a no holds for a month */
 
   var ua = navigator.userAgent;
   // Crawlers and PageSpeed present as Android phones; the app itself stamps QuranShell
@@ -14,13 +13,14 @@
   if (/QuranShell\/|bot|crawler|spider|Lighthouse|Google-InspectionTool/i.test(ua)) return;
   if (location.hostname === 'appassets.androidplatform.net') return;
 
+  // Offered on every visit from an Android browser; a no holds for the rest of that visit only
   var last = 0;
-  try { last = +localStorage.getItem(KEY) || 0; } catch (e) {}
-  if (Date.now() - last < QUIET_FOR) return;
+  try { last = +sessionStorage.getItem(KEY) || 0; } catch (e) {}
+  if (last) return;
 
 
   function remember() {
-    try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {}
+    try { sessionStorage.setItem(KEY, String(Date.now())); } catch (e) {}
   }
 
   function track(name) {

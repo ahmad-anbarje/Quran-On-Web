@@ -143,7 +143,8 @@ async function main() {
         await pressWord(page, shape === PHONE);
         await page.waitForTimeout(600);
         assert(await page.evaluate(() => !document.getElementById('r-menu').hidden), 'the player did not open on a word');
-        await page.click(shape === PHONE ? '#r-menu .r-dock [data-act="meaning"]' : '#r-menu .r-acts [data-act="meaning"]');
+        // On a phone it is in the top bar, as the app keeps the player to its own seven
+        await page.click(shape === PHONE ? '#btn-bar-meaning' : '#r-menu .r-acts [data-act="meaning"]');
         await page.waitForFunction(() => { const t = document.querySelector('#meaning .mn-text'); return t && t.textContent.length > 20 && !/Loading/.test(t.textContent); }, null, { timeout: 10000 });
         const first = await page.$eval('#meaning .mn-text', (t) => t.textContent);
         await page.click('#meaning .mn-tab:not(.on)');

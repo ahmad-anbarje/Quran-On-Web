@@ -868,45 +868,55 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   #r-menu .r-now { padding: 0; margin: 0; border: 0; }
   #r-menu .r-panel { margin: 8px 10px 0; }
 
-  #r-menu .r-dock { display: flex; }
+  /* The app's strip (part_player_reader.xml, reader_foot): 64dp, its chrome colour under a hairline,
+     seven equal slots, a 22dp outline in the muted ink over an 11sp name, play a 34dp disc in the accent */
+  #r-menu .r-dock {
+    display: flex;
+    height: 64px;
+    background: #f1f6fc;
+    border-top: 1px solid var(--line);
+  }
+  body.dark-mode #r-menu .r-dock { background: #242c35; }
   body:not(.ui-rtl) #r-menu .r-dock { direction: ltr; }
 
   #r-menu .r-dock button {
     flex: 1 1 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    min-height: 64px;
-    padding: 6px 0;
+    gap: 3px;
+    padding: 0;
     border: 0;
     background: none;
     color: var(--text-mute);
     font: inherit;
-    font-size: 0.72rem;
+    font-size: 11px;
+    line-height: 1;
+    white-space: nowrap;
     cursor: pointer;
   }
 
-  #r-menu .r-dock .ic { width: 24px; height: 24px; fill: currentColor; }
+  #r-menu .r-dock .ic { width: 22px; height: 22px; }
+  #r-menu .r-dock .ic.ic-line { fill: none; stroke: currentColor; stroke-width: 1.6; }
   body.tajweed-on #r-menu .r-dock .r-dock-tajweed,
   #r-menu .r-dock .r-dock-repeat.on,
   #r-menu .r-dock .r-dock-latin.on,
-  #r-menu .r-dock .r-dock-meaning.on,
   #r-menu .r-dock .r-dock-speed.on { color: var(--primary); }
   #r-menu .r-dock .r-speed-value { margin: 0; font-weight: 400; }
 
-  #r-menu .r-dock .r-dock-play { color: var(--primary); font-weight: 700; }
+  #r-menu .r-dock .r-dock-play { font-weight: 700; }
   #r-menu .r-dock-disc {
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     background: var(--primary);
-    color: var(--on-dark);
+    color: #fff;
   }
-  #r-menu .r-dock-disc .ic { width: 22px; height: 22px; }
+  #r-menu .r-dock-disc .ic { width: 18px; height: 18px; fill: currentColor; stroke: none; }
 }
 
 /* ---------- translation and tafsir -------------------------------------

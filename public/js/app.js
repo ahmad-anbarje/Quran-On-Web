@@ -608,6 +608,8 @@ $(function () {
      until asked for, since anything permanent is taken from the page. */
   function showChrome(on) {
     $('body').toggleClass('chrome-on', !!on);
+    // The player comes with the bars on a phone, held word or not, as in the app
+    if (on && phoneLayout.matches && surah && window.Recite && Recite.dock) Recite.dock();
     $('#page-bar').attr('aria-hidden', on ? 'false' : 'true');
 
     /* The phone's own bars belong to the same moment as ours: away while the
@@ -1302,6 +1304,8 @@ $(function () {
   function showEdition() {
     $('body').toggleClass('tajweed-on', VERSION === 'tj');
     $('#btn-legend').attr('aria-pressed', String(VERSION === 'tj'));
+    if (VERSION !== 'tj') $('#tajweed-legend').prop('hidden', true);
+    if (window.Recite && Recite.edition) Recite.edition();
   }
   function setTajweed(on) {
     var want = on ? 'tj' : 'v4';
@@ -1338,6 +1342,7 @@ $(function () {
   });
   $('#btn-close-legend').on('click', function () { $('#tajweed-legend').prop('hidden', true); });
   $('#btn-theme-corner, #btn-bar-theme').on('click', function () { $('#btn-theme').trigger('click'); });
+  $('#btn-bar-meaning').on('click', function () { if (window.Recite && Recite.meaning) Recite.meaning(); });
 
   /* The other edition is other data and other fonts: the page is read again in it, where the reader was */
   $('#btn-tajweed').on('click', function () { setTajweed(VERSION !== 'tj'); });

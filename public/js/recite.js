@@ -712,30 +712,23 @@
       '</button>' +
       /* The phone's player: one row in the Android app's order, shown only on a phone. */
       '<div class="r-dock">' +
-        // First, as in the app's player: the pages in Tajweed colours or plain; held, what the colours mean
+        /* The app's player, slot for slot (part_player_reader.xml): three either side of play,
+           each the app's own outline over its name */
         '<button data-act="tajweed" class="r-dock-tajweed">' +
           '<svg class="ic ic-line" viewBox="0 0 24 24"><use href="#i-tajweed"/></svg>' +
           '<span class="lang-ar">تجويد</span><span class="lang-en">Tajweed</span>' +
         '</button>' +
-        '<button data-act="follow">' +
-          '<svg class="ic" viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8.94 3A9 9 0 0 0 13 3.06V1h-2v2.06A9 9 0 0 0 3.06 11H1v2h2.06A9 9 0 0 0 11 20.94V23h2v-2.06A9 9 0 0 0 20.94 13H23v-2h-2.06zM12 19a7 7 0 1 1 0-14 7 7 0 0 1 0 14z"/></svg>' +
-          '<span class="lang-ar">تتبع</span><span class="lang-en">Follow</span>' +
-        '</button>' +
         '<button data-act="voice" class="r-dock-voice">' +
-          '<svg class="ic" viewBox="0 0 24 24"><path d="M12 12.2a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2zm0 1.8c-4.2 0-7.2 2.2-7.2 4.6V21h14.4v-2.4c0-2.4-3-4.6-7.2-4.6z"/></svg>' +
+          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M12 8m-3.6 0a3.6 3.6 0 1 0 7.2 0a3.6 3.6 0 1 0-7.2 0M4.8 20.5v-1a5 5 0 0 1 5-5h4.4a5 5 0 0 1 5 5v1"/></svg>' +
           '<span class="lang-ar">القارئ</span><span class="lang-en">Reciter</span>' +
         '</button>' +
         '<button data-act="latin" class="r-dock-latin">' +
           '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M2.8 18.5 7.5 5.5l4.7 13M4.5 14h6"/><path d="M17 15.2m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0M20.2 11.6v6.9"/></svg>' +
           '<span class="lang-ar">النطق</span><span class="lang-en">Phonetic</span>' +
         '</button>' +
-        '<button data-act="meaning" class="r-dock-meaning">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M12 6.5C10.3 5.2 7.9 4.6 4 4.6v13.2c3.9 0 6.3.6 8 1.9 1.7-1.3 4.1-1.9 8-1.9V4.6c-3.9 0-6.3.6-8 1.9zM12 6.5v13.2"/></svg>' +
-          '<span class="lang-ar">التفسير</span><span class="lang-en">Meaning</span>' +
-        '</button>' +
         '<button data-act="play" class="r-dock-play">' +
           '<span class="r-dock-disc">' +
-            '<svg class="ic r-ic-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
+            '<svg class="ic r-ic-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>' +
             '<svg class="ic r-ic-pause" viewBox="0 0 24 24"><path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z"/></svg>' +
           '</span>' +
           '<span class="r-when-paused"><span class="lang-ar">تشغيل</span><span class="lang-en">Play</span></span>' +
@@ -747,11 +740,9 @@
           '<span class="r-word-wait"><span class="lang-ar">تحميل…</span><span class="lang-en">Loading…</span></span>' +
         '</button>' +
         '<button data-act="repeat" class="r-dock-repeat">' +
-          '<svg class="ic" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg>' +
+          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M16.5 3 20 6.5 16.5 10M4 11.5v-2a3 3 0 0 1 3-3h13M7.5 21 4 17.5 7.5 14M20 12.5v2a3 3 0 0 1-3 3H4"/></svg>' +
           '<span class="lang-ar">تكرار</span><span class="lang-en">Repeat</span>' +
         '</button>' +
-        /* Speed in Close's place, as in the app: the player already comes and
-           goes with the page's bars, and pausing is Play's to do. */
         '<button data-act="speed" class="r-dock-speed">' +
           '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M5.07 18A8 8 0 1 1 18.93 18"/><path d="M12 14l3.6-4.4M12 14m-1.3 0a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0-2.6 0"/></svg>' +
           '<span class="r-speed-value"></span>' +
@@ -1847,8 +1838,44 @@
     if (!frame) frame = requestAnimationFrame(tick);
   });
 
+  /* A tap on a phone's page brings the player with the bars, as the app's do: on the word held if
+     there is one, else on the first ayah of the page in view */
+  function dock() {
+    if (!surah) return;
+    if (!menu) build();
+    if (!menu.hidden) return;
+    var p = host.currentPage(), n = timing ? timing.ayah.length : 0, v = at || 0;
+    if (!v) { v = 1; while (n && v < n && host.ayahPage(v) !== p) v++; }
+    menuAt = { v: v, w: null };
+    fresh = true;
+    note('');
+    sync();
+    el.tajweed.hidden = true;
+    menu.hidden = false;
+    document.dispatchEvent(new CustomEvent('recite:opened'));
+    if (global.Meaning) Meaning.settle();
+  }
+
+  /* The edition switched: off, the word's Tajweed goes; on, the word in hand shows its rules, as the app's
+     showMarkedTajweed does, once the page has been drawn again in the colour fonts */
+  function edition() {
+    if (!menu) return;
+    if (!document.body.classList.contains('tajweed-on')) { el.tajweed.hidden = true; return; }
+    if (menu.hidden || menuAt.w === null || menuAt.w === undefined || !surah) return;
+    var key = '.mushaf.ready .m-word[data-a="' + surah.id + ':' + menuAt.v + '"][data-w="' + menuAt.w + '"]';
+    var tries = 0;
+    (function look() {
+      var w = document.querySelector(key);
+      if (w && /QCF-tj-/.test(w.closest('.mushaf').style.fontFamily)) tajweedCard(w);
+      else if (++tries < 20) setTimeout(look, 150);
+    })();
+  }
+
   global.Recite = {
     open: open,
+    dock: dock,
+    edition: edition,
+    meaning: function () { if (!menu) build(); act('meaning'); },
     repaint: repaint,
     relabel: relabel,
 
