@@ -1567,8 +1567,8 @@ body[data-lang="en"] .mushaf.failed::after {
                               transparent 0.37em);
 }
 .m-end.m-medal, body.dark-mode .m-end.m-medal { background: none; }
-/* The medallion fonts carry the site's blues, a second palette for dark pages */
-body.dark-mode .m-medal { font-palette: dark; }
+/* Dark pages turn the medallion's light over and keep its hue: a deep blue disc, white numerals, pale outline */
+body.dark-mode .m-medal { filter: invert(1) hue-rotate(180deg); }
 /* The Tajweed edition's white, which reads clearer on the dark sheet than the interface's grey */
 body.dark-mode .mushaf { color: #ffffff; }
 body.dark-mode .m-end {

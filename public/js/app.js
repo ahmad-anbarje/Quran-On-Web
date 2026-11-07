@@ -1324,7 +1324,7 @@ $(function () {
     localStorage.setItem('quran-tajweed', on ? 'on' : 'off');
     $.getJSON('/data/mushaf-' + want + '.json').done(function (data) {
       VERSION = want;
-      OFFLINE_MB = { v4: 43, tj: 51 }[VERSION];
+      OFFLINE_MB = { v4: 47, tj: 51 }[VERSION];
       if (VERSION === 'tj') darkPalette();
       mushaf = data;
       ayahs = Mushaf.ayahIndex(mushaf.pages, mushaf.marks || {}, VERSION);

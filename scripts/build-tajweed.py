@@ -90,8 +90,8 @@ for p in range(1, 605):
 
 # The plain edition's ayah numbers, drawn as this edition's medallions (outline, ornament, disc, numerals in
 # layers of their own) so the reader can paint them in the site's blues: each page's, in order, into
-# mushaf-v4.json, and a font a page holding only them, public/fonts/tjm/p<page>.woff2
-OUT_ENDS = os.path.join(ROOT, 'public', 'fonts', 'tjm')
+# mushaf-v4.json, and a font a page holding only them, public/fonts/tjb/p<page>.woff2
+OUT_ENDS = os.path.join(ROOT, 'public', 'fonts', 'tjb')
 os.makedirs(OUT_ENDS, exist_ok=True)
 ends = {}
 for p in range(1, 605):
@@ -116,17 +116,13 @@ for p in range(1, 605):
                 first.setdefault(k, x.colorID)
                 x.colorID = k
         assert sorted(first) == [0, 1, 2, 3], p
-        # The site's blues, built in: palette 0 for light pages, 1 (flagged dark) for dark (outline, ornament, disc, numerals)
+        # The site's blues, built in (outline, ornament, disc, numerals); a dark page turns them in CSS (outline, ornament, disc, numerals)
         from fontTools.ttLib.tables.C_P_A_L_ import Color
         rgb = lambda h: Color(red=int(h[1:3], 16), green=int(h[3:5], 16), blue=int(h[5:7], 16), alpha=255)
-        cpal.palettes = [[rgb(h) for h in ('#0d4a73', '#0d4a73', '#1a6fa3', '#ffffff')],
-                         [rgb(h) for h in ('#3f9bd1', '#3f9bd1', '#1d5d8a', '#ffffff')]]
         cpal.numPaletteEntries = 4
-        cpal.version = 1
-        cpal.paletteTypes = [1, 2]
-        cpal.paletteLabels = [0xFFFF, 0xFFFF]
-        cpal.paletteEntryLabels = [0xFFFF] * 4
+        cpal.version = 0
         f.flavor = 'woff2'
+        cpal.palettes = [[rgb(h) for h in ('#0d4a73', '#5aaedd', '#dbeefa', '#000000')]]
         f.save(out)
 v4['ends'] = ends
 json.dump(v4, open(os.path.join(ROOT, 'public', 'data', 'mushaf-v4.json'), 'w', encoding='utf-8', newline='\n'),

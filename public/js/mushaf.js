@@ -232,7 +232,8 @@
             span.dataset.plain = word;
             span.textContent = medal[m++];
             span.classList.add('m-medal');
-            span.style.fontFamily = '"' + familyFor('tjm', ends.page) + '"';
+            span.style.fontFamily = '"' + familyFor('tjb', ends.page) + '"';
+            span.dataset.mp = ends.page;
           }
 
           span.dataset.a = key;
@@ -409,13 +410,14 @@
    * its shrink and overflowed, then got it back, flickering on every frame.
    * Dividing by the factor just applied feeds the fit its own rounding.
    */
-  function naturalWidth(line, avail) {
+  function naturalWidth(line, avail, k) {
     var kept = +line.dataset.nat;
     if (kept > 0 && avail > 0) return kept * avail;
 
     var words = line.children;
     var w = 0;
     for (var i = 0; i < words.length; i++) w += words[i].getBoundingClientRect().width;
+    w /= k || 1;
 
     /* An inline font-size is only ever a percentage written by the fit below,
        so undoing it gives the width this line would have had unshrunk. Lines
@@ -458,7 +460,10 @@
     /* A line's height is set in ems, so shrinking one would shorten it and
        pull the page off its fixed line grid. The height every line must keep
        is read once, before anything is shrunk. */
-    var lineHeight = lines[0].getBoundingClientRect().height;
+    // Drawn while magnified, the screen's sizes carry the magnifier's scale; the layout's do not
+    var k = box.offsetWidth ? box.getBoundingClientRect().width / box.offsetWidth : 1;
+    if (!(k > 0)) k = 1;
+    var lineHeight = lines[0].getBoundingClientRect().height / k;
 
     /* The type size is only needed to size a centred line's gaps, and barely
        any line is centred — 22 of 8807 in V2. Resolving a computed style costs
@@ -468,7 +473,7 @@
 
     var widths = [];
     for (i = 0; i < lines.length; i++) {
-      var w = naturalWidth(lines[i], avail);
+      var w = naturalWidth(lines[i], avail, k);
       /* A page whose font has not painted yet measures as nothing — leave it
          for the caller to retry rather than locking in a bogus layout. */
       if (w <= 0) return false;

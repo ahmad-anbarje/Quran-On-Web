@@ -138,7 +138,7 @@ async function cachePages(asked, port, version) {
   for (const page of pages) {
     // The plain edition's ayah medallions come from a face of their own, kept beside the page's
     const urls = ['/fonts/' + version + '/p' + page + '.woff2'];
-    if (version === 'v4') urls.push('/fonts/tjm/p' + page + '.woff2');
+    if (version === 'v4') urls.push('/fonts/tjb/p' + page + '.woff2');
     try {
       let fresh = false;
       for (const url of urls) {

@@ -36,7 +36,7 @@
       if (section.isConnected && (box.dataset.pending === version || box.dataset.version === version)) Mushaf.setWords(box, list);
     }, function () {});
 
-    var medals = !ends ? Promise.resolve() : Mushaf.loadPageFont('tjm', p).catch(function () {
+    var medals = !ends ? Promise.resolve() : Mushaf.loadPageFont('tjb', p).catch(function () {
       [].forEach.call(box.querySelectorAll('.m-medal'), function (s) {
         s.textContent = s.dataset.plain;
         s.style.fontFamily = '';
