@@ -8,14 +8,14 @@
 
   var app = null;
 
-  /** version, data(), ayahs(), mode(), page(), fitted(), settled(), setPage() */
+  /** version(), data(), ayahs(), mode(), page(), fitted(), settled(), setPage() */
   function init(host) { app = host; }
 
   function hydrate(section) {
     var box = section.querySelector('.mushaf');
     if (!box) return;
 
-    var version = app.version;
+    var version = app.version();
     /* A box drawn with a since-evicted face shows its glyph codes as text, so
        it counts as built only while its own face is still registered. */
     if (box.dataset.version === version && !Mushaf.hasFont(version, section.getAttribute('data-page'))) {
@@ -93,7 +93,7 @@
 
   function warmPages(list) {
     list.forEach(function (n) {
-      if (n >= 1 && n <= 604) Mushaf.loadPageFont(app.version, n, false, true);
+      if (n >= 1 && n <= 604) Mushaf.loadPageFont(app.version(), n, false, true);
     });
   }
 
@@ -162,7 +162,7 @@
     }
 
     // The fonts before the fitting, for the turn that finds its leaves cold; on screen, so first in line
-    [start, start + 1].forEach(function (n) { if (n >= 1 && n <= 604) Mushaf.loadPageFont(app.version, n); });
+    [start, start + 1].forEach(function (n) { if (n >= 1 && n <= 604) Mushaf.loadPageFont(app.version(), n); });
 
     onShow.forEach(function (n) {
       var el = sectionFor(n);

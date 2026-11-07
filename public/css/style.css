@@ -275,6 +275,11 @@ body[data-lang="en"] .lang-ar { display: none !important; }
               transform var(--t), box-shadow var(--t);
 }
 #sidebar.hidden ~ #sidebar-handle .ic { transform: rotate(180deg); }
+/* A finger needs more than a pointer: on a touch screen the tab is a target, not a hint */
+@media (pointer: coarse) {
+  #sidebar-handle { width: 40px; height: 108px; }
+  #sidebar-handle .ic { width: 24px; height: 24px; }
+}
 
 /* --- full screen ---
    A corner button where the lane beside the page is wide enough to hold it
@@ -348,6 +353,18 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
   border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
 }
 #btn-legend .ic, #btn-theme-corner .ic { width: 22px; height: 22px; }
+/* The phone's top bar carries them instead, at its far end; nothing floats over the words */
+#page-bar .bar-tools { margin-inline-start: auto; display: flex; gap: 2px; }
+#page-bar .bar-tools .ghost-btn { color: var(--primary); }
+#btn-bar-tajweed[aria-pressed="true"] { background: color-mix(in srgb, var(--primary) 18%, transparent); border-radius: 50%; }
+#btn-bar-theme .ic-moon, body.dark-mode #btn-bar-theme .ic-sun { display: none; }
+body.dark-mode #btn-bar-theme .ic-moon { display: block; }
+@media (max-width: 480px) {
+  #btn-legend, #btn-theme-corner { display: none; }
+}
+/* "On-screen buttons" off takes these with the rest; Settings still has both */
+body.turners-off #btn-legend, body.turners-off #btn-theme-corner { display: none; }
+
 /* The theme the page is in, chosen or the system's: the sun on a light page, the moon on a dark one */
 #btn-theme-corner .ic-moon, body.dark-mode #btn-theme-corner .ic-sun { display: none; }
 body.dark-mode #btn-theme-corner .ic-moon { display: block; }
@@ -355,10 +372,10 @@ body.dark-mode #btn-theme-corner .ic-moon { display: block; }
 /* The word clicked in the Tajweed edition, in the player: large, in its colours, its rules below */
 .r-tajweed { padding: 6px 14px 10px; border-bottom: 1px solid var(--line); }
 .r-tajweed[hidden] { display: none; }
-.r-tj-word { font-size: 64px; line-height: 1.5; text-align: center; direction: ltr; white-space: nowrap; }
+.r-tj-word { font-size: 84px; line-height: 1.6; padding: 14px 0 4px; text-align: center; direction: ltr; white-space: nowrap; overflow: hidden; }
 .r-tajweed ul { list-style: none; margin: 0; padding: 0; }
 .r-tajweed li { display: flex; align-items: center; gap: 10px; padding: 3px 0; font-size: 0.86rem; }
-.r-tj-plain { margin: 2px 0 0; font-size: 0.84rem; color: var(--text-mute); text-align: center; }
+.r-tj-plain { margin: 2px 0 0; font-size: 0.84rem; color: var(--text-mute); text-align: center; unicode-bidi: plaintext; }
 #tajweed-legend {
   position: fixed;
   top: calc(var(--corner-top) + 2 * var(--corner-step));
@@ -382,8 +399,8 @@ body.tajweed-on #btn-legend { color: var(--primary); }
 #tajweed-legend li { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 0.86rem; }
 .tj-sw { flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--c); }
 body.dark-mode .tj-sw { background: var(--cd); }
-/* A phone's page runs edge to edge, its head band at the top: the buttons sit at the foot instead, the card above them */
-@media (max-width: 767px) {
+/* A small tablet's page runs near the edge: the buttons sit at its foot instead, the card above them */
+@media (min-width: 481px) and (max-width: 767px) {
   #btn-legend { top: auto; bottom: calc(14px + var(--corner-step)); }
   #btn-theme-corner { top: auto; bottom: 14px; }
   #tajweed-legend { top: auto; bottom: calc(14px + 2 * var(--corner-step)); }

@@ -921,8 +921,12 @@
     }).join('');
 
     el.voices.innerHTML =
-      '<span class="r-legend"><span class="lang-ar">القارئ</span>' +
+      // Its own head, with the way back: over the menu's buttons, the list covers the one that opened it
+      '<div class="r-voices-head"><span class="r-legend"><span class="lang-ar">القارئ</span>' +
                              '<span class="lang-en">Reciter</span></span>' +
+        '<button class="r-voices-back" data-act="voice" aria-label="إغلاق | Close">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">' +
+            '<path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button></div>' +
       '<div class="r-voice-list">' + rows + '</div>';
   }
 
@@ -1197,6 +1201,10 @@
     var list = document.createElement('ul');
     box.appendChild(word);
     box.appendChild(list);
+    // A long word comes down to the card's width rather than past it
+    requestAnimationFrame(function () {
+      if (word.scrollWidth > word.clientWidth) word.style.fontSize = Math.floor(84 * word.clientWidth / word.scrollWidth) + 'px';
+    });
     if (!tajweedRules[page]) {
       tajweedRules[page] = fetch('/data/tajweed/p' + page + '.json')
         .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })

@@ -796,6 +796,53 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
 #r-menu.r-playing .r-when-playing { display: inline; }
 #r-menu.r-playing .r-when-paused { display: none; }
 
+/* --- the menu as tiles ---
+   Three short rows rather than seven long ones: playing two abreast, how it is heard three abreast,
+   what it means two abreast; each an icon over its name, the setting's value under it. */
+#r-menu .r-acts { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 2px; }
+#r-menu .r-acts > * { grid-column: span 3; }
+#r-menu .r-acts .r-voice, #r-menu .r-acts .r-speed, #r-menu .r-acts .r-repeat { grid-column: span 2; }
+#r-menu .r-acts .r-voice[hidden] ~ .r-speed, #r-menu .r-acts .r-voice[hidden] ~ .r-repeat { grid-column: span 3; }
+#r-menu .r-acts .r-sep { grid-column: 1 / -1; margin: 2px 6px; }
+#r-menu .r-acts button {
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 62px;
+  padding: 8px 4px;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-align: center;
+  background: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+#r-menu .r-acts .ic { width: 20px; height: 20px; }
+#r-menu .r-acts .r-voice-value, #r-menu .r-acts .r-speed-value, #r-menu .r-acts .r-repeat-value {
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.7rem;
+}
+
+/* The reciters over the buttons, not below them: the menu keeps its height whoever is chosen */
+#r-menu .r-voices-head { display: flex; align-items: center; justify-content: space-between; }
+#r-menu .r-voices-back { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--text-mute); cursor: pointer; }
+#r-menu .r-voices-back:hover { background: var(--primary-soft); color: var(--primary); }
+#r-menu .r-voices-back svg { width: 16px; height: 16px; }
+@media (min-width: 481px) {
+  #r-menu .r-voices:not([hidden]) {
+    position: absolute;
+    inset: 40px 0 0;
+    z-index: 3;
+    margin: 0;
+    padding: 8px 10px;
+    overflow-y: auto;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+  }
+}
+
 /* Same breakpoint as the phone rules in style.css; here so they come after the panel's own rules */
 @media (max-width: 480px) {
   /* Docked along the foot as one row, like the Android app's player; where it was dragged or opened no longer applies */

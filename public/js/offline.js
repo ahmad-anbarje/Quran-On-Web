@@ -30,7 +30,7 @@
   }
 
   /** Keep these pages' fonts, quietly. */
-  function keepPages(pages) { swSend({ type: 'cache-pages', pages: pages, version: app.version }); }
+  function keepPages(pages) { swSend({ type: 'cache-pages', pages: pages, version: app.version() }); }
 
   /* The worker is in charge now, so fill it — the whole mushaf, not just the
      pages opened. The surah on screen goes first, so reading stops waiting. */
@@ -41,7 +41,7 @@
 
     /* One question instead of six hundred: walking every page again finds
        nothing to do, but still counts 0-100 and reads as a fresh download. */
-    swSend({ type: 'usage', version: app.version }, function (u) {
+    swSend({ type: 'usage', version: app.version() }, function (u) {
       if (u.type !== 'usage') return;
       if (u.fonts >= PAGES) { complete = true; app.showValues(); return; }
       fillMushaf();
@@ -53,7 +53,7 @@
     var pages = [];
     for (var p = 1; p <= PAGES; p++) pages.push(p);
 
-    swSend({ type: 'cache-pages', pages: pages, version: app.version }, function (m) {
+    swSend({ type: 'cache-pages', pages: pages, version: app.version() }, function (m) {
       if (!offline) return;
       if (m.type === 'progress') {
         var pct = Math.round(m.done / m.total * 100);
@@ -125,6 +125,8 @@
     native: native,
     on    : function () { return offline; },
     complete: function () { return offline && complete; },
+    // The edition read has changed: what was saved is the other one's, so the new one is checked and saved
+    refill: function () { complete = false; if (offline) whenControlled(); },
   };
 
 }(window));

@@ -24,13 +24,15 @@ $(function () {
   // What the whole edition weighs, said before it is saved for reading offline
   var OFFLINE_MB = { v4: 43, tj: 51 }[VERSION];
   /* Tajweed's fonts are coloured, a palette for light pages and one for dark:
-     the dark one is named for every page's face at once */
-  if (VERSION === 'tj') {
+     the dark one is named for every page's face at once, the first time the edition is drawn */
+  function darkPalette() {
+    if (document.getElementById('tj-palette')) return;
     var faces = [];
     for (var f = 1; f <= 604; f++) faces.push('"QCF-tj-' + f + '"');
-    $('<style>').text('@font-palette-values --tj-dark { font-family: ' + faces.join(', ') + '; base-palette: 1; }' +
+    $('<style id="tj-palette">').text('@font-palette-values --tj-dark { font-family: ' + faces.join(', ') + '; base-palette: 1; }' +
       'body.dark-mode .mushaf, body.dark-mode .r-tj-word { font-palette: --tj-dark; }').appendTo('head');
   }
+  if (VERSION === 'tj') darkPalette();
   var PAGES = 604;
   var weight = localStorage.getItem('quran-weight') || '400';
   var bright = parseInt(localStorage.getItem('quran-bright')) || 100;
@@ -756,8 +758,9 @@ $(function () {
       /* On a phone the pages are a row moved by a transform, so both of these
          are the pager's business; elsewhere they are the scroller's. */
       if (!(startAt ? Pager.go(startAt) : Pager.go(surahPages[0]))) {
-        if (start) start.scrollIntoView({ block: 'start' });
-        else area.scrollTo({ top: 0, behavior: 'auto' });
+        // Arrived at, not travelled to: the area scrolls smoothly, which here would run through every page between
+        if (start) start.scrollIntoView({ block: 'start', behavior: 'instant' });
+        else area.scrollTo({ top: 0, behavior: 'instant' });
       }
       /* The page being opened is hydrated outright rather than waiting on the
          observer, so the reader never lands on a blank sheet. */
@@ -1292,15 +1295,35 @@ $(function () {
   });
 
   /* The palette by the page is the switch: a click turns Tajweed on, another back to the plain
-     mushaf. What a colour means is shown on the word clicked (recite.js, tajweedCard) */
-  function setTajweed(on) {
-    localStorage.setItem('quran-tajweed', on ? 'on' : 'off');
-    location.reload();
+     mushaf, in place, as the app does — the other edition's data, and the pages being read
+     drawn again in it where the reader is. What a colour means is shown on the word clicked
+     (recite.js, tajweedCard). */
+  var switching = false;
+  function showEdition() {
+    $('body').toggleClass('tajweed-on', VERSION === 'tj');
+    $('#btn-legend, #btn-bar-tajweed').attr('aria-pressed', String(VERSION === 'tj'));
   }
-  $('body').toggleClass('tajweed-on', VERSION === 'tj');
-  $('#btn-legend').attr('aria-pressed', String(VERSION === 'tj'))
-    .on('click', function () { setTajweed(VERSION !== 'tj'); });
-  $('#btn-theme-corner').on('click', function () { $('#btn-theme').trigger('click'); });
+  function setTajweed(on) {
+    var want = on ? 'tj' : 'v4';
+    if (want === VERSION || switching) return;
+    switching = true;
+    localStorage.setItem('quran-tajweed', on ? 'on' : 'off');
+    $.getJSON('/data/mushaf-' + want + '.json').done(function (data) {
+      VERSION = want;
+      OFFLINE_MB = { v4: 43, tj: 51 }[VERSION];
+      if (VERSION === 'tj') darkPalette();
+      mushaf = data;
+      ayahs = Mushaf.ayahIndex(mushaf.pages, mushaf.marks || {}, VERSION);
+      Mushaf.loadPageFont(VERSION, mushaf.basmalah.page, true);
+      showEdition();
+      Offline.refill();
+      showValues();
+      if (surah) open(surah, pageToReopen());
+    }).always(function () { switching = false; });
+  }
+  showEdition();
+  $('#btn-legend, #btn-bar-tajweed').on('click', function () { setTajweed(VERSION !== 'tj'); });
+  $('#btn-theme-corner, #btn-bar-theme').on('click', function () { $('#btn-theme').trigger('click'); });
 
   /* The other edition is other data and other fonts: the page is read again in it, where the reader was */
   $('#btn-tajweed').on('click', function () { setTajweed(VERSION !== 'tj'); });
@@ -2085,7 +2108,7 @@ $(function () {
   });
 
   Offline.init({
-    version   : VERSION,
+    version   : function () { return VERSION; },
     lang      : function () { return lang; },
     ar        : ar,
     surah     : function () { return surah; },
@@ -2095,7 +2118,7 @@ $(function () {
   });
 
   Leaves.init({
-    version : VERSION,
+    version : function () { return VERSION; },
     data    : function () { return mushaf; },
     ayahs   : function () { return ayahs; },
     mode    : function () { return mode; },

@@ -54,8 +54,8 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v4/ -->
   <link rel="stylesheet" href="/css/fonts.min.css?v=dc96e96b71" />
-  <link rel="stylesheet" href="/css/style.min.css?v=bf920ac5d1" />
-  <link rel="stylesheet" href="/css/recite.min.css?v=afd4d8c4ae" />
+  <link rel="stylesheet" href="/css/style.min.css?v=3bc8598353" />
+  <link rel="stylesheet" href="/css/recite.min.css?v=8b3f3b9582" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
   <link rel="preload" href="/data/surahs.json" as="fetch" crossorigin />
@@ -405,6 +405,16 @@
         <svg class="ic" viewBox="0 0 24 24"><use href="#i-back"/></svg>
       </button>
       <span id="page-bar-name"></span>
+      <!-- At the bar's other end, as the app's top bar has them: Tajweed, then light and dark -->
+      <span class="bar-tools">
+        <button id="btn-bar-tajweed" class="ghost-btn" aria-label="ألوان التجويد | Tajweed colours" aria-pressed="false">
+          <svg class="ic" viewBox="0 0 24 24"><use href="#i-tajweed"/></svg>
+        </button>
+        <button id="btn-bar-theme" class="ghost-btn" aria-label="المظهر | Theme">
+          <svg class="ic ic-moon" viewBox="0 0 24 24"><use href="#i-moon"/></svg>
+          <svg class="ic ic-sun" viewBox="0 0 24 24"><use href="#i-sun"/></svg>
+        </button>
+      </span>
     </div>
 
     <main id="content-area">
@@ -699,15 +709,15 @@
   <script defer src="/js/dom.min.js?v=1c501dfb04"></script>
   <script defer src="/js/i18n.min.js?v=b57155789c"></script>
   <script defer src="/js/mushaf.min.js?v=a77bee90cc"></script>
-  <script defer src="/js/recite.min.js?v=999816d566"></script>
+  <script defer src="/js/recite.min.js?v=308633bfb3"></script>
   <!-- The meaning window, fetched by recite.js the first time it is opened -->
   <template id="meaning-script" data-src="/js/tafsir.min.js?v=121969884a"></template>
   <script defer src="/js/ayahs.min.js?v=3b7e12dcaa"></script>
   <script defer src="/js/listen.min.js?v=8d3a062e5a"></script>
   <script defer src="/js/pager.min.js?v=73fed4459e"></script>
-  <script defer src="/js/offline.min.js?v=f633109224"></script>
-  <script defer src="/js/leaves.min.js?v=964a1ade72"></script>
-  <script defer src="/js/app.min.js?v=269e452a23"></script>
+  <script defer src="/js/offline.min.js?v=946ef23f48"></script>
+  <script defer src="/js/leaves.min.js?v=f31407bff9"></script>
+  <script defer src="/js/app.min.js?v=3137342d27"></script>
   <script defer src="/js/appcard.min.js?v=942fa5f409"></script>
   <article class="sr-only" lang="ar" dir="rtl">
     <h1>الجزء الحادي والعشرون من القرآن · Juz 21</h1>
