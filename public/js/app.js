@@ -491,7 +491,7 @@ $(function () {
     scale = Math.min(2.5, Math.max(0.6, Math.round(s * 100) / 100));
     localStorage.setItem('quran-scale', scale);
     document.documentElement.style.setProperty('--quran-scale', scale);
-    $('#font-level').text(Math.round(scale * 100) + '%');
+    $('#font-level, #size-corner .sz-level').text(Math.round(scale * 100) + '%');
     refitPages();
     if (anchor) {
       var keep = function () {
@@ -508,27 +508,35 @@ $(function () {
   /* The way back to where the reading stopped: opening on the index made
      carrying on the one hard thing, so it is offered at the head of it. */
   /* ---------- reading history ----------
-     Each day's surahs and the pages read in them, newest first, kept in this browser for 30 days. */
+     Every page opened, with when, newest first: two only when they were open together as a spread.
+     Kept in this browser for 30 days. */
   function dayKey(back) {
     var d = new Date();
     d.setDate(d.getDate() - (back || 0));
     return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   }
   function readHistory() {
-    try { return JSON.parse(localStorage.getItem('quran-history')) || {}; } catch (e) { return {}; }
+    try { return JSON.parse(localStorage.getItem('quran-reads')) || {}; } catch (e) { return {}; }
   }
   function logPages(pages) {
     if (!surah) return;
     var h = readHistory(), key = dayKey(), day = h[key] = h[key] || [];
-    var at = -1;
-    day.forEach(function (e, i) { if (e.s === surah.id) at = i; });
-    var entry = at >= 0 ? day.splice(at, 1)[0] : { s: surah.id, p: [] };
-    pages.forEach(function (p) { if (p && entry.p.indexOf(p) < 0) entry.p.push(p); });
-    entry.last = pages[0];
-    day.unshift(entry);
+    pages = pages.filter(function (p) { return p >= 1 && p <= PAGES; });
+    // The same view again (a refit, a reload) only moves its time
+    if (day[0] && day[0].s === surah.id && day[0].p.join() === pages.join()) day.shift();
+    day.unshift({ s: surah.id, p: pages, t: Date.now() });
+    if (day.length > 300) day.length = 300;
     Object.keys(h).sort().reverse().slice(30).forEach(function (k) { delete h[k]; });
-    try { localStorage.setItem('quran-history', JSON.stringify(h)); } catch (e) { /* full or blocked: the reading goes on */ }
+    try { localStorage.setItem('quran-reads', JSON.stringify(h)); } catch (e) { /* full or blocked: the reading goes on */ }
     if (!$('.drawer-pane[data-pane="history"]').prop('hidden')) showHistory();
+  }
+  /* "4 minutes ago" today, the clock time on earlier days */
+  function when(t, today) {
+    if (!today) return new Date(t).toLocaleTimeString(I18n.lang(), { hour: 'numeric', minute: '2-digit' });
+    var mins = Math.round((Date.now() - t) / 60000);
+    if (!window.Intl || !Intl.RelativeTimeFormat) return new Date(t).toLocaleTimeString();
+    var rel = new Intl.RelativeTimeFormat(I18n.lang(), { numeric: 'auto' });
+    return mins < 1 ? rel.format(0, 'second') : mins < 60 ? rel.format(-mins, 'minute') : rel.format(-Math.floor(mins / 60), 'hour');
   }
   function showHistory() {
     var list = document.getElementById('history-list');
@@ -543,16 +551,18 @@ $(function () {
       return;
     }
     days.forEach(function (k) {
-      var total = h[k].reduce(function (n, e) { return n + e.p.length; }, 0);
+      var seen = {};
+      h[k].forEach(function (e) { e.p.forEach(function (p) { seen[p] = 1; }); });
       var head = document.createElement('div');
       head.className = 'hist-day';
-      var name = k === dayKey() ? T('اليوم', 'Today') : k === dayKey(1) ? T('أمس', 'Yesterday')
+      var today = k === dayKey();
+      var name = today ? T('اليوم', 'Today') : k === dayKey(1) ? T('أمس', 'Yesterday')
         : new Date(k + 'T12:00:00').toLocaleDateString(I18n.lang(), { weekday: 'long', day: 'numeric', month: 'long' });
       var n = document.createElement('span');
       n.textContent = name;
       var c = document.createElement('span');
       c.className = 'hist-count';
-      c.textContent = T('{n} صفحة', '{n} pages', { n: num(total) });
+      c.textContent = T('{n} صفحة', '{n} pages', { n: num(Object.keys(seen).length) });
       head.appendChild(n);
       head.appendChild(c);
       list.appendChild(head);
@@ -562,15 +572,17 @@ $(function () {
         var row = document.createElement('button');
         row.className = 'hist-row';
         row.dataset.s = e.s;
-        row.dataset.p = e.last;
+        row.dataset.p = e.p[0];
         var t = document.createElement('span');
         t.className = 'hist-name';
-        t.textContent = num(s.id) + '. ' + (lang === 'ar' ? s.full : s.en);
-        var where = document.createElement('span');
-        where.className = 'hist-where';
-        where.textContent = T('صفحة {n}', 'Page {n}', { n: num(e.last) }) + ' · ' + T('{n} صفحة', '{n} pages', { n: num(e.p.length) });
+        var pages = e.p.map(num).join(lang === 'ar' ? '، ' : ', ');
+        t.textContent = (e.p.length > 1 ? T('صفحتا {n}', 'Pages {n}', { n: pages }) : T('صفحة {n}', 'Page {n}', { n: pages }))
+          + ' · ' + (lang === 'ar' ? s.full : s.en);
+        var at = document.createElement('span');
+        at.className = 'hist-where';
+        at.textContent = when(e.t, today);
         row.appendChild(t);
-        row.appendChild(where);
+        row.appendChild(at);
         list.appendChild(row);
       });
     });
@@ -1480,8 +1492,8 @@ $(function () {
   systemDark.addEventListener('change', function () {
     if (themeChoice === null) applyTheme(null);
   });
-  $('#btn-font-inc').on('click', function () { applyScale(scale + 0.1); });
-  $('#btn-font-dec').on('click', function () { applyScale(scale - 0.1); });
+  $('#btn-font-inc, #size-corner .sz-inc').on('click', function () { applyScale(scale + 0.1); });
+  $('#btn-font-dec, #size-corner .sz-dec').on('click', function () { applyScale(scale - 0.1); });
 
   /* The languages, a menu of their own, from Settings, the corner or the phone's bar: each by its
      own name, and under it the name the site's language gives it */

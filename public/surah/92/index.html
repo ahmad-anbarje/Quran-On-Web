@@ -54,7 +54,7 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v4/ -->
   <link rel="stylesheet" href="/css/fonts.min.css?v=dc96e96b71" />
-  <link rel="stylesheet" href="/css/style.min.css?v=faabc1e159" />
+  <link rel="stylesheet" href="/css/style.min.css?v=ec368a4cd4" />
   <link rel="stylesheet" href="/css/recite.min.css?v=8cabe8a444" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
@@ -396,6 +396,12 @@
       <svg class="ic ic-mode-pages" viewBox="0 0 24 24"><use href="#i-mode-pages"/></svg>
       <svg class="ic ic-mode-spread" viewBox="0 0 24 24"><use href="#i-mode-spread"/></svg><span class="cb-label cb-pages"><span class="lang-ar">صفحة واحدة</span><span class="lang-en">One page</span></span><span class="cb-label cb-spread"><span class="lang-ar">صفحتان</span><span class="lang-en">Two pages</span></span>
     </button>
+    <!-- One page at a time has its own zoom, the text size, under the mode -->
+    <div id="size-corner" role="group" aria-label="حجم الخط | Text size">
+      <button class="sz-inc" aria-label="أكبر | Larger"><svg class="ic" viewBox="0 0 24 24"><use href="#i-plus"/></svg></button>
+      <span class="sz-level">100%</span>
+      <button class="sz-dec" aria-label="أصغر | Smaller"><svg class="ic" viewBox="0 0 24 24"><use href="#i-minus"/></svg></button>
+    </div>
     <!-- The languages, a menu of their own: each in its own script, its name in the site's language under it -->
     <div id="lang-menu" role="dialog" aria-labelledby="lang-menu-title" hidden>
       <div class="lm-head">
@@ -763,7 +769,7 @@
   <script defer src="/js/pager.min.js?v=73fed4459e"></script>
   <script defer src="/js/offline.min.js?v=946ef23f48"></script>
   <script defer src="/js/leaves.min.js?v=ed29c02f2b"></script>
-  <script defer src="/js/app.min.js?v=1e4f25079b"></script>
+  <script defer src="/js/app.min.js?v=512f8d4e53"></script>
   <script defer src="/js/appcard.min.js?v=0795da197f"></script>
   <article class="sr-only" lang="ar" dir="rtl" aria-label="نص سورة الليل">
     <h1>سورة الليل · Surah Al-Layl</h1>

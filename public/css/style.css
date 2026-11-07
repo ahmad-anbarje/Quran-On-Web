@@ -369,6 +369,27 @@ body[data-mode="pages"] #btn-mode-corner .cb-pages, body[data-mode="spread"] #bt
 /* The weight in force, of the three Settings steps through */
 #btn-weight-corner .cb-label { display: none; }
 #btn-weight-corner[data-w="400"] .cb-w400, #btn-weight-corner[data-w="500"] .cb-w500, #btn-weight-corner[data-w="700"] .cb-w700 { display: block; }
+/* The text size, one page at a time's zoom, under the mode tile */
+#size-corner {
+  position: fixed;
+  top: calc(var(--corner-top) + 5 * var(--corner-step));
+  left: 10px;
+  z-index: 125;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  width: 58px;
+  padding: 2px 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text-mute);
+}
+body[data-mode="pages"] #size-corner { display: flex; }
+#size-corner button { display: flex; align-items: center; justify-content: center; width: 100%; height: 32px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; border-radius: 12px; }
+#size-corner button:hover { color: var(--primary); background: color-mix(in srgb, var(--primary) 10%, transparent); }
+#size-corner .ic { width: 18px; height: 18px; }
+#size-corner .sz-level { font-size: 0.66rem; font-weight: 600; line-height: 1; padding: 2px 0; }
 /* Where two pages cannot open, there is no mode to switch */
 body.no-spread #btn-mode-corner { display: none; }
 #btn-legend:hover, #btn-legend[aria-pressed="true"], #btn-theme-corner:hover,
@@ -382,11 +403,12 @@ body.no-spread #btn-mode-corner { display: none; }
 #page-bar .bar-tools { margin-inline-start: auto; display: flex; gap: 4px; }
 #page-bar .bar-tools .ghost-btn { flex-direction: column; gap: 1px; width: auto; height: auto; min-width: 48px; padding: 2px 4px; color: var(--text-mute); }
 @media (max-width: 480px) {
-  #btn-legend, #btn-theme-corner, #btn-lang-corner, #btn-weight-corner, #btn-mode-corner { display: none; }
+  #btn-legend, #btn-theme-corner, #btn-lang-corner, #btn-weight-corner, #btn-mode-corner, body[data-mode] #size-corner { display: none; }
 }
 /* "On-screen buttons" off takes these with the rest; Settings then has them again */
 body.turners-off #btn-legend, body.turners-off #btn-theme-corner,
-body.turners-off #btn-lang-corner, body.turners-off #btn-weight-corner, body.turners-off #btn-mode-corner { display: none; }
+body.turners-off #btn-lang-corner, body.turners-off #btn-weight-corner, body.turners-off #btn-mode-corner,
+body.turners-off[data-mode] #size-corner { display: none; }
 /* Where the corner has them, Settings does not say them twice */
 @media (min-width: 481px) {
   body:not(.turners-off) #btn-tajweed, body:not(.turners-off) #btn-theme,
@@ -408,8 +430,8 @@ body.dark-mode .ic-moon { display: block; }
 .r-tj-plain { margin: 2px 0 0; font-size: 0.84rem; color: var(--text-mute); text-align: center; unicode-bidi: plaintext; }
 #tajweed-legend {
   position: fixed;
-  top: calc(var(--corner-top) + 5 * var(--corner-step));
-  left: 10px;
+  top: calc(var(--corner-top) + var(--corner-step));
+  left: 76px;
   /* Above the dimming the index lays over the page, so it can always be closed */
   z-index: 155;
   width: min(300px, calc(100vw - 20px));
@@ -434,6 +456,7 @@ body.dark-mode .tj-sw { background: var(--cd); }
   #btn-lang-corner { top: auto; bottom: calc(14px + 2 * var(--corner-step)); }
   #btn-weight-corner { top: auto; bottom: calc(14px + 3 * var(--corner-step)); }
   #btn-mode-corner { top: auto; bottom: calc(14px + 4 * var(--corner-step)); }
+  #size-corner { top: auto; bottom: calc(14px + 5 * var(--corner-step)); }
   #btn-legend { top: auto; bottom: calc(14px + var(--corner-step)); }
   #btn-theme-corner { top: auto; bottom: 14px; }
   #tajweed-legend { top: auto; bottom: calc(14px + 5 * var(--corner-step)); }
