@@ -247,6 +247,13 @@
 
       <div class="drawer-pane" data-pane="settings" hidden>
 
+        <!-- First, so the rows it brings back when the buttons go never move it -->
+        <button id="btn-turners" class="set-row">
+          <svg class="ic set-ico" viewBox="0 0 24 24"><use href="#i-turners"/></svg>
+          <span class="set-label"><span class="lang-ar">أزرار الشاشة</span><span class="lang-en">On-screen buttons</span></span>
+          <span class="set-value" id="v-turners"></span>
+        </button>
+
         <button id="btn-mode" class="set-row">
           <svg class="ic set-ico ic-mode-pages" viewBox="0 0 24 24"><use href="#i-mode-pages"/></svg>
           <svg class="ic set-ico ic-mode-spread" viewBox="0 0 24 24"><use href="#i-mode-spread"/></svg>
@@ -303,12 +310,6 @@
         </button>
 
         <div class="set-sep"></div>
-
-        <button id="btn-turners" class="set-row">
-          <svg class="ic set-ico" viewBox="0 0 24 24"><use href="#i-turners"/></svg>
-          <span class="set-label"><span class="lang-ar">أزرار الشاشة</span><span class="lang-en">On-screen buttons</span></span>
-          <span class="set-value" id="v-turners"></span>
-        </button>
 
         <button id="btn-offline" class="set-row">
           <svg class="ic set-ico" viewBox="0 0 24 24"><use href="#i-offline"/></svg>
