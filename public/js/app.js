@@ -478,11 +478,30 @@ $(function () {
   /* 100% is one whole page on screen; above that the page runs taller and
      scrolls, up to whatever the sheet's width allows. */
   function applyScale(s) {
+    // The page at the top of the screen, and how far into it: the same point stays there as the pages grow or shrink
+    var area = document.getElementById('content-area'), anchor = null;
+    if (mode === 'pages' && area) {
+      var top = area.getBoundingClientRect().top;
+      [].some.call(document.querySelectorAll('.page-section'), function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.height > 1 && r.bottom > top + 1) { anchor = { el: el, f: (top - r.top) / r.height }; return true; }
+        return false;
+      });
+    }
     scale = Math.min(2.5, Math.max(0.6, Math.round(s * 100) / 100));
     localStorage.setItem('quran-scale', scale);
     document.documentElement.style.setProperty('--quran-scale', scale);
     $('#font-level').text(Math.round(scale * 100) + '%');
     refitPages();
+    if (anchor) {
+      var keep = function () {
+        var r = anchor.el.getBoundingClientRect();
+        area.scrollTop += r.top + anchor.f * r.height - area.getBoundingClientRect().top;
+      };
+      keep();
+      requestAnimationFrame(keep);
+      setTimeout(keep, 250);
+    }
   }
 
   /* The way back to where the reading stopped: opening on the index made
