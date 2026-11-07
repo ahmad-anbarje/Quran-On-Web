@@ -1301,7 +1301,7 @@ $(function () {
   var switching = false;
   function showEdition() {
     $('body').toggleClass('tajweed-on', VERSION === 'tj');
-    $('#btn-legend, #btn-bar-tajweed').attr('aria-pressed', String(VERSION === 'tj'));
+    $('#btn-legend').attr('aria-pressed', String(VERSION === 'tj'));
   }
   function setTajweed(on) {
     var want = on ? 'tj' : 'v4';
@@ -1322,7 +1322,21 @@ $(function () {
     }).always(function () { switching = false; });
   }
   showEdition();
-  $('#btn-legend, #btn-bar-tajweed').on('click', function () { setTajweed(VERSION !== 'tj'); });
+  $('#btn-legend').on('click', function () { setTajweed(VERSION !== 'tj'); });
+
+  /* Held, the dock's Tajweed shows what the colours mean, as the app's long press does */
+  var legendHold = null;
+  $(document).on('pointerdown', '.r-dock-tajweed', function () {
+    legendHold = setTimeout(function () { legendHold = 'shown'; $('#tajweed-legend').prop('hidden', false); }, 500);
+  }).on('pointerup pointercancel pointerleave', '.r-dock-tajweed', function () {
+    if (legendHold !== 'shown') clearTimeout(legendHold);
+  });
+  // The player asks for the switch; the tap that ends a hold was the hold's, and switches nothing
+  document.addEventListener('tajweed:toggle', function () {
+    if (legendHold === 'shown') { legendHold = null; return; }
+    setTajweed(VERSION !== 'tj');
+  });
+  $('#btn-close-legend').on('click', function () { $('#tajweed-legend').prop('hidden', true); });
   $('#btn-theme-corner, #btn-bar-theme').on('click', function () { $('#btn-theme').trigger('click'); });
 
   /* The other edition is other data and other fonts: the page is read again in it, where the reader was */
@@ -1356,33 +1370,36 @@ $(function () {
   $('#btn-font-inc').on('click', function () { applyScale(scale + 0.05); });
   $('#btn-font-dec').on('click', function () { applyScale(scale - 0.05); });
 
-  /* The languages, each by its own name, opened under the row. */
-  $('#btn-lang').on('click', function () {
+  /* The languages, a menu of their own, from Settings, the corner or the phone's bar: each by its
+     own name, and under it the name the site's language gives it */
+  function showLangMenu(open) {
     var $list = $('#lang-list');
-    if (!$list.length) {
-      $list = $('<div id="lang-list" class="lang-list" role="listbox" hidden></div>').insertAfter(this);
+    if (open) {
+      var names = null;
+      try { names = new Intl.DisplayNames([I18n.lang()], { type: 'language' }); } catch (e) { /* the own names alone */ }
+      $list.empty();
       I18n.LANGS.forEach(function (l) {
-        $('<button type="button" role="option" class="lang-opt"></button>')
-          .attr({ 'data-code': l.code, lang: l.code, dir: l.dir }).text(l.name).appendTo($list);
+        var said = names ? names.of(l.code) : '';
+        var $b = $('<button type="button" role="option" class="lang-opt"></button>')
+          .attr({ 'data-code': l.code, 'aria-selected': String(l.code === I18n.lang()) });
+        $('<span class="lo-own"></span>').attr({ lang: l.code, dir: l.dir }).text(l.name).appendTo($b);
+        if (said && said.toLowerCase() !== l.name.toLowerCase()) $('<span class="lo-said"></span>').text(said).appendTo($b);
+        $b.appendTo($list);
       });
     }
-    $list.find('.lang-opt').each(function () {
-      $(this).attr('aria-selected', String($(this).attr('data-code') === I18n.lang()));
-    });
-    var open = $list.prop('hidden');
-    $list.prop('hidden', !open);
-    $(this).attr('aria-expanded', String(open));
+    $('#lang-menu').prop('hidden', !open);
+    $('#btn-lang, #btn-lang-corner, #btn-bar-lang').attr('aria-expanded', String(open));
     if (open) {
-      // At the pane's foot it opens below the fold: brought up, with the language in use focused
-      $list[0].scrollIntoView({ block: 'nearest' });
       var on = $list[0].querySelector('[aria-selected="true"]');
       if (on) on.focus({ preventScroll: true });
     }
-  });
+  }
+  $('#btn-lang, #btn-lang-corner, #btn-bar-lang').on('click', function () { showLangMenu($('#lang-menu').prop('hidden')); });
+  $('#btn-close-lang').on('click', function () { showLangMenu(false); });
+  $(document).on('keydown', function (e) { if (e.key === 'Escape' && !$('#lang-menu').prop('hidden')) showLangMenu(false); });
   $(document).on('click', '#lang-list .lang-opt', function () {
     var code = $(this).attr('data-code');
-    $('#lang-list').prop('hidden', true);
-    $('#btn-lang').attr('aria-expanded', 'false');
+    showLangMenu(false);
     if (code === I18n.lang()) return;
     I18n.set(code);
     // The translation follows a language chosen here; kept for the meaning window, which loads when opened

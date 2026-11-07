@@ -422,7 +422,7 @@
     if (!repeat.on) return false;
 
     var end = repeat.scope === 'ayah'  ? timing.ayah[repeat.from - 1][1]
-            : repeat.scope === 'range' ? timing.ayah[repeat.to - 1][1]
+            : repeat.scope === 'range' || repeat.scope === 'page' ? timing.ayah[repeat.to - 1][1]
             : repeat.scope === 'surah' ? timing.ayah[timing.ayah.length - 1][1]
             : null;
     if (end === null || t < end) return false;
@@ -605,7 +605,7 @@
           '<button class="r-btn" data-act="prev" aria-label="الآية السابقة">' +
             '<svg class="ic" viewBox="0 0 24 24"><path d="M8 6h2v12H8zm9 0v12l-8-6z"/></svg>' +
           '</button>' +
-          '<button class="r-btn r-play" data-act="toggle" aria-label="تشغيل">' +
+          '<button class="r-btn r-play" data-act="play" aria-label="تشغيل">' +
             '<svg class="ic r-ic-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
             '<svg class="ic r-ic-pause" viewBox="0 0 24 24"><path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z"/></svg>' +
           '</button>' +
@@ -619,10 +619,6 @@
       '<div class="r-acts">' +
         /* Three kinds of row, in the order they are wanted: what to play, how to
            hear it (who, how fast, how often), and what it means. */
-        '<button data-act="ayah">' +
-          '<svg class="ic" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
-          '<span class="lang-ar">تشغيل الآية</span><span class="lang-en">Play this ayah</span>' +
-        '</button>' +
         '<button data-act="word">' +
           '<svg class="ic" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
           '<span class="lang-ar">تشغيل الكلمة</span><span class="lang-en">Play this word</span>' +
@@ -671,6 +667,7 @@
           '<span class="r-legend"><span class="lang-ar">ما يُعاد</span>' +
                                  '<span class="lang-en">Repeat</span></span>' +
           '<button class="r-chip" data-scope="ayah"><span class="lang-ar">الآية</span><span class="lang-en">Ayah</span></button>' +
+          '<button class="r-chip" data-scope="page"><span class="lang-ar">الصفحة</span><span class="lang-en">Page</span></button>' +
           '<button class="r-chip" data-scope="range"><span class="lang-ar">مقطع</span><span class="lang-en">Range</span></button>' +
           '<button class="r-chip" data-scope="surah"><span class="lang-ar">السورة</span><span class="lang-en">Surah</span></button>' +
         '</div>' +
@@ -715,6 +712,11 @@
       '</button>' +
       /* The phone's player: one row in the Android app's order, shown only on a phone. */
       '<div class="r-dock">' +
+        // First, as in the app's player: the pages in Tajweed colours or plain; held, what the colours mean
+        '<button data-act="tajweed" class="r-dock-tajweed">' +
+          '<svg class="ic ic-line" viewBox="0 0 24 24"><use href="#i-tajweed"/></svg>' +
+          '<span class="lang-ar">تجويد</span><span class="lang-en">Tajweed</span>' +
+        '</button>' +
         '<button data-act="follow">' +
           '<svg class="ic" viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8.94 3A9 9 0 0 0 13 3.06V1h-2v2.06A9 9 0 0 0 3.06 11H1v2h2.06A9 9 0 0 0 11 20.94V23h2v-2.06A9 9 0 0 0 20.94 13H23v-2h-2.06zM12 19a7 7 0 1 1 0-14 7 7 0 0 1 0 14z"/></svg>' +
           '<span class="lang-ar">تتبع</span><span class="lang-en">Follow</span>' +
@@ -990,6 +992,15 @@
        for, so that carrying on to the next does not silently move the loop. */
     if (scope === 'ayah') repeat.from = repeat.to = menuAt.v || at || 1;
     if (scope === 'range' && repeat.to < repeat.from) repeat.to = repeat.from;
+    /* The page: the ayahs that begin on the page of the one in hand, as the reader turns to them */
+    if (scope === 'page') {
+      var v = menuAt.v || at || 1, p = host.ayahPage(v), n = timing ? timing.ayah.length : v;
+      var from = v, to = v;
+      while (from > 1 && host.ayahPage(from - 1) === p) from--;
+      while (to < n && host.ayahPage(to + 1) === p) to++;
+      repeat.from = from;
+      repeat.to = to;
+    }
     repeat.left = repeat.times;
     sync();
   }
@@ -1063,9 +1074,7 @@
       if (!el.voices.children.length) fillVoices();
       var v = voiceOf(chosen());
       el.voice.classList.toggle('open', !el.voices.hidden);
-      el.voiceValue.textContent = v
-        ? T(v.noteAr || v.nameAr || v.name, v.note || v.name)
-        : '';
+      el.voiceValue.textContent = v ? T(v.nameAr || v.name, v.name) : '';
       menu.querySelectorAll('[data-voice]').forEach(function (b) {
         b.classList.toggle('on', b.dataset.voice === voice);
       });
@@ -1098,8 +1107,8 @@
   /** What the repeat is set to, in a few characters, beside its own button. */
   function repeatLabel() {
     if (!repeat.on) return '';
-    var what = T({ ayah: 'الآية', range: 'مقطع', surah: 'السورة' }[repeat.scope],
-      { ayah: 'ayah', range: 'range', surah: 'surah' }[repeat.scope]);
+    var what = T({ ayah: 'الآية', page: 'الصفحة', range: 'مقطع', surah: 'السورة' }[repeat.scope],
+      { ayah: 'ayah', page: 'page', range: 'range', surah: 'surah' }[repeat.scope]);
     return what + ' ' + (repeat.times === Infinity ? '∞' : num(repeat.times) + '×');
   }
 
@@ -1357,6 +1366,8 @@
 
   function act(what) {
     if (what === 'close') { closeMenu(); return; }
+    // The edition is the reader's to switch (app.js); the player only offers the button
+    if (what === 'tajweed') { document.dispatchEvent(new CustomEvent('tajweed:toggle')); return; }
     /* Folding the menu away is about the menu, not about the recitation, so it
        works whether or not this surah has one. */
     if (what === 'minimize') { setMinimized(!minimized); return; }

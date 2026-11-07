@@ -799,10 +799,12 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
 /* --- the menu as tiles ---
    Three short rows rather than seven long ones: playing two abreast, how it is heard three abreast,
    what it means two abreast; each an icon over its name, the setting's value under it. */
-#r-menu .r-acts { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; padding: 2px; }
-#r-menu .r-acts > * { grid-column: span 3; }
-#r-menu .r-acts .r-voice, #r-menu .r-acts .r-speed, #r-menu .r-acts .r-repeat { grid-column: span 2; }
-#r-menu .r-acts .r-voice[hidden] ~ .r-speed, #r-menu .r-acts .r-voice[hidden] ~ .r-repeat { grid-column: span 3; }
+#r-menu .r-acts { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding: 2px; }
+#r-menu .r-acts > * { grid-column: span 6; }
+#r-menu .r-acts [data-act="word"], #r-menu .r-acts .r-voice, #r-menu .r-acts .r-speed, #r-menu .r-acts .r-repeat { grid-column: span 3; }
+#r-menu .r-acts .r-voice[hidden] ~ .r-speed, #r-menu .r-acts .r-voice[hidden] ~ .r-repeat { grid-column: span 4; }
+#r-menu .r-acts:has(.r-voice[hidden]) [data-act="word"] { grid-column: span 4; }
+#r-menu .r-acts .r-sep:first-of-type { display: none; }
 #r-menu .r-acts .r-sep { grid-column: 1 / -1; margin: 2px 6px; }
 #r-menu .r-acts button {
   flex-direction: column;
@@ -824,6 +826,7 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   white-space: nowrap;
   font-size: 0.7rem;
 }
+#r-menu .r-acts .r-voice-value { white-space: normal; line-height: 1.2; }
 
 /* The reciters over the buttons, not below them: the menu keeps its height whoever is chosen */
 #r-menu .r-voices-head { display: flex; align-items: center; justify-content: space-between; }
@@ -886,6 +889,7 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   }
 
   #r-menu .r-dock .ic { width: 24px; height: 24px; fill: currentColor; }
+  body.tajweed-on #r-menu .r-dock .r-dock-tajweed,
   #r-menu .r-dock .r-dock-repeat.on,
   #r-menu .r-dock .r-dock-latin.on,
   #r-menu .r-dock .r-dock-meaning.on,
@@ -1073,19 +1077,52 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
 #meaning .mn-search:focus { outline: 2px solid var(--primary); outline-offset: 0; border-color: transparent; }
 #meaning .mn-count { margin: 6px 2px 4px; font-size: 0.76rem; opacity: 0.85; }
 #meaning .mn-list { flex: 1 1 auto; min-height: 0; margin: 0 0 8px; padding: 0; list-style: none; overflow-y: auto; overscroll-behavior: contain; }
+/* A language a heading, held at the top while its translations pass under it: its name, how its
+   speakers write it, and how many there are; each translation its translator, and under it who published it */
 #meaning .mn-group {
   position: sticky;
   top: 0;
-  padding: 7px 8px 3px;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 9px 8px 5px;
+  border-bottom: 1px solid var(--line);
   background: var(--surface);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--primary);
 }
-#meaning .mn-item { padding: 7px 12px; border-radius: var(--r-sm); font-size: 0.88rem; font-weight: 600; cursor: pointer; }
+#meaning .mn-native { font-weight: 600; color: var(--text-mute); unicode-bidi: plaintext; }
+#meaning .mn-n {
+  display: inline-block;
+  align-self: center;
+  margin-inline-start: auto;
+  min-width: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  font-size: 0.7rem;
+  line-height: 18px;
+  text-align: center;
+}
+#meaning .mn-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0;
+  padding: 7px 10px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+#meaning .mn-tr { flex: 1 1 auto; min-width: 0; }
+#meaning .mn-name { display: block; font-size: 0.88rem; font-weight: 600; }
+#meaning .mn-house { display: block; margin-top: 1px; font-size: 0.74rem; font-weight: 500; color: var(--text-mute); }
 #meaning .mn-item:hover, #meaning .mn-item.active { background: var(--primary-soft); }
-#meaning .mn-item[aria-selected="true"] { font-weight: 700; color: var(--primary); }
-#meaning .mn-item[aria-selected="true"]::after { content: " ✓"; }
+#meaning .mn-item[aria-selected="true"] { background: var(--primary-soft); color: var(--primary); }
+#meaning .mn-item[aria-selected="true"] .mn-name { font-weight: 700; }
+#meaning .mn-item[aria-selected="true"]::after { content: "✓"; flex: none; font-weight: 700; }
 
 #meaning .mn-body {
   flex: 1 1 auto;

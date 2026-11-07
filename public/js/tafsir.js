@@ -476,6 +476,13 @@
   }
 
   /* A language by the reader's name for it, and by its own where that differs. */
+  function part(cls, text) {
+    var s = document.createElement('span');
+    s.className = cls;
+    s.textContent = text;
+    return s;
+  }
+
   function langLabel(t, l) {
     var mine = nameIn(t.language, l), own = t.language.native;
     return own && fold(own) !== fold(mine) ? mine + ' · ' + own : mine;
@@ -537,7 +544,7 @@
       if (!s) return;
       shown++;
       var key = t.language.en + '|' + t.lang;
-      if (!by[key]) { by[key] = { label: langLabel(t, l), list: [], best: 0, first: n }; groups.push(by[key]); }
+      if (!by[key]) { by[key] = { t: t, list: [], best: 0, first: n }; groups.push(by[key]); }
       by[key].list.push(t);
       by[key].best = Math.max(by[key].best, s);
     });
@@ -555,10 +562,14 @@
     el.list.textContent = '';
     var chosen = textOf('translation');
     groups.forEach(function (g) {
+      // The language as the reader names it, as its speakers write it, and how many there are
       var head = document.createElement('li');
       head.className = 'mn-group';
       head.setAttribute('role', 'presentation');
-      head.textContent = g.label;
+      var mine = nameIn(g.t.language, l), own = g.t.language.native;
+      head.appendChild(part('mn-lang', mine));
+      if (own && fold(own) !== fold(mine)) head.appendChild(part('mn-native', own));
+      head.appendChild(part('mn-n', l === 'ar' ? ar(g.list.length) : String(g.list.length)));
       el.list.appendChild(head);
       g.list.forEach(function (t) {
         var li = document.createElement('li');
@@ -566,7 +577,11 @@
         li.setAttribute('role', 'option');
         li.dataset.id = t.id;
         li.setAttribute('aria-selected', t.id === chosen ? 'true' : 'false');
-        li.textContent = [t.name[l], house(t, l)].filter(Boolean).join(' · ');
+        // The translator, and under it who published it
+        var who = part('mn-tr', '');
+        who.appendChild(part('mn-name', t.name[l]));
+        if (house(t, l)) who.appendChild(part('mn-house', house(t, l)));
+        li.appendChild(who);
         el.list.appendChild(li);
       });
     });

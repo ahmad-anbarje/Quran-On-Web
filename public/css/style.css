@@ -236,14 +236,16 @@ body[data-lang="en"] .lang-ar { display: none !important; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 88px;
-  padding: 0;
-  border: 1px solid var(--line);
+  flex-direction: column;
+  gap: 3px;
+  width: 50px;
+  height: auto;
+  padding: 10px 0 8px;
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--line));
   border-right: none;
-  border-radius: var(--r-md) 0 0 var(--r-md);
-  background: var(--surface);
-  color: var(--text);
+  border-radius: 16px 0 0 16px;
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary);
   cursor: pointer;
   box-shadow: -2px 0 8px rgba(20, 60, 95, 0.08);
   /* `right` on the drawer's own timing, so the two move as one piece. */
@@ -265,7 +267,9 @@ body[data-lang="en"] .lang-ar { display: none !important; }
 #sidebar-handle:hover .ic { transform: translateX(-2px); }
 #sidebar.hidden ~ #sidebar-handle:hover .ic { transform: rotate(180deg) translateX(-2px); }
 
-#sidebar-handle .ic { width: 18px; height: 18px; transition: transform var(--t); }
+#sidebar-handle .ic { width: 16px; height: 16px; transition: transform var(--t); }
+#sidebar-handle .sh-book { width: 22px; height: 22px; }
+#sidebar-handle .cb-label { font-size: 0.66rem; }
 
 /* Shut: the tab sits against the screen edge, and its chevron turns to point the
    way it will open. */
@@ -277,8 +281,8 @@ body[data-lang="en"] .lang-ar { display: none !important; }
 #sidebar.hidden ~ #sidebar-handle .ic { transform: rotate(180deg); }
 /* A finger needs more than a pointer: on a touch screen the tab is a target, not a hint */
 @media (pointer: coarse) {
-  #sidebar-handle { width: 40px; height: 108px; }
-  #sidebar-handle .ic { width: 24px; height: 24px; }
+  #sidebar-handle { width: 56px; padding: 12px 0 10px; }
+  #sidebar-handle .sh-book { width: 24px; height: 24px; }
 }
 
 /* --- full screen ---
@@ -328,8 +332,8 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
    shown; the card opens beside it. Swatches take the dark palette on dark pages,
    as the letters do. */
 /* The corner's buttons, one under another: full screen where it is shown, Tajweed, then light and dark */
-:root { --corner-step: calc(var(--corner-btn) + 8px); --corner-top: 10px; }
-#btn-legend, #btn-theme-corner {
+:root { --corner-step: 60px; --corner-top: 10px; }
+#btn-legend, #btn-theme-corner, #btn-lang-corner {
   position: fixed;
   top: var(--corner-top);
   left: 10px;
@@ -337,37 +341,43 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--corner-btn);
-  height: var(--corner-btn);
+  flex-direction: column;
+  gap: 2px;
+  width: 58px;
+  height: 52px;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 50%;
+  border-radius: 14px;
   background: var(--surface);
   color: var(--text-mute);
   cursor: pointer;
 }
+.cb-label { font-family: var(--ui-font); font-size: 0.62rem; font-weight: 600; line-height: 1.1; white-space: nowrap; }
+.cb-dark, body.dark-mode .cb-light { display: none; }
+body.dark-mode .cb-dark { display: inline; }
 #btn-theme-corner { top: calc(var(--corner-top) + var(--corner-step)); }
-#btn-legend:hover, #btn-legend[aria-pressed="true"], #btn-theme-corner:hover {
+#btn-lang-corner { top: calc(var(--corner-top) + 2 * var(--corner-step)); }
+#btn-legend:hover, #btn-legend[aria-pressed="true"], #btn-theme-corner:hover,
+#btn-lang-corner:hover, #btn-lang-corner[aria-expanded="true"] {
   background: color-mix(in srgb, var(--primary) 14%, var(--surface));
   color: var(--primary);
   border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
 }
-#btn-legend .ic, #btn-theme-corner .ic { width: 22px; height: 22px; }
+#btn-legend .ic, #btn-theme-corner .ic, #btn-lang-corner .ic { width: 20px; height: 20px; }
 /* The phone's top bar carries them instead, at its far end; nothing floats over the words */
-#page-bar .bar-tools { margin-inline-start: auto; display: flex; gap: 2px; }
-#page-bar .bar-tools .ghost-btn { color: var(--primary); }
-#btn-bar-tajweed[aria-pressed="true"] { background: color-mix(in srgb, var(--primary) 18%, transparent); border-radius: 50%; }
-#btn-bar-theme .ic-moon, body.dark-mode #btn-bar-theme .ic-sun { display: none; }
-body.dark-mode #btn-bar-theme .ic-moon { display: block; }
+#page-bar .bar-tools { margin-inline-start: auto; display: flex; gap: 4px; }
+#page-bar .bar-tools .ghost-btn { flex-direction: column; gap: 1px; width: auto; height: auto; min-width: 48px; padding: 2px 4px; color: var(--primary); }
 @media (max-width: 480px) {
-  #btn-legend, #btn-theme-corner { display: none; }
+  #btn-legend, #btn-theme-corner, #btn-lang-corner { display: none; }
 }
 /* "On-screen buttons" off takes these with the rest; Settings still has both */
-body.turners-off #btn-legend, body.turners-off #btn-theme-corner { display: none; }
+body.turners-off #btn-legend, body.turners-off #btn-theme-corner,
+body.turners-off #btn-lang-corner { display: none; }
 
 /* The theme the page is in, chosen or the system's: the sun on a light page, the moon on a dark one */
-#btn-theme-corner .ic-moon, body.dark-mode #btn-theme-corner .ic-sun { display: none; }
-body.dark-mode #btn-theme-corner .ic-moon { display: block; }
+/* Everywhere the theme is offered (Settings, the corner, the phone's bar): one icon, the sun or the moon of the page's theme */
+.ic-moon, body.dark-mode .ic-sun { display: none; }
+body.dark-mode .ic-moon { display: block; }
 
 /* The word clicked in the Tajweed edition, in the player: large, in its colours, its rules below */
 .r-tajweed { padding: 6px 14px 10px; border-bottom: 1px solid var(--line); }
@@ -378,7 +388,7 @@ body.dark-mode #btn-theme-corner .ic-moon { display: block; }
 .r-tj-plain { margin: 2px 0 0; font-size: 0.84rem; color: var(--text-mute); text-align: center; unicode-bidi: plaintext; }
 #tajweed-legend {
   position: fixed;
-  top: calc(var(--corner-top) + 2 * var(--corner-step));
+  top: calc(var(--corner-top) + 3 * var(--corner-step));
   left: 10px;
   /* Above the dimming the index lays over the page, so it can always be closed */
   z-index: 155;
@@ -401,19 +411,20 @@ body.tajweed-on #btn-legend { color: var(--primary); }
 body.dark-mode .tj-sw { background: var(--cd); }
 /* A small tablet's page runs near the edge: the buttons sit at its foot instead, the card above them */
 @media (min-width: 481px) and (max-width: 767px) {
+  #btn-lang-corner { top: auto; bottom: calc(14px + 2 * var(--corner-step)); }
   #btn-legend { top: auto; bottom: calc(14px + var(--corner-step)); }
   #btn-theme-corner { top: auto; bottom: 14px; }
-  #tajweed-legend { top: auto; bottom: calc(14px + 2 * var(--corner-step)); }
+  #tajweed-legend { top: auto; bottom: calc(14px + 3 * var(--corner-step)); }
 }
 @media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
   :root { --corner-top: calc(10px + var(--corner-btn) + 8px); }
-  #tajweed-legend { top: var(--corner-top); left: calc(10px + var(--corner-step)); }
+  #tajweed-legend { top: var(--corner-top); left: 76px; }
 }
 
 /* --- zoom rail ---
    The magnifier's slider, in the bottom-left corner, dressed like the full-screen button.
    The track gives way on a short window, so the rail never climbs to the turner at mid-height. */
-:root { --zr-track: clamp(56px, calc(100vh - 560px), 128px); }
+:root { --zr-track: clamp(48px, calc(100vh - 600px), 84px); --zr-w: 34px; }
 
 #zoom-rail {
   position: fixed;
@@ -423,11 +434,11 @@ body.dark-mode .tj-sw { background: var(--cd); }
   display: none;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  width: var(--corner-btn);
-  padding: 6px 0 4px;
+  gap: 2px;
+  width: var(--zr-w);
+  padding: 4px 0 3px;
   border: 1px solid var(--line);
-  border-radius: calc(var(--corner-btn) / 2);
+  border-radius: calc(var(--zr-w) / 2);
   background: var(--surface);
   opacity: 0.85;
   transition: opacity var(--t), box-shadow var(--t);
@@ -441,8 +452,8 @@ body.dark-mode .tj-sw { background: var(--cd); }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -453,7 +464,7 @@ body.dark-mode .tj-sw { background: var(--cd); }
   transition: background var(--t), color var(--t);
 }
 .zr-step:hover { background: color-mix(in srgb, var(--primary) 14%, var(--surface)); color: var(--primary); }
-.zr-step .ic { width: 16px; height: 16px; }
+.zr-step .ic { width: 14px; height: 14px; }
 
 .zr-track {
   position: relative;
@@ -482,9 +493,9 @@ body.dark-mode .tj-sw { background: var(--cd); }
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: 16px;
-  height: 16px;
-  margin: 0 0 -8px -8px;
+  width: 13px;
+  height: 13px;
+  margin: 0 0 -6.5px -6.5px;
   border: 2px solid var(--primary);
   border-radius: 50%;
   background: var(--surface);
@@ -612,12 +623,35 @@ button.set-row:hover .set-ico, a.set-row:hover .set-ico { color: var(--primary);
 
 /* The languages, opened under their row: two to a line, each in its own words,
    the one in use filled so it reads as chosen at a glance */
+#lang-menu {
+  position: fixed;
+  top: 10px;
+  left: 76px;
+  z-index: 165;
+  width: min(380px, calc(100vw - 20px));
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  padding: 10px 6px 4px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
+}
+#lang-menu[hidden] { display: none; }
+#lang-menu .lm-head { display: flex; align-items: center; justify-content: space-between; padding: 0 10px 8px; }
+#lang-menu h2 { margin: 0; font-size: 1rem; }
+@media (max-width: 767px) {
+  #lang-menu { top: auto; bottom: 0; left: 0; width: 100%; max-height: 80vh; border-radius: 16px 16px 0 0; }
+}
 .lang-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
-  padding: 2px 14px 12px;
+  padding: 2px 10px 12px;
 }
+.lang-opt { flex-direction: column; gap: 2px; }
+.lang-opt .lo-said { font-size: 0.72rem; font-weight: 500; opacity: 0.75; }
 .lang-list[hidden] { display: none; }
 /* Centred, whichever way a name is written, so the grid reads even; the tick
    sits in the corner and takes no room from the name */
@@ -1524,10 +1558,18 @@ body[data-lang="en"] .mushaf.failed::after {
    layout, unlike padding cancelled by a negative margin, which moved a
    line-ending mark by 1.7px. */
 .m-end {
-  color: var(--primary);
+  /* Drawn as the Tajweed edition draws its medallion, in the site's blue: a filled disc inside
+     the outline, the outline and the number a deeper blue over it */
+  color: color-mix(in srgb, var(--primary) 80%, #000);
   background: radial-gradient(circle at 50% 56%,
-                              var(--primary-soft) 0 0.36em,
-                              transparent 0.36em);
+                              color-mix(in srgb, var(--primary) 28%, var(--paper, #fffdf7)) 0 0.36em,
+                              transparent 0.37em);
+}
+body.dark-mode .m-end {
+  color: #8cc8ee;
+  background: radial-gradient(circle at 50% 56%,
+                              color-mix(in srgb, var(--primary) 38%, transparent) 0 0.36em,
+                              transparent 0.37em);
 }
 
 /* The gap inside a two-part word, drawn rather than spaced — see mushaf.js. */

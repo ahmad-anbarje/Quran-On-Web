@@ -54,8 +54,8 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v4/ -->
   <link rel="stylesheet" href="/css/fonts.min.css?v=dc96e96b71" />
-  <link rel="stylesheet" href="/css/style.min.css?v=3bc8598353" />
-  <link rel="stylesheet" href="/css/recite.min.css?v=8b3f3b9582" />
+  <link rel="stylesheet" href="/css/style.min.css?v=500066eaa9" />
+  <link rel="stylesheet" href="/css/recite.min.css?v=f0d58a36e5" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
   <link rel="preload" href="/data/surahs.json" as="fetch" crossorigin />
@@ -137,8 +137,8 @@
       <g id="i-listen"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14h2.5a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M20 14h-2.5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1H19a1 1 0 0 0 1-1z"/></g>
       <g id="i-sliders"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></g>
       <g id="i-bookmark"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.6L5 21V4a1 1 0 0 1 1-1z"/></g>
-      <g id="i-moon"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></g>
-      <g id="i-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></g>
+      <g id="i-moon"><path d="M11.7 4A8 8 0 1 0 20 12.3 6 6 0 0 1 11.7 4z"/></g>
+      <g id="i-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.75 5.75l2.13 2.13M16.12 16.12l2.13 2.13M5.75 18.25l2.13-2.13M16.12 7.88l2.13-2.13"/></g>
       <g id="i-expand"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></g>
       <g id="i-mouse"><rect x="7" y="3.5" width="10" height="17" rx="5"/><path d="M12 7.2v3"/></g>
       <g id="i-pinch"><circle cx="8.5" cy="15.5" r="1.8"/><circle cx="15.5" cy="8.5" r="1.8"/><path d="M6 18 3.5 20.5M3.5 17v3.5H7M18 6l2.5-2.5M20.5 7V3.5H17"/></g>
@@ -157,7 +157,7 @@
       <g id="i-turners"><path d="M10 7l-4 5 4 5M14 7l4 5-4 5"/></g>
       <g id="i-weight"><path d="M7 18V6h5.2a3 3 0 0 1 0 6H7m0 0h5.8a3 3 0 0 1 0 6H7"/></g>
       <g id="i-theme"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></g>
-      <g id="i-tajweed"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.9 1.2-1.8-.5-1.1.3-2.2 1.5-2.2H17a4 4 0 0 0 4-4c0-5.5-4-10-9-10z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="10" cy="7" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor" stroke="none"/></g>
+      <g id="i-tajweed"><path d="M12 3.2C6.9 3.2 3 6.8 3 11.6c0 4.3 3.3 8 7.4 8 1.2 0 1.9-.8 1.9-1.8s-.8-1.5-.8-2.5.8-1.8 1.8-1.8h2.3c3.1 0 5.4-2.3 5.4-5.1C21 5.5 17.1 3.2 12 3.2z"/><circle cx="7.4" cy="11.4" r="1.1"/><circle cx="9.8" cy="7.4" r="1.1"/><circle cx="14.6" cy="7.2" r="1.1"/></g>
       <g id="i-globe"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/></g>
       <g id="i-spark"><path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></g>
       <g id="i-message"><path d="M4.5 5.5h15a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9.5L5.5 20v-3.5h-1a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/><path d="M8 9.5h8M8 12.5h5"/></g>
@@ -278,13 +278,14 @@
         </button>
 
         <button id="btn-theme" class="set-row">
-          <svg class="ic set-ico" viewBox="0 0 24 24"><use href="#i-theme"/></svg>
+          <svg class="ic set-ico ic-moon" viewBox="0 0 24 24"><use href="#i-moon"/></svg>
+          <svg class="ic set-ico ic-sun" viewBox="0 0 24 24"><use href="#i-sun"/></svg>
           <span class="set-label"><span class="lang-ar">المظهر</span><span class="lang-en">Theme</span></span>
           <span class="set-value" id="v-theme"></span>
         </button>
 
         <div class="set-row" id="brightness-wrap">
-          <svg class="ic set-ico" viewBox="0 0 24 24"><use href="#i-sun"/></svg>
+          <svg class="ic set-ico" viewBox="0 0 24 24"><use href="#i-theme"/></svg>
           <span class="set-label"><span class="lang-ar">سطوع الصفحة</span><span class="lang-en">Page brightness</span></span>
           <input id="brightness" type="range" min="55" max="100" step="1" value="100"
                  aria-label="Page brightness" />
@@ -360,6 +361,8 @@
 
     <!-- rides the sidebar's outer edge; follows it in and out -->
     <button id="sidebar-handle" aria-label="فهرس السور | Surah index">
+      <svg class="ic sh-book" viewBox="0 0 24 24"><use href="#i-book"/></svg>
+      <span class="cb-label"><span class="lang-ar">السور</span><span class="lang-en">Surahs</span></span>
       <svg class="ic" viewBox="0 0 24 24"><use href="#i-chev"/></svg>
     </button>
     <!-- The corner free of the index and the turners; shown only where there is room -->
@@ -369,13 +372,25 @@
     </button>
     <!-- Tajweed by the page: one click turns the colours on, the next back to the plain mushaf -->
     <button id="btn-legend" aria-label="ألوان التجويد | Tajweed colours" aria-pressed="false">
-      <svg class="ic" viewBox="0 0 24 24"><use href="#i-tajweed"/></svg>
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-tajweed"/></svg><span class="cb-label"><span class="lang-ar">تجويد</span><span class="lang-en">Tajweed</span></span>
     </button>
     <!-- Light and dark, by the page as well as in Settings -->
     <button id="btn-theme-corner" aria-label="المظهر | Theme">
       <svg class="ic ic-moon" viewBox="0 0 24 24"><use href="#i-moon"/></svg>
-      <svg class="ic ic-sun" viewBox="0 0 24 24"><use href="#i-sun"/></svg>
+      <svg class="ic ic-sun" viewBox="0 0 24 24"><use href="#i-sun"/></svg><span class="cb-label cb-light"><span class="lang-ar">نهاري</span><span class="lang-en">Light</span></span><span class="cb-label cb-dark"><span class="lang-ar">ليلي</span><span class="lang-en">Dark</span></span>
     </button>
+    <!-- The site's language by the page too, opening the languages' own menu -->
+    <button id="btn-lang-corner" aria-label="اللغة | Language" aria-haspopup="dialog">
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"/></svg><span class="cb-label"><span class="lang-ar">اللغة</span><span class="lang-en">Language</span></span>
+    </button>
+    <!-- The languages, a menu of their own: each in its own script, its name in the site's language under it -->
+    <div id="lang-menu" role="dialog" aria-labelledby="lang-menu-title" hidden>
+      <div class="lm-head">
+        <h2 id="lang-menu-title"><span class="lang-ar">اللغة</span><span class="lang-en">Language</span></h2>
+        <button id="btn-close-lang" class="ghost-btn" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><use href="#i-close"/></svg></button>
+      </div>
+      <div id="lang-list" class="lang-list" role="listbox"></div>
+    </div>
     <!-- The rules and their colours, never shown whole: the word clicked takes its own rows from here -->
     <div id="tajweed-legend" role="dialog" aria-labelledby="tj-legend-title" hidden>
       <div class="tj-head">
@@ -417,14 +432,14 @@
         <svg class="ic" viewBox="0 0 24 24"><use href="#i-back"/></svg>
       </button>
       <span id="page-bar-name"></span>
-      <!-- At the bar's other end, as the app's top bar has them: Tajweed, then light and dark -->
+      <!-- At the bar's other end, as the app's top bar has it: light and dark -->
       <span class="bar-tools">
-        <button id="btn-bar-tajweed" class="ghost-btn" aria-label="ألوان التجويد | Tajweed colours" aria-pressed="false">
-          <svg class="ic" viewBox="0 0 24 24"><use href="#i-tajweed"/></svg>
+        <button id="btn-bar-lang" class="ghost-btn" aria-label="اللغة | Language" aria-haspopup="dialog">
+          <svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"/></svg><span class="cb-label"><span class="lang-ar">اللغة</span><span class="lang-en">Language</span></span>
         </button>
         <button id="btn-bar-theme" class="ghost-btn" aria-label="المظهر | Theme">
           <svg class="ic ic-moon" viewBox="0 0 24 24"><use href="#i-moon"/></svg>
-          <svg class="ic ic-sun" viewBox="0 0 24 24"><use href="#i-sun"/></svg>
+          <svg class="ic ic-sun" viewBox="0 0 24 24"><use href="#i-sun"/></svg><span class="cb-label cb-light"><span class="lang-ar">نهاري</span><span class="lang-en">Light</span></span><span class="cb-label cb-dark"><span class="lang-ar">ليلي</span><span class="lang-en">Dark</span></span>
         </button>
       </span>
     </div>
@@ -721,15 +736,15 @@
   <script defer src="/js/dom.min.js?v=1c501dfb04"></script>
   <script defer src="/js/i18n.min.js?v=b57155789c"></script>
   <script defer src="/js/mushaf.min.js?v=a77bee90cc"></script>
-  <script defer src="/js/recite.min.js?v=308633bfb3"></script>
+  <script defer src="/js/recite.min.js?v=83ca843c15"></script>
   <!-- The meaning window, fetched by recite.js the first time it is opened -->
-  <template id="meaning-script" data-src="/js/tafsir.min.js?v=121969884a"></template>
+  <template id="meaning-script" data-src="/js/tafsir.min.js?v=db5919a49b"></template>
   <script defer src="/js/ayahs.min.js?v=3b7e12dcaa"></script>
   <script defer src="/js/listen.min.js?v=8d3a062e5a"></script>
   <script defer src="/js/pager.min.js?v=73fed4459e"></script>
   <script defer src="/js/offline.min.js?v=946ef23f48"></script>
   <script defer src="/js/leaves.min.js?v=f31407bff9"></script>
-  <script defer src="/js/app.min.js?v=3137342d27"></script>
+  <script defer src="/js/app.min.js?v=00ab053d05"></script>
   <script defer src="/js/appcard.min.js?v=942fa5f409"></script>
   <article class="sr-only" lang="ar" dir="rtl" aria-label="نص سورة القارعة">
     <h1>سورة القارعة · Surah Al-Qari'ah</h1>
