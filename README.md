@@ -49,7 +49,8 @@
 
 **Everywhere**
 - Phones, tablets and desktops; swipe, keyboard shortcuts or the on-screen buttons
-- Tajweed colours, turned on in Settings: the same pages with each rule of recitation in its colour, a palette for light and one for dark
+- Tajweed colours, switched on and off by the palette button beside the page (or in Settings): the same pages with each rule of recitation in its colour, a palette for light and one for dark; a word clicked shows large in the player with only the rules its colours mark, as the Android app's Tajweed card does
+- Light and dark by the page too: the button shows the sun or the moon of the theme the page is in, chosen or the system's
 - Offline reading (the whole mushaf, about 43 MB, or the Tajweed edition's own size, asked before it is saved or removed), installable, dark and light
 - The site in 14 languages: Arabic, English, Urdu, Indonesian, Bengali, Turkish,
   French, Persian, Hindi, Malay, Spanish, Russian, German and Chinese, chosen in

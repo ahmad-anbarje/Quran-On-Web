@@ -827,7 +827,11 @@
       from: menu.querySelector('.r-from'),
       to: menu.querySelector('.r-to'),
       note: menu.querySelector('.r-note'),
+      tajweed: document.createElement('div'),
     };
+    el.tajweed.className = 'r-tajweed';
+    el.tajweed.hidden = true;
+    menu.querySelector('.r-menu-bar').after(el.tajweed);
 
     menu.addEventListener('click', function (e) {
       var b = e.target.closest('button');
@@ -1139,6 +1143,7 @@
        the word only while the pointer was on it. The same band and ink the
        recitation uses, since it means the same thing. */
     light(surah.id + ':' + v, k);
+    tajweedCard(target);
     /* A word in another ayah, with the meaning up, is asking what that one means. */
     if (global.Meaning) Meaning.follow(surah, v);
 
@@ -1173,6 +1178,44 @@
       top = r.top - m.height - 6;
     }
     place(r.left + r.width / 2 - m.width / 2, top);
+  }
+
+  /* In the Tajweed edition, the word as the app's card shows it: large, in its own colours, with
+     only the rules those colours mark, read from data/tajweed/p<page>.json (scripts/build-tajweed.py) */
+  var tajweedRules = {};
+  function tajweedCard(target) {
+    var box = el.tajweed, sheet = target.closest('.mushaf'), section = target.closest('[data-page]');
+    box.hidden = !(document.body.classList.contains('tajweed-on') && target.dataset.a && sheet && section);
+    if (box.hidden) return;
+    var page = +section.dataset.page;
+    var at = [].indexOf.call(sheet.querySelectorAll('.m-ayah .m-word[data-a]'), target);
+    box.textContent = '';
+    var word = document.createElement('div');
+    word.className = 'r-tj-word';
+    word.style.fontFamily = sheet.style.fontFamily;
+    word.textContent = target.textContent;
+    var list = document.createElement('ul');
+    box.appendChild(word);
+    box.appendChild(list);
+    if (!tajweedRules[page]) {
+      tajweedRules[page] = fetch('/data/tajweed/p' + page + '.json')
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .catch(function (err) { delete tajweedRules[page]; throw err; });
+    }
+    tajweedRules[page].then(function (bits) {
+      if (!box.contains(list)) return;            // another word since
+      var mark = bits[at] || 0;
+      // The legend's own rows, so their names and swatches are said once, in every language
+      [].forEach.call(document.querySelectorAll('#tajweed-legend li'), function (row, i) {
+        if (mark & (1 << i)) list.appendChild(row.cloneNode(true));
+      });
+      if (!list.children.length) {
+        var plain = document.createElement('p');
+        plain.className = 'r-tj-plain';
+        plain.textContent = T('لا أحكام ملوّنة في هذه الكلمة، فتُقرأ كالمعتاد.', 'No coloured rules in this word; it is read as usual.');
+        box.appendChild(plain);
+      }
+    }).catch(function () { /* the word alone, in its colours */ });
   }
 
   function closeMenu() {

@@ -4,11 +4,14 @@ rules of Tajweed in colour fonts (COLR, a palette for light pages and one for da
 
   public/data/mushaf-tj.json    the 604 pages line by line, each word as its Tajweed glyph
   public/fonts/tj/p<page>.woff2  each page's font, as the app ships it, cut to the glyphs the page draws
+  public/data/tajweed/p<page>.json  each word's rules, in the page's order, as bits of the legend's rows,
+                                   read from the colours its glyph is painted in (the app's TajweedFonts)
 
 The fonts number their glyphs as V2's, so a word is drawn as V2 drew it, left to right. Every page holds the same
 words as v4 (tests/check-data.js), which the recitation lights by number.
 
-Usage: python scripts/build-tajweed.py [Android app's src/main, default ../Quran_Android/app/src/main]
+Usage: python scripts/build-tajweed.py [Android app's src/main] [--fonts]
+  default ../Quran_Android/app/src/main; the fonts are cut again only when asked or missing
   Its data and fonts come from tools/tajweed_build.py there.
 """
 import io
@@ -20,13 +23,19 @@ from fontTools import subset
 from fontTools.ttLib import TTFont
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, '..', 'Quran_Android', 'app', 'src', 'main')
+ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
+SRC = ARGS[0] if ARGS else os.path.join(ROOT, '..', 'Quran_Android', 'app', 'src', 'main')
+OUT_RULES = os.path.join(ROOT, 'public', 'data', 'tajweed')
+# The legend's rows, in its order, by the palette slots each is painted from (the app's TajweedLegend RULES)
+RULE_SLOTS = [{3}, {9}, {4}, {5}, {6}, {8}, {7}, {1, 2, 15}]
 OUT_FONTS = os.path.join(ROOT, 'public', 'fonts', 'tj')
 OUT_DATA = os.path.join(ROOT, 'public', 'data', 'mushaf-tj.json')
 
 app = json.load(open(os.path.join(SRC, 'assets', 'data', 'mushaf-tajweed.json'), encoding='utf-8'))
 v4 = json.load(open(os.path.join(ROOT, 'public', 'data', 'mushaf-v4.json'), encoding='utf-8'))
 os.makedirs(OUT_FONTS, exist_ok=True)
+os.makedirs(OUT_RULES, exist_ok=True)
+CUT = '--fonts' in sys.argv or not os.path.exists(os.path.join(OUT_FONTS, 'p604.woff2'))
 
 opts = subset.Options()
 opts.flavor = 'woff2'
@@ -52,8 +61,23 @@ for p in range(1, 605):
     pages[str(p)] = rows
 
     f = TTFont(os.path.join(SRC, 'fonts-tajweed', f'tj{p}.otf'))
-    missing = codes - set(f.getBestCmap())
+    cmap = f.getBestCmap()
+    missing = codes - set(cmap)
     assert not missing, (p, sorted(missing)[:5])
+
+    # Each drawn word's rules, the ayah numbers among them, in the order the page builds its words
+    layers = f['COLR'].ColorLayers
+    rules = []
+    for r in rows:
+        if r['t'] != 'ayah':
+            continue
+        for word in r['tj'].split('|'):
+            slots = {l.colorID for c in word if c != ' ' for l in layers.get(cmap[ord(c)], [])}
+            rules.append(sum(1 << i for i, s_ in enumerate(RULE_SLOTS) if s_ & slots))
+    json.dump(rules, open(os.path.join(OUT_RULES, f'p{p}.json'), 'w', newline='\n'), separators=(',', ':'))
+    if not CUT:
+        continue
+
     s = subset.Subsetter(opts)
     s.populate(unicodes=sorted(codes))
     s.subset(f)
@@ -72,4 +96,4 @@ data = {
     'marks': app['marks'],
 }
 json.dump(data, open(OUT_DATA, 'w', encoding='utf-8', newline='\n'), ensure_ascii=False, separators=(',', ':'))
-print(f'tajweed: 604 page fonts, {total / 1e6:.1f} MB; {os.path.getsize(OUT_DATA) / 1e3:.0f} KB of data')
+print(f'tajweed: 604 pages of rules' + (f', 604 page fonts, {total / 1e6:.1f} MB' if CUT else ', fonts kept') + f'; {os.path.getsize(OUT_DATA) / 1e3:.0f} KB of data')

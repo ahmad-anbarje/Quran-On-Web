@@ -342,12 +342,23 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
   cursor: pointer;
 }
 #btn-theme-corner { top: calc(var(--corner-top) + var(--corner-step)); }
-#btn-legend:hover, #btn-legend[aria-expanded="true"], #btn-theme-corner:hover {
+#btn-legend:hover, #btn-legend[aria-pressed="true"], #btn-theme-corner:hover {
   background: color-mix(in srgb, var(--primary) 14%, var(--surface));
   color: var(--primary);
   border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
 }
 #btn-legend .ic, #btn-theme-corner .ic { width: 22px; height: 22px; }
+/* The theme the page is in, chosen or the system's: the sun on a light page, the moon on a dark one */
+#btn-theme-corner .ic-moon, body.dark-mode #btn-theme-corner .ic-sun { display: none; }
+body.dark-mode #btn-theme-corner .ic-moon { display: block; }
+
+/* The word clicked in the Tajweed edition, in the player: large, in its colours, its rules below */
+.r-tajweed { padding: 6px 14px 10px; border-bottom: 1px solid var(--line); }
+.r-tajweed[hidden] { display: none; }
+.r-tj-word { font-size: 64px; line-height: 1.5; text-align: center; direction: ltr; white-space: nowrap; }
+.r-tajweed ul { list-style: none; margin: 0; padding: 0; }
+.r-tajweed li { display: flex; align-items: center; gap: 10px; padding: 3px 0; font-size: 0.86rem; }
+.r-tj-plain { margin: 2px 0 0; font-size: 0.84rem; color: var(--text-mute); text-align: center; }
 #tajweed-legend {
   position: fixed;
   top: calc(var(--corner-top) + 2 * var(--corner-step));
@@ -366,8 +377,6 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
 #tajweed-legend .tj-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 #tajweed-legend h2 { margin: 0; font-size: 0.95rem; }
 #tajweed-legend ul { list-style: none; margin: 8px 0 0; padding: 0; }
-#tajweed-legend .tj-off { width: 100%; margin-top: 8px; padding: 8px; font: inherit; font-size: 0.84rem; color: var(--text-mute); background: transparent; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
-#tajweed-legend .tj-off:hover { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 35%, var(--line)); }
 /* On, the button says so: the palette in the accent colour */
 body.tajweed-on #btn-legend { color: var(--primary); }
 #tajweed-legend li { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-size: 0.86rem; }
