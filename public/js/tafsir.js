@@ -569,7 +569,7 @@
       var mine = nameIn(g.t.language, l), own = g.t.language.native;
       head.appendChild(part('mn-lang', mine));
       if (own && fold(own) !== fold(mine)) head.appendChild(part('mn-native', own));
-      head.appendChild(part('mn-n', l === 'ar' ? ar(g.list.length) : String(g.list.length)));
+      head.appendChild(part('mn-num', l === 'ar' ? ar(g.list.length) : String(g.list.length)));
       el.list.appendChild(head);
       g.list.forEach(function (t) {
         var li = document.createElement('li');

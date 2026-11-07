@@ -605,10 +605,6 @@
           '<button class="r-btn" data-act="prev" aria-label="الآية السابقة">' +
             '<svg class="ic" viewBox="0 0 24 24"><path d="M8 6h2v12H8zm9 0v12l-8-6z"/></svg>' +
           '</button>' +
-          '<button class="r-btn r-play" data-act="play" aria-label="تشغيل">' +
-            '<svg class="ic r-ic-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
-            '<svg class="ic r-ic-pause" viewBox="0 0 24 24"><path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z"/></svg>' +
-          '</button>' +
           '<button class="r-btn" data-act="next" aria-label="الآية التالية">' +
             '<svg class="ic" viewBox="0 0 24 24"><path d="M14 6h2v12h-2zm-7 0l8 6-8 6z"/></svg>' +
           '</button>' +
@@ -619,6 +615,13 @@
       '<div class="r-acts">' +
         /* Three kinds of row, in the order they are wanted: what to play, how to
            hear it (who, how fast, how often), and what it means. */
+        /* The ayah first, in the accent: play, and pause while it plays */
+        '<button data-act="play" class="r-ayah" aria-label="تشغيل">' +
+          '<svg class="ic r-ic-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
+          '<svg class="ic r-ic-pause" viewBox="0 0 24 24"><path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z"/></svg>' +
+          '<span class="r-when-paused"><span class="lang-ar">تشغيل الآية</span><span class="lang-en">Play this ayah</span></span>' +
+          '<span class="r-when-playing"><span class="lang-ar">إيقاف مؤقت</span><span class="lang-en">Pause</span></span>' +
+        '</button>' +
         '<button data-act="word">' +
           '<svg class="ic" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
           '<span class="lang-ar">تشغيل الكلمة</span><span class="lang-en">Play this word</span>' +
@@ -804,7 +807,7 @@
       now: menu.querySelector('.r-now'),
       seek: menu.querySelector('.r-seek'),
       played: menu.querySelector('.r-played'),
-      play: menu.querySelector('.r-play'),
+      play: menu.querySelector('.r-ayah'),
       time: menu.querySelector('.r-time'),
       repeat: menu.querySelector('.r-repeat'),
       repeatValue: menu.querySelector('.r-repeat-value'),

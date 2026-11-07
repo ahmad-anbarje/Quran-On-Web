@@ -178,9 +178,11 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
 #r-menu .r-transport {
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  gap: 24px;
   padding: 2px 4px 0;
 }
+#r-menu .r-transport .r-time:empty { display: none; }
 
 #r-menu .r-btn {
   flex: 0 0 auto;
@@ -801,9 +803,11 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
    what it means two abreast; each an icon over its name, the setting's value under it. */
 #r-menu .r-acts { display: grid; grid-template-columns: repeat(12, 1fr); gap: 4px; padding: 2px; }
 #r-menu .r-acts > * { grid-column: span 6; }
-#r-menu .r-acts [data-act="word"], #r-menu .r-acts .r-voice, #r-menu .r-acts .r-speed, #r-menu .r-acts .r-repeat { grid-column: span 3; }
-#r-menu .r-acts .r-voice[hidden] ~ .r-speed, #r-menu .r-acts .r-voice[hidden] ~ .r-repeat { grid-column: span 4; }
-#r-menu .r-acts:has(.r-voice[hidden]) [data-act="word"] { grid-column: span 4; }
+#r-menu .r-acts .r-voice, #r-menu .r-acts .r-speed, #r-menu .r-acts .r-repeat { grid-column: span 4; }
+#r-menu .r-acts .r-voice[hidden] ~ .r-speed, #r-menu .r-acts .r-voice[hidden] ~ .r-repeat { grid-column: span 6; }
+#r-menu .r-acts .r-ayah, #r-menu .r-acts .r-ayah:hover { background: var(--primary); color: var(--on-dark, #fff); }
+#r-menu .r-acts .r-ayah:hover { background: var(--primary-dark); }
+#r-menu .r-acts .r-ayah .ic, #r-menu .r-acts .r-ayah:hover .ic { color: inherit; }
 #r-menu .r-acts .r-sep:first-of-type { display: none; }
 #r-menu .r-acts .r-sep { grid-column: 1 / -1; margin: 2px 6px; }
 #r-menu .r-acts button {
@@ -973,7 +977,8 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   display: flex;
   align-items: center;
   gap: 4px;
-  padding-inline: 10px 0;
+  min-height: 40px;
+  padding-inline: 12px 0;
   border-bottom: 1px solid var(--line);
   background: var(--surface-2);
   cursor: grab;
@@ -1105,7 +1110,7 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
   color: var(--primary);
 }
 #meaning .mn-native { font-weight: 600; color: var(--text-mute); unicode-bidi: plaintext; }
-#meaning .mn-n {
+#meaning .mn-num {
   display: inline-block;
   align-self: center;
   margin-inline-start: auto;
