@@ -331,7 +331,7 @@ body.is-fullscreen .fs-toggle .ic-fs-exit { display: block; }
    as the letters do. */
 /* The corner's buttons, one under another: full screen where it is shown, Tajweed, then light and dark */
 :root { --corner-step: 60px; --corner-top: 10px; }
-#btn-legend, #btn-theme-corner, #btn-lang-corner, #btn-weight-corner, #btn-mode-corner {
+#btn-legend, #btn-theme-corner, #btn-lang-corner, #btn-weight-corner, #btn-mode-corner, #btn-saved-corner {
   position: fixed;
   top: var(--corner-top);
   left: 10px;
@@ -357,6 +357,12 @@ body.dark-mode .cb-dark { display: inline; }
 #btn-lang-corner { top: calc(var(--corner-top) + 2 * var(--corner-step)); }
 #btn-weight-corner { top: calc(var(--corner-top) + 3 * var(--corner-step)); }
 #btn-mode-corner { top: calc(var(--corner-top) + 4 * var(--corner-step)); }
+/* The saved pages at the top right, clear of the left column and the turners; below the Surah list tab when that is up there */
+#btn-saved-corner { top: 10px; left: auto; right: 10px; }
+body.tab-top #btn-saved-corner { top: 104px; }
+#btn-saved-corner:hover { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 35%, var(--line)); }
+#btn-saved-corner .ic { width: 20px; height: 20px; }
+
 #btn-weight-corner:hover, #btn-mode-corner:hover, #btn-weight-corner.on {
   color: var(--primary);
   border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
@@ -403,16 +409,16 @@ body.no-spread #btn-mode-corner { display: none; }
 #page-bar .bar-tools { margin-inline-start: auto; display: flex; gap: 4px; }
 #page-bar .bar-tools .ghost-btn { flex-direction: column; gap: 1px; width: auto; height: auto; min-width: 48px; padding: 2px 4px; color: var(--text-mute); }
 @media (max-width: 480px) {
-  #btn-legend, #btn-theme-corner, #btn-lang-corner, #btn-weight-corner, #btn-mode-corner, body[data-mode] #size-corner { display: none; }
+  #btn-legend, #btn-theme-corner, #btn-lang-corner, #btn-weight-corner, #btn-mode-corner, #btn-saved-corner, body[data-mode] #size-corner { display: none; }
 }
 /* "On-screen buttons" off takes these with the rest; Settings then has them again */
 body.turners-off #btn-legend, body.turners-off #btn-theme-corner,
-body.turners-off #btn-lang-corner, body.turners-off #btn-weight-corner, body.turners-off #btn-mode-corner,
+body.turners-off #btn-lang-corner, body.turners-off #btn-weight-corner, body.turners-off #btn-mode-corner, body.turners-off #btn-saved-corner,
 body.turners-off[data-mode] #size-corner { display: none; }
 /* Where the corner has them, Settings does not say them twice */
 @media (min-width: 481px) {
   body:not(.turners-off) #btn-tajweed, body:not(.turners-off) #btn-theme,
-  body:not(.turners-off) #btn-lang, body:not(.turners-off) #btn-weight,
+  body:not(.turners-off) #btn-lang, body:not(.turners-off) #btn-weight, body:not(.turners-off) #btn-bookmarks,
   body:not(.turners-off):not(.no-spread) #btn-mode { display: none; }
 }
 
@@ -796,6 +802,13 @@ body.dark-mode .lang-opt[aria-selected="true"] { border-color: #1f6a9a; backgrou
 
 /* Laid over the page, never beside it: opening the index for a moment should
    not reflow what is being read, and the sheet keeps the whole window. */
+/* The list's inner edge: the pointer turns to a resize arrow and a blue line shows where to drag */
+#sidebar-resize { position: absolute; top: 0; bottom: 0; left: -4px; z-index: 5; width: 8px; cursor: col-resize; touch-action: none; }
+#sidebar-resize::after { content: ''; position: absolute; top: 0; bottom: 0; left: 3px; width: 2px; background: var(--primary); opacity: 0; transition: opacity 0.15s ease 0.1s; }
+#sidebar-resize:hover::after, .sidebar-sizing #sidebar-resize::after { opacity: 1; }
+.sidebar-sizing, .sidebar-sizing * { cursor: col-resize !important; user-select: none; }
+.sidebar-sizing #sidebar { transition: none !important; }
+@media (pointer: coarse), (max-width: 767px) { #sidebar-resize { display: none; } }
 #sidebar {
   position: fixed;
   top: 0;
@@ -1624,8 +1637,8 @@ body[data-lang="en"] .mushaf.failed::after {
 }
 .m-end.m-medal, body.dark-mode .m-end.m-medal { background: none; }
 body.dark-mode .m-medal { filter: url(#medal-dark); }
-/* The Tajweed edition's white, which reads clearer on the dark sheet than the interface's grey */
-body.dark-mode .mushaf { color: #ffffff; }
+/* The interface's own white, so the page and the buttons read as one */
+body.dark-mode .mushaf { color: #e3e7eb; }
 body.dark-mode .m-end {
   color: #8cc8ee;
   background: radial-gradient(circle at 50% 56%,

@@ -576,7 +576,7 @@ $(function () {
         var t = document.createElement('span');
         t.className = 'hist-name';
         var pages = e.p.map(num).join(lang === 'ar' ? '، ' : ', ');
-        t.textContent = (e.p.length > 1 ? T('صفحتا {n}', 'Pages {n}', { n: pages }) : T('صفحة {n}', 'Page {n}', { n: pages }))
+        t.textContent = (e.p.length > 1 ? T('صفحة {n}', 'Pages {n}', { n: pages }) : T('صفحة {n}', 'Page {n}', { n: pages }))
           + ' · ' + (lang === 'ar' ? s.full : s.en);
         var at = document.createElement('span');
         at.className = 'hist-where';
@@ -1461,6 +1461,35 @@ $(function () {
   $('#btn-close-legend').on('click', function () { $('#tajweed-legend').prop('hidden', true); });
   $('#btn-theme-corner, #btn-bar-theme').on('click', function () { $('#btn-theme').trigger('click'); });
   $('#btn-weight-corner').on('click', function () { $('#btn-weight').trigger('click'); });
+  $('#btn-saved-corner').on('click', function () { $('#btn-bookmarks').trigger('click'); });
+
+  /* The index's width, dragged at its inner edge and kept */
+  (function () {
+    var grip = document.getElementById('sidebar-resize');
+    var root = document.documentElement;
+    var fit = function (px) { return Math.round(Math.min(Math.max(px, 260), Math.min(640, window.innerWidth * 0.6))); };
+    var kept = +localStorage.getItem('quran-sidebar-w');
+    if (kept) root.style.setProperty('--sidebar-w', fit(kept) + 'px');
+    if (!grip) return;
+    grip.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      grip.setPointerCapture(e.pointerId);
+      document.body.classList.add('sidebar-sizing');
+    });
+    grip.addEventListener('pointermove', function (e) {
+      if (!grip.hasPointerCapture(e.pointerId)) return;
+      root.style.setProperty('--sidebar-w', fit(window.innerWidth - e.clientX) + 'px');
+    });
+    var done = function (e) {
+      if (!grip.hasPointerCapture(e.pointerId)) return;
+      grip.releasePointerCapture(e.pointerId);
+      document.body.classList.remove('sidebar-sizing');
+      try { localStorage.setItem('quran-sidebar-w', parseInt(getComputedStyle(root).getPropertyValue('--sidebar-w'))); } catch (err) { /* not kept */ }
+    };
+    grip.addEventListener('pointerup', done);
+    grip.addEventListener('pointercancel', done);
+  })();
   $('#btn-mode-corner').on('click', function () { $('#btn-mode').trigger('click'); });
   $('#btn-bar-meaning').on('click', function () { if (window.Recite && Recite.meaning) Recite.meaning(); });
 

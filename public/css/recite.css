@@ -183,6 +183,8 @@ body.is-reciting .m-word[data-a] { cursor: pointer; }
   padding: 2px 4px 0;
 }
 #r-menu .r-transport .r-time:empty { display: none; }
+/* No ayah-to-ayah steps in the player: the page and the ayah tile do that */
+#r-menu .r-transport { display: none; }
 
 #r-menu .r-btn {
   flex: 0 0 auto;

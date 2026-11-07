@@ -54,8 +54,8 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v4/ -->
   <link rel="stylesheet" href="/css/fonts.min.css?v=dc96e96b71" />
-  <link rel="stylesheet" href="/css/style.min.css?v=ec368a4cd4" />
-  <link rel="stylesheet" href="/css/recite.min.css?v=c608d887e0" />
+  <link rel="stylesheet" href="/css/style.min.css?v=2557b36d11" />
+  <link rel="stylesheet" href="/css/recite.min.css?v=a3375f56d2" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
   <link rel="preload" href="/data/surahs.json" as="fetch" crossorigin />
@@ -165,6 +165,8 @@
          so an icon-only strip is unexplained on exactly the devices that have
          least room to spare. -->
     <aside id="sidebar" class="quiet">
+      <!-- Its inner edge, dragged to make the list wider or narrower -->
+      <div id="sidebar-resize" aria-hidden="true"></div>
 
       <div class="drawer-tabs">
         <button class="drawer-tab on" data-pane="index">
@@ -177,7 +179,7 @@
         </button>
         <button class="drawer-tab" data-pane="history">
           <svg class="ic" viewBox="0 0 24 24"><use href="#i-history"/></svg>
-          <span class="lang-ar">السجل</span><span class="lang-en">History</span>
+          <span class="lang-ar">قراءاتي</span><span class="lang-en">History</span>
         </button>
         <button class="drawer-tab" data-pane="settings">
           <svg class="ic" viewBox="0 0 24 24"><use href="#i-sliders"/></svg>
@@ -383,6 +385,10 @@
     <button id="btn-mode-corner" aria-label="طريقة العرض | Reading mode">
       <svg class="ic ic-mode-pages" viewBox="0 0 24 24"><use href="#i-mode-pages"/></svg>
       <svg class="ic ic-mode-spread" viewBox="0 0 24 24"><use href="#i-mode-spread"/></svg><span class="cb-label cb-pages"><span class="lang-ar">صفحة واحدة</span><span class="lang-en">One page</span></span><span class="cb-label cb-spread"><span class="lang-ar">صفحتان</span><span class="lang-en">Two pages</span></span>
+    </button>
+    <!-- The saved pages, by the page as in Settings -->
+    <button id="btn-saved-corner" aria-label="الصفحات المحفوظة | Saved pages">
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-bookmark"/></svg><span class="cb-label"><span class="lang-ar">المحفوظة</span><span class="lang-en">Saved</span></span>
     </button>
     <!-- One page at a time has its own zoom, the text size, under the mode -->
     <div id="size-corner" role="group" aria-label="حجم الخط | Text size">
@@ -757,7 +763,7 @@
   <script defer src="/js/pager.min.js?v=73fed4459e"></script>
   <script defer src="/js/offline.min.js?v=946ef23f48"></script>
   <script defer src="/js/leaves.min.js?v=ed29c02f2b"></script>
-  <script defer src="/js/app.min.js?v=512f8d4e53"></script>
+  <script defer src="/js/app.min.js?v=c79b284c99"></script>
   <script defer src="/js/appcard.min.js?v=0795da197f"></script>
   <article class="sr-only" lang="ar" dir="rtl">
     <h1>الجزء الثالث من القرآن · Juz 3</h1>
