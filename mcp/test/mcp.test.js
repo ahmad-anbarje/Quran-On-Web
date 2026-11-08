@@ -374,7 +374,7 @@ test('users are counted once a day by a keyed hash, by country and app, and no a
   assert.doesNotMatch(JSON.stringify(snap), /203\.0|198\.51|192\.0/);
 });
 
-test('what assistants ask is counted as totals of fixed choices; scanners, free text and quotes are not', () => {
+test('what readers ask is counted as totals of fixed choices; scanners, free text and quotes are not', () => {
   const { createStats } = require('../src/stats');
   const s = createStats(null);
   const init = (name) => ({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name } } });
@@ -385,10 +385,13 @@ test('what assistants ask is counted as totals of fixed choices; scanners, free 
   s.message(call('search', { query: 'my name is Ahmad', translation: 'sahih' }), reader);
   s.message(init('agentrank-probe'), scanner);
   s.message(call('get_ayah', { surah: 1, ayah: 1 }), scanner);
+  // An assistant's call from another of its addresses, never introduced, is a reader's all the same
+  s.message(call('get_tafsir', { surah: 36, ayah: 1 }), { ip: '192.0.2.44', country: 'US' });
   s.failed('get_recitation', 'No reciter "afasy"; list_reciters gives the ids.');
   const day = s.snapshot().days[new Date().toISOString().slice(0, 10)];
   assert.deepStrictEqual(day.asked.get_ayah, { surah: { 2: 1 }, translation: { sahih: 1 } });
   assert.deepStrictEqual(day.asked.search, { translation: { sahih: 1 } });
+  assert.deepStrictEqual(day.asked.get_tafsir, { surah: { 36: 1 } });
   assert.deepStrictEqual(day.failed.get_recitation, { 'No reciter "…"; list_reciters gives the ids.': 1 });
   assert.doesNotMatch(JSON.stringify(day), /Ahmad|afasy|"1":|203\.0/);
 });

@@ -6,7 +6,7 @@
  * as it connects, such as "claude-ai"), and the users: callers told apart by a
  * keyed hash of their address, the key made fresh each day and never written
  * down, so only the day's totals (by app and by Cloudflare's country) are kept.
- * And, for calls from AI assistants only, what is asked as totals of its choices
+ * And, for every call but a known scanner's, what is asked as totals of its choices
  * (which surah, translation, reciter, language, kind of file) and why calls fail,
  * from fixed lists: never free text, never tied to a caller. Ninety days.
  *
@@ -93,10 +93,12 @@ function createStats(file) {
         const tool = m.params && m.params.name;
         bump(d.tools, typeof tool === 'string' && NAME.test(tool) ? tool : 'other');
         user(d, who);
-        // What an assistant's reader asked for, as totals of the choices; scanners' probes are left out
+        /* What readers asked for, as totals of the choices. Only a caller that introduced itself as a scanner is
+           left out: assistants call from fleets of addresses, rarely the one that introduced the app */
         const apps = who && who.ip ? seen.get(hash(who)) : null;
+        const scanner = apps && apps.size > 0 && ![...apps].some(assistant);
         const args = m.params && m.params.arguments;
-        if (apps && [...apps].some(assistant) && typeof tool === 'string' && NAME.test(tool) && args && typeof args === 'object') {
+        if (!scanner && typeof tool === 'string' && NAME.test(tool) && args && typeof args === 'object') {
           d.asked = d.asked || {};
           const t = d.asked[tool] = d.asked[tool] || {};
           for (const [k, shape] of Object.entries(CHOICES)) {
