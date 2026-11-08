@@ -10,12 +10,19 @@
  * (which surah, translation, reciter, language, kind of file) and why calls fail,
  * from fixed lists: never free text, never tied to a caller. Ninety days.
  *
+ * Who calls is told by kind: Claude.ai and ChatGPT by the address ranges they publish
+ * (origin.js), apps on a reader's own machine by the name they give, scanners by theirs,
+ * and the rest unverified. For all but scanners, each tool's errors and speed are counted;
+ * and the last calls, their fixed choices only, are held in memory (never on disk) for
+ * the admin page to look at and replay.
+ *
  * Saved to a file when one is given (MCP_STATS_FILE, or systemd's state
  * directory) once a minute and on the way down; otherwise held in memory only.
  */
 'use strict';
 
 const crypto = require('crypto');
+const { AsyncLocalStorage } = require('async_hooks');
 const fs = require('fs');
 const path = require('path');
 
@@ -23,6 +30,8 @@ const DAYS = 90;
 const NAME = /^[\w .@/+-]{1,48}$/;     // what a client calls itself, kept only if it looks like a name
 const COUNTRY = /^[A-Z]{2}$/;          // Cloudflare's CF-IPCountry; XX, T1 (Tor) or none count as ??
 const MAX_SEEN = 200000;               // a day's callers held at most, so a flood cannot grow memory
+const RECENT = 100;                    // the last calls the admin page can see and replay, in memory only
+const SPEED = [100, 300, 1000, 3000];  // a call's time, in ms, counted by the band it falls in
 // The apps readers use, by the name each gives (public/admin/mcp/mcp.js keeps the same list); the rest are scanners
 const SCANNER = /probe|scan|crawl|check|audit|verif|monitor|health|bot\b|census|research|harvest|registry|catalog|index/i;
 const ASSISTANT = /claude|anthropic|openai|chatgpt|gemini|visual studio code|vscode|copilot|cursor|windsurf|codeium|grok|xai|perplexity|mistral|le ?chat|^zed|^cline|roo-?code|^goose|lm ?studio/i;
@@ -35,8 +44,28 @@ const CHOICES = {
   language: (v) => typeof v === 'string' && /^[a-z]{2,3}$/i.test(v) ? v.toLowerCase() : null,
   kind: (v) => typeof v === 'string' && /^[a-z]{2,12}$/.test(v) ? v : null,
 };
+/* A call's arguments as far as they can be kept and replayed: numbers, ids and switches, never typed text */
+const KEEP = { surah: 'int', ayah: 'int', to: 'int', limit: 'int', translation: 'id', reciter: 'id', language: 'id', kind: 'id', tafsir: 'flag' };
+function keepArgs(args) {
+  const out = {};
+  if (!args || typeof args !== 'object') return out;
+  for (const [k, type] of Object.entries(KEEP)) {
+    const v = args[k];
+    if (type === 'int' && Number.isInteger(v) && v >= 0 && v <= 100000) out[k] = v;
+    else if (type === 'id' && typeof v === 'string' && /^[a-z0-9_-]{1,48}$/i.test(v)) out[k] = v;
+    else if (type === 'flag' && typeof v === 'boolean') out[k] = v;
+  }
+  return out;
+}
+const KINDS = ['claude', 'chatgpt', 'app', 'unknown', 'scanner'];
 
-function createStats(file) {
+/* A refusal's words without the protocol's preamble, and without anything quoted from the caller */
+const plain = (reason) => String(reason || '')
+  .replace(/^MCP error -?\d+:\s*/, '')
+  .replace(/^Input validation error: Invalid arguments for tool [\w-]+:\s*/, 'Invalid arguments: ')
+  .replace(/"[^"]*"/g, '"…"');
+
+function createStats(file, { origin = () => null } = {}) {
   let days = {};
   if (file) {
     try { days = JSON.parse(fs.readFileSync(file, 'utf8')).days || {}; } catch (e) { /* first run */ }
@@ -45,6 +74,9 @@ function createStats(file) {
 
   // Today's callers, as hashes under today's key: both live in memory only and go at midnight
   let seenDay = '', key = null, seen = new Map();
+  // The last calls, newest first, and the caller each request is answered for: memory only
+  const recent = [];
+  const caller = new AsyncLocalStorage();
 
   function today() {
     const key_ = new Date().toISOString().slice(0, 10);
@@ -62,7 +94,20 @@ function createStats(file) {
 
   const hash = (who) => crypto.createHmac('sha256', key).update(String(who.ip)).digest('base64').slice(0, 16);
 
-  /* A caller met today for the first time is a user: counted once, by country, and once for each app */
+  /* What kind of caller: an assistant's cloud by its address, else by the apps it named itself today */
+  function kindOf(who) {
+    if (!who || !who.ip) return { kind: 'unknown' };
+    const o = origin(who.ip);
+    if (o) return { kind: o };
+    const apps = key ? seen.get(hash(who)) : null;
+    if (apps && apps.size) {
+      const app = [...apps].find(assistant);
+      return app ? { kind: 'app', app } : { kind: 'scanner', app: [...apps][0] };
+    }
+    return { kind: 'unknown' };
+  }
+
+  /* A caller met today for the first time is a user: counted once, by country, by kind, and once for each app */
   function user(d, who, app) {
     if (!who || !who.ip) return;
     const h = hash(who);
@@ -73,6 +118,8 @@ function createStats(file) {
       d.users = (d.users || 0) + 1;
       d.countries = d.countries || {};
       bump(d.countries, COUNTRY.test(who.country || '') ? who.country : '??');
+      const kind = origin(who.ip) || (app ? (assistant(app) ? 'app' : 'scanner') : 'unknown');
+      bump(d.userKinds = d.userKinds || {}, kind);
     }
     if (app && !apps.has(app)) { apps.add(app); d.userClients = d.userClients || {}; bump(d.userClients, app); }
   }
@@ -93,19 +140,7 @@ function createStats(file) {
         const tool = m.params && m.params.name;
         bump(d.tools, typeof tool === 'string' && NAME.test(tool) ? tool : 'other');
         user(d, who);
-        /* What readers asked for, as totals of the choices. Only a caller that introduced itself as a scanner is
-           left out: assistants call from fleets of addresses, rarely the one that introduced the app */
-        const apps = who && who.ip ? seen.get(hash(who)) : null;
-        const scanner = apps && apps.size > 0 && ![...apps].some(assistant);
-        const args = m.params && m.params.arguments;
-        if (!scanner && typeof tool === 'string' && NAME.test(tool) && args && typeof args === 'object') {
-          d.asked = d.asked || {};
-          const t = d.asked[tool] = d.asked[tool] || {};
-          for (const [k, shape] of Object.entries(CHOICES)) {
-            const v = shape(args[k]);
-            if (v !== null) bump(t[k] = t[k] || {}, v);
-          }
-        }
+        bump(d.callKinds = d.callKinds || {}, kindOf(who).kind);
       }
     }
   }
@@ -114,11 +149,47 @@ function createStats(file) {
   /* A tool's answer that was a refusal: why, with what was quoted and every number taken out */
   function failed(tool, reason) {
     if (typeof tool !== 'string' || !NAME.test(tool)) return;
-    const why = String(reason || '').replace(/"[^"]*"/g, '"…"').replace(/\d+/g, '#').slice(0, 80);
+    const why = plain(reason).replace(/\d+/g, '#').slice(0, 100);
     const d = today();
     d.failed = d.failed || {};
     bump(d.failed[tool] = d.failed[tool] || {}, why);
   }
+  /* Answers the next requests on behalf of this caller, so the tools' outcomes know who asked */
+  const within = (who, fn) => caller.run(who || {}, fn);
+
+  /* A tool call's answer, as it was sent: what was asked (the choices), whether it failed (a refusal, or arguments
+     the tool would not take), how long it took. A replay from the admin page is not a reader and is not counted */
+  function outcome(tool, args, r, ms, who = caller.getStore()) {
+    if (typeof tool !== 'string' || !NAME.test(tool)) return;
+    if (who && who.replay) return;
+    const { kind, app } = kindOf(who);
+    const failedNow = !!(r && r.isError);
+    const text = (r && r.content && r.content[0] && r.content[0].text) || '';
+    const d = today();
+    if (kind !== 'scanner') {
+      if (failedNow) failed(tool, text);
+      // Only tools that exist get here, so a probe's made-up names are never counted as asked
+      d.asked = d.asked || {};
+      const t = d.asked[tool] = d.asked[tool] || {};
+      for (const [k, shape] of Object.entries(CHOICES)) {
+        const v = shape(args && args[k]);
+        if (v !== null) bump(t[k] = t[k] || {}, v);
+      }
+      d.health = d.health || {};
+      const h = d.health[tool] = d.health[tool] || { calls: 0, errors: 0, speed: [0, 0, 0, 0, 0] };
+      h.calls++;
+      if (failedNow) h.errors++;
+      const band = SPEED.findIndex((x) => ms < x);
+      h.speed[band < 0 ? SPEED.length : band]++;
+    }
+    recent.unshift({
+      t: Date.now(), kind, app: app || undefined, tool, args: keepArgs(args), ok: !failedNow,
+      why: failedNow ? plain(text).slice(0, 160) : undefined,
+      ms: Math.round(ms), bytes: JSON.stringify(r || '').length,
+    });
+    if (recent.length > RECENT) recent.length = RECENT;
+  }
+
   const error = () => { today().errors++; };
   const limited = () => { today().limited++; };
 
@@ -137,7 +208,10 @@ function createStats(file) {
     for (const sig of ['SIGTERM', 'SIGINT']) process.once(sig, () => { save(); process.exit(0); });
   }
 
-  return { message, file: file_, failed, error, limited, save, snapshot: () => ({ days, kept: DAYS, saved: !!file }) };
+  return {
+    message, file: file_, failed, error, limited, save, within, outcome,
+    snapshot: () => ({ days, kept: DAYS, saved: !!file, recent, kinds: KINDS, speed: SPEED }),
+  };
 }
 
 /* Where to keep them: an explicit file, else systemd's state directory, else nowhere */
@@ -147,4 +221,4 @@ function statsFile() {
   return null;
 }
 
-module.exports = { createStats, statsFile };
+module.exports = { createStats, statsFile, keepArgs };

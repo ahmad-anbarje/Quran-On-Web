@@ -334,7 +334,7 @@ test('all callers together are held to a ceiling, whatever their addresses', asy
   await new Promise((ok) => capped.close(ok));
 });
 
-test('usage is counted for the admin page: calls by tool, connections by app, nothing else', async () => {
+test('usage is counted for the admin page: calls by tool, connections by app, the last calls in memory only', async () => {
   const counted = createServer({ perMinute: 100, statsFile: null });
   await new Promise((ok) => counted.listen(0, '127.0.0.1', ok));
   const at = `http://127.0.0.1:${counted.address().port}`;
@@ -351,8 +351,43 @@ test('usage is counted for the admin page: calls by tool, connections by app, no
   assert.deepStrictEqual(day.tools, { get_ayah: 2, list_surahs: 1 });
   assert.deepStrictEqual(day.clients, { 'claude-ai': 1 });
   assert.strictEqual(day.files, 1);
-  assert.doesNotMatch(JSON.stringify(s), /127\.0\.0\.1|surah":1/);   // no addresses, nothing asked
+  // A named app on the reader's own machine; its calls' choices kept, for replay
+  assert.deepStrictEqual(day.callKinds, { app: 3 });
+  assert.deepStrictEqual(day.health.get_ayah.calls, 2);
+  assert.deepStrictEqual(s.recent.map((c) => [c.kind, c.tool, c.args, c.ok]),
+    [['app', 'list_surahs', {}, true], ['app', 'get_ayah', { surah: 1, ayah: 2 }, true], ['app', 'get_ayah', { surah: 1, ayah: 1 }, true]]);
+  assert.doesNotMatch(JSON.stringify(s), /127\.0\.0\.1/);   // no addresses
+  // A replay answers the same call again, and is not counted
+  const again = await fetch(at + '/replay', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+    body: JSON.stringify({ tool: 'get_ayah', args: { surah: 1, ayah: 1, query: 'never passed on' } }),
+  });
+  const answer = await again.json();
+  assert.match(answer.result.content[0].text, /1:1/);
+  const after = await (await fetch(at + '/stats')).json();
+  assert.strictEqual(after.days[new Date().toISOString().slice(0, 10)].calls, 3);
+  assert.strictEqual(after.recent.length, 3);
   await new Promise((ok) => counted.close(ok));
+});
+
+test('callers are told apart: Claude.ai and ChatGPT by their published addresses, apps and scanners by name', () => {
+  const { createStats } = require('../src/stats');
+  const { createOrigin } = require('../src/origin');
+  const origin = createOrigin({ fetch: false });
+  origin.ranges(['23.98.142.176/28']);
+  const s = createStats(null, { origin });
+  const init = (name) => ({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name } } });
+  const call = { jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'get_ayah', arguments: {} } };
+  s.message(call, { ip: '160.79.106.9' });                     // Claude.ai, whatever it calls itself
+  s.message(call, { ip: '::ffff:23.98.142.180' });             // ChatGPT
+  s.message(init('claude-code'), { ip: '203.0.113.7' });
+  s.message(call, { ip: '203.0.113.7' });
+  s.message(init('mcpbeat'), { ip: '198.51.100.2' });
+  s.message(call, { ip: '198.51.100.2' });
+  s.message(call, { ip: '192.0.2.9' });                        // never said who it is
+  const day = s.snapshot().days[new Date().toISOString().slice(0, 10)];
+  assert.deepStrictEqual(day.callKinds, { claude: 1, chatgpt: 1, app: 1, scanner: 1, unknown: 1 });
+  assert.deepStrictEqual(day.userKinds, { claude: 1, chatgpt: 1, app: 1, scanner: 1, unknown: 1 });
 });
 
 test('users are counted once a day by a keyed hash, by country and app, and no address is kept', () => {
@@ -380,13 +415,18 @@ test('what readers ask is counted as totals of fixed choices; scanners, free tex
   const init = (name) => ({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name } } });
   const call = (name, args) => ({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name, arguments: args } });
   const reader = { ip: '203.0.113.7', country: 'SA' }, scanner = { ip: '198.51.100.2', country: 'US' };
+  // As the server does: the message is counted, then the tool answers within its caller
+  const ask = (who, name, args, r = { content: [{ type: 'text', text: 'ok' }] }) => {
+    s.message(call(name, args), who);
+    s.within(who, () => s.outcome(name, args, r, 12));
+  };
   s.message(init('claude-ai'), reader);
-  s.message(call('get_ayah', { surah: 2, ayah: 255, translation: 'sahih' }), reader);
-  s.message(call('search', { query: 'my name is Ahmad', translation: 'sahih' }), reader);
+  ask(reader, 'get_ayah', { surah: 2, ayah: 255, translation: 'sahih' });
+  ask(reader, 'search', { query: 'my name is Ahmad', translation: 'sahih' });
   s.message(init('agentrank-probe'), scanner);
-  s.message(call('get_ayah', { surah: 1, ayah: 1 }), scanner);
+  ask(scanner, 'get_ayah', { surah: 1, ayah: 1 });
   // An assistant's call from another of its addresses, never introduced, is a reader's all the same
-  s.message(call('get_tafsir', { surah: 36, ayah: 1 }), { ip: '192.0.2.44', country: 'US' });
+  ask({ ip: '192.0.2.44', country: 'US' }, 'get_tafsir', { surah: 36, ayah: 1 });
   s.failed('get_recitation', 'No reciter "afasy"; list_reciters gives the ids.');
   const day = s.snapshot().days[new Date().toISOString().slice(0, 10)];
   assert.deepStrictEqual(day.asked.get_ayah, { surah: { 2: 1 }, translation: { sahih: 1 } });
@@ -394,6 +434,9 @@ test('what readers ask is counted as totals of fixed choices; scanners, free tex
   assert.deepStrictEqual(day.asked.get_tafsir, { surah: { 36: 1 } });
   assert.deepStrictEqual(day.failed.get_recitation, { 'No reciter "…"; list_reciters gives the ids.': 1 });
   assert.doesNotMatch(JSON.stringify(day), /Ahmad|afasy|"1":|203\.0/);
+  // The last calls keep the choices, never the words of a search
+  assert.doesNotMatch(JSON.stringify(s.snapshot().recent), /Ahmad|203\.0/);
+  assert.deepStrictEqual(day.health.get_ayah, { calls: 1, errors: 0, speed: [1, 0, 0, 0, 0] });
 });
 
 test('health, wrong paths and methods', async () => {

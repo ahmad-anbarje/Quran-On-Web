@@ -35,7 +35,7 @@ function build(q, version, { feedbackUrl, stats } = {}) {
         '(the Madinah Mushaf offline, with recitations).',
     },
   );
-  registerTools(server, q, stats);
+  registerTools(server, q);
   registerApp(server, q);
   registerResources(server, q);
   registerFeedback(server, q, feedbackUrl);

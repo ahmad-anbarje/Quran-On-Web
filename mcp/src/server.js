@@ -23,7 +23,8 @@ const quran = require('./quran');
 const { build } = require('./mcp');
 const { serveFile } = require('./files');
 const { feedbackUrl } = require('./feedback');
-const { createStats, statsFile } = require('./stats');
+const { createStats, statsFile, keepArgs } = require('./stats');
+const { createOrigin } = require('./origin');
 
 const VERSION = require('../package.json').version;
 const MAX_BODY = 64 * 1024;
@@ -32,12 +33,37 @@ const PER_MINUTE = Number(process.env.MCP_PER_MINUTE || 600);
 // And a ceiling over all of them together, so a flood cannot take the box
 const TOTAL_PER_MINUTE = Number(process.env.MCP_TOTAL_PER_MINUTE || 6000);
 
+/* Each tool call's answer read as it is sent, so the counts see what the reader got: a refusal, arguments the
+   tool would not take (turned away before it runs), or an answer, and how long it all took */
+function watch(res, body, who, tools, stats) {
+  const calls = (Array.isArray(body) ? body : [body]).filter((m) => m && m.method === 'tools/call' && m.params
+    && tools && tools.has(m.params.name));
+  if (!calls.length) return;
+  const t0 = performance.now(), out = [], write = res.write.bind(res), end = res.end.bind(res);
+  const keep = (c) => { if (c && typeof c !== 'function') out.push(Buffer.from(c)); };
+  res.write = (c, ...rest) => { keep(c); return write(c, ...rest); };
+  res.end = (c, ...rest) => {
+    keep(c);
+    const ms = performance.now() - t0;
+    let sent = [];
+    try { sent = [].concat(JSON.parse(Buffer.concat(out).toString('utf8'))); } catch (e) { /* not an answer to read */ }
+    for (const m of calls) {
+      const reply = sent.find((x) => x && x.id === m.id);
+      const r = !reply ? { isError: true, content: [{ type: 'text', text: 'no answer' }] }
+        : reply.result || { isError: true, content: [{ type: 'text', text: (reply.error && reply.error.message) || 'error' }] };
+      stats.outcome(m.params.name, m.params.arguments, r, ms, who);
+    }
+    return end(c, ...rest);
+  };
+}
+
 function createServer(options = {}) {
   const root = options.root || path.join(__dirname, '..', '..');
   const q = quran.open(root);
   const perMinute = options.perMinute || PER_MINUTE;
   const totalPerMinute = options.totalPerMinute || TOTAL_PER_MINUTE;
-  const stats = options.stats || createStats('statsFile' in options ? options.statsFile : statsFile());
+  const stats = options.stats || createStats('statsFile' in options ? options.statsFile : statsFile(),
+    { origin: options.origin || createOrigin({ fetch: !!options.fetchRanges }) });
   const reports = feedbackUrl(options);
 
   /* Requests a minute, by address; the map is swept as it goes, so it holds
@@ -91,7 +117,10 @@ function createServer(options = {}) {
       if (serveFile(q, req, res)) return stats.file();
       return send(res, 404, { error: 'no such file; get_file with kind "data" lists them' });
     }
-    if (url !== '/mcp') return send(res, 404, { error: 'not found; the MCP endpoint is /mcp' });
+    /* The admin page's replay of a recent call (nginx passes it only behind the admin password): the same tool
+       and choices asked again, the answer shown, nothing counted */
+    const replay = url === '/replay' && req.method === 'POST';
+    if (url !== '/mcp' && !replay) return send(res, 404, { error: 'not found; the MCP endpoint is /mcp' });
 
     /* Stateless: nothing to stream back on a GET, no session to DELETE */
     if (req.method !== 'POST') return send(res, 405, rpcError(-32000, 'Method not allowed'), { Allow: 'POST' });
@@ -111,13 +140,19 @@ function createServer(options = {}) {
       try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch (e) {
         return send(res, 400, rpcError(-32700, 'Parse error'));
       }
-      stats.message(body, { ip, country: req.headers['x-country'] });
+      if (replay) {
+        if (!body || typeof body.tool !== 'string' || !/^[a-z_]{1,40}$/.test(body.tool)) return send(res, 400, { error: 'a tool to replay' });
+        body = { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: body.tool, arguments: keepArgs(body.args) } };
+      } else stats.message(body, { ip, country: req.headers['x-country'] });
+      const who = replay ? { replay: true } : { ip, country: req.headers['x-country'] };
       const server = build(q, VERSION, { feedbackUrl: reports, stats });
       const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
       res.on('close', () => { transport.close(); server.close(); });
+      if (stats.outcome) watch(res, body, who, server.toolNames, stats);
       try {
         await server.connect(transport);
-        await transport.handleRequest(req, res, body);
+        const answer = () => transport.handleRequest(req, res, body);
+        await (stats.within ? stats.within(who, answer) : answer());
       } catch (e) {
         console.error(e);
         stats.error();
@@ -130,7 +165,8 @@ function createServer(options = {}) {
 if (require.main === module) {
   const host = process.env.MCP_HOST || '127.0.0.1';
   const port = Number(process.env.MCP_PORT || 8788);
-  const server = createServer();
+  // Live: OpenAI's published ranges are read now and each day
+  const server = createServer({ fetchRanges: true });
   server.requestTimeout = 15_000;
   server.headersTimeout = 10_000;
   server.listen(port, host, () => console.log(`mcp listening on ${host}:${port}`));

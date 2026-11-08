@@ -7,106 +7,166 @@
 <title>MCP · Admin · The Great Quran</title>
 <link rel="stylesheet" href="../admin.css" />
 <style>
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 10px; margin: 16px 0; }
+  .top { flex-wrap: wrap; gap: 8px; }
+  .top .tools { display: flex; gap: 8px; align-items: center; }
+  .jump { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; position: sticky; top: 0; z-index: 2; padding: 8px 0; background: var(--bg); }
+  .jump a { font-size: 0.8rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: var(--text); text-decoration: none; }
+  .jump a:hover { border-color: var(--primary); color: var(--primary); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 10px; margin: 14px 0; }
   .card { padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
-  .card b { display: block; font-size: 1.6rem; color: var(--primary); line-height: 1.2; }
-  .card span { font-size: 0.8rem; opacity: 0.7; }
-  h2 { font-size: 1rem; margin: 22px 0 8px; }
+  .card b { display: block; font-size: 1.6rem; color: var(--primary); line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .card span { font-size: 0.8rem; opacity: 0.75; }
+  .card small { display: block; font-size: 0.74rem; opacity: 0.6; margin-top: 2px; }
+  .card.hi { border-color: var(--primary); }
+  .card.good b { color: var(--ok); } .card.warn b { color: var(--warn); } .card.bad b { color: var(--bad); }
+  h2.sec { font-size: 1.1rem; margin: 30px 0 4px; padding-top: 14px; border-top: 1px solid var(--line); scroll-margin-top: 52px; }
+  h2.sec small { font-weight: 400; font-size: 0.8rem; opacity: 0.65; margin-left: 6px; }
+  h3 { font-size: 0.92rem; margin: 14px 0 8px; }
+  .lead { font-size: 0.84rem; opacity: 0.75; margin: 2px 0 10px; }
   .bars { display: flex; align-items: flex-end; gap: 3px; height: 120px; padding: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
-  .bar { flex: 1 1 0; background: var(--primary); border-radius: 3px 3px 0 0; min-height: 2px; opacity: 0.85; position: relative; }
-  .bar:hover { opacity: 1; }
+  .bar { flex: 1 1 0; display: flex; flex-direction: column-reverse; min-height: 2px; }
+  .bar i { display: block; background: var(--primary); border-radius: 2px 2px 0 0; }
+  .bar i.bot { background: var(--line); }
   .axis { display: flex; justify-content: space-between; font-size: 0.72rem; opacity: 0.6; margin-top: 4px; }
+  .legend { font-size: 0.75rem; opacity: 0.75; margin-left: 8px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--primary); margin: 0 4px 0 10px; vertical-align: -1px; }
+  .legend i.bot { background: var(--line); }
   table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-  td, th { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); font-size: 0.88rem; }
-  th { font-weight: 600; opacity: 0.7; font-size: 0.78rem; }
-  td.n { font-variant-numeric: tabular-nums; width: 6rem; }
+  td, th { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); font-size: 0.86rem; vertical-align: top; }
+  th { font-weight: 600; opacity: 0.7; font-size: 0.76rem; }
+  td.n, th.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
   tr:last-child td { border-bottom: 0; }
+  td small { display: block; opacity: 0.6; font-size: 0.74rem; }
   .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr)); gap: 14px; }
   .four { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 14px; }
-  h2.sec { font-size: 1.1rem; margin: 30px 0 4px; padding-top: 14px; border-top: 1px solid var(--line); }
-  h3 { font-size: 0.92rem; margin: 14px 0 8px; }
-  .card.hi { border-color: var(--primary); }
-  td.n, th.n { text-align: right; white-space: nowrap; }
-  td small { display: block; opacity: 0.6; font-size: 0.74rem; }
+  .wide { overflow-x: auto; }
   .more { margin-top: 22px; }
   .more summary { cursor: pointer; font-weight: 600; font-size: 1rem; }
   .more table { margin-top: 8px; }
   .note { font-size: 0.8rem; opacity: 0.7; margin-top: 18px; }
   .err { color: var(--bad); }
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; margin-left: 8px; vertical-align: middle; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; vertical-align: middle; }
   .seg button { font: inherit; font-size: 0.78rem; padding: 3px 10px; border: 0; background: var(--card); color: var(--text); cursor: pointer; }
   .seg button[aria-pressed="true"] { background: var(--primary); color: #fff; }
-  td .flag { display: inline-block; width: 1.6em; }
-  select { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); }
+  select, .btn { font: inherit; font-size: 0.85rem; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--text); cursor: pointer; }
+  .btn:hover { border-color: var(--primary); color: var(--primary); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 0.74rem; font-weight: 600; white-space: nowrap; border: 1px solid var(--line); }
+  .badge.claude, .badge.chatgpt { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+  .badge.app { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 45%, var(--line)); }
+  .badge.unknown { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, var(--line)); }
+  .badge.scanner { opacity: 0.6; }
+  .ok { color: var(--ok); font-weight: 600; } .no { color: var(--bad); font-weight: 600; }
+  .speed { display: flex; height: 10px; width: 9rem; border-radius: 4px; overflow: hidden; background: var(--line); }
+  .speed i { display: block; height: 100%; }
+  .speed i:nth-child(1) { background: var(--ok); } .speed i:nth-child(2) { background: color-mix(in srgb, var(--ok) 55%, var(--warn)); }
+  .speed i:nth-child(3) { background: var(--warn); } .speed i:nth-child(4) { background: color-mix(in srgb, var(--warn) 50%, var(--bad)); }
+  .speed i:nth-child(5) { background: var(--bad); }
+  code { font-size: 0.8rem; }
+  #answer { scroll-margin-top: 60px; margin-top: 12px; padding: 12px 14px; background: var(--card); border: 1px solid var(--primary); border-radius: 12px; }
+  #answer[hidden] { display: none; }
+  #answer header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; font-weight: 600; font-size: 0.88rem; }
+  #answer pre { margin: 0 0 8px; padding: 10px; max-height: 26rem; overflow: auto; background: var(--bg); border-radius: 8px; font-size: 0.78rem; white-space: pre-wrap; word-break: break-word; }
+  #answer img { max-width: 100%; border: 1px solid var(--line); border-radius: 8px; }
+  td.dim, .dim { opacity: 0.55; }
 </style>
 </head>
 <body>
 <main>
   <header class="top">
     <h1>MCP server</h1>
-    <select id="range" aria-label="Period">
-      <option value="1">Today</option>
-      <option value="7" selected>Last 7 days</option>
-      <option value="30">Last 30 days</option>
-      <option value="90">Last 90 days</option>
-    </select>
+    <div class="tools">
+      <select id="range" aria-label="Period">
+        <option value="1">Today</option>
+        <option value="7" selected>Last 7 days</option>
+        <option value="30">Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+      <button class="btn" id="reload">Refresh</button>
+    </div>
   </header>
-  <p class="crumb"><a href="../">Admin</a> · how much readqurantoday.com/mcp is used, by AI assistants and developers' apps</p>
+  <p class="crumb"><a href="../">Admin</a> · readqurantoday.com/mcp, used by AI assistants for their readers</p>
+
+  <nav class="jump" aria-label="Sections">
+    <a href="#health">Are readers answered?</a>
+    <a href="#recent">Recent calls</a>
+    <a href="#asked">What readers ask</a>
+    <a href="#who">Who uses it</a>
+    <a href="#scan">Scanners</a>
+  </nav>
 
   <div class="cards">
-    <div class="card hi"><b id="peopleToday">–</b><span>users today, through AI assistants</span></div>
-    <div class="card"><b id="peopleAvg">–</b><span>a day, on average</span></div>
-    <div class="card"><b id="calls">–</b><span>tool calls</span></div>
-    <div class="card"><b id="bots">–</b><span>scanners &amp; directories today</span></div>
-    <div class="card"><b id="files">–</b><span>files downloaded</span></div>
-    <div class="card"><b id="problems">–</b><span>errors · refused</span></div>
+    <div class="card hi"><b id="cReal">–</b><span>real users</span><small id="cRealToday"></small></div>
+    <div class="card"><b id="cCalls">–</b><span>tool calls by real users</span><small id="cUnverified"></small></div>
+    <div class="card" id="cardErr"><b id="cErr">–</b><span>of their calls failed</span><small id="cErrN"></small></div>
+    <div class="card" id="cardFast"><b id="cFast">–</b><span>answered within 0.3 s</span><small id="cSlow"></small></div>
+    <div class="card"><b id="cBots">–</b><span>scanners &amp; directories</span><small>not readers, kept apart</small></div>
   </div>
 
   <h2><span id="chartTitle">Users a day</span>
-    <span class="seg" role="group" aria-label="Chart"><button id="showUsers" aria-pressed="true">Users</button><button id="showCalls" aria-pressed="false">Tool calls</button></span></h2>
+    <span class="seg" role="group" aria-label="Chart"><button id="showUsers" aria-pressed="true">Users</button><button id="showCalls" aria-pressed="false">Tool calls</button></span>
+    <span class="legend"><i></i>real <i class="bot"></i>scanners</span></h2>
   <div class="bars" id="bars"></div>
   <div class="axis"><span id="from"></span><span id="to"></span></div>
 
-  <h2 class="sec">Who uses it</h2>
+  <h2 class="sec" id="health">Are readers getting answers? <small>every caller but scanners</small></h2>
+  <p class="lead">Each tool: how often real users' calls failed, and how fast they were answered.</p>
   <div class="two">
-    <div>
-      <h3>AI assistants</h3>
-      <table><thead><tr><th>Assistant</th><th class="n">Users</th><th class="n">Connections</th></tr></thead><tbody id="assistants"></tbody></table>
+    <div class="wide">
+      <table><thead><tr><th>Tool</th><th class="n">Calls</th><th class="n">Failed</th><th title="Green under 0.1 s, then 0.3 s, 1 s, 3 s; red over 3 s">Speed</th></tr></thead><tbody id="healthRows"></tbody></table>
     </div>
     <div>
-      <h3>Users by country</h3>
-      <table><thead><tr><th>Country</th><th class="n">Users</th></tr></thead><tbody id="countries"></tbody></table>
+      <table><thead><tr><th>Why calls failed <small>tool · reason, quotes and numbers taken out</small></th><th class="n">Times</th></tr></thead><tbody id="failures"></tbody></table>
     </div>
   </div>
 
-  <h2 class="sec">What readers ask</h2>
-  <p class="note">From every call but those of callers known to be scanners, as totals of the choices made: which surah, translation, reciter, language, kind of file. Counted from today's deploy on; nothing typed is kept.</p>
+  <h2 class="sec" id="recent">Recent calls <small>the last 100 since the server started; in memory only</small></h2>
+  <p class="lead">What was asked (the choices only, never typed words) and whether it worked. <b>Replay</b> asks the same again and shows the answer the reader got.
+    <span class="seg" role="group" aria-label="Show"><button id="onlyReal" aria-pressed="true">Readers</button><button id="allCalls" aria-pressed="false">Everyone</button></span></p>
+  <div class="wide">
+    <table><thead><tr><th>When</th><th>Who</th><th>Tool · choices</th><th>Result</th><th class="n">Time</th><th class="n">Size</th><th></th></tr></thead><tbody id="recentRows"></tbody></table>
+  </div>
+  <section id="answer" hidden aria-live="polite">
+    <header><span id="answerTitle"></span><button class="btn" id="answerClose">Close</button></header>
+    <div id="answerBody"></div>
+  </section>
+
+  <h2 class="sec" id="asked">What readers ask</h2>
+  <p class="lead">Totals of the choices made in real users' calls: which surah, translation, reciter, language, kind of file.</p>
   <div class="four">
     <div><h3>Surahs</h3><table><thead><tr><th>Surah</th><th class="n">Asked</th></tr></thead><tbody id="askSurah"></tbody></table></div>
     <div><h3>Translations</h3><table><thead><tr><th>Translation</th><th class="n">Asked</th></tr></thead><tbody id="askTranslation"></tbody></table></div>
     <div><h3>Reciters</h3><table><thead><tr><th>Reciter</th><th class="n">Asked</th></tr></thead><tbody id="askReciter"></tbody></table></div>
-    <div><h3>Languages &amp; files</h3><table><thead><tr><th>Choice</th><th class="n">Asked</th></tr></thead><tbody id="askOther"></tbody></table></div>
+    <div><h3>Tools &amp; other choices</h3><table><thead><tr><th>Choice</th><th class="n">Asked</th></tr></thead><tbody id="askOther"></tbody></table></div>
   </div>
 
-  <h2 class="sec">Tools</h2>
+  <h2 class="sec" id="who">Who uses it</h2>
   <div class="two">
     <div>
-      <h3>Calls</h3>
-      <table><thead><tr><th>Tool</th><th class="n">Calls</th></tr></thead><tbody id="tools"></tbody></table>
+      <h3>By kind of caller</h3>
+      <table><thead><tr><th>Caller</th><th class="n">Users</th><th class="n">Calls</th></tr></thead><tbody id="kinds"></tbody></table>
     </div>
     <div>
-      <h3>Failures</h3>
-      <table><thead><tr><th>Tool · why</th><th class="n">Times</th></tr></thead><tbody id="failures"></tbody></table>
+      <h3>Apps on readers' own machines</h3>
+      <table><thead><tr><th>App</th><th class="n">Users</th><th class="n">Connections</th></tr></thead><tbody id="assistants"></tbody></table>
+    </div>
+    <div>
+      <h3>Users by country <small>everyone, scanners too</small></h3>
+      <table><thead><tr><th>Country</th><th class="n">Users</th></tr></thead><tbody id="countries"></tbody></table>
+    </div>
+    <div>
+      <h3>Calls by tool <small>everyone</small></h3>
+      <table><thead><tr><th>Tool</th><th class="n">Calls</th></tr></thead><tbody id="tools"></tbody></table>
     </div>
   </div>
 
-  <details class="more">
+  <details class="more" id="scan">
     <summary>Scanners &amp; directories <span id="botCount"></span></summary>
-    <p class="note">Directories, health checkers and security scanners that test MCP servers. Not readers.</p>
+    <p class="note">Directories, health checkers and security scanners that test MCP servers, by the name each gives. Not readers.</p>
     <table><thead><tr><th>Name it gives</th><th class="n">Users</th><th class="n">Connections</th></tr></thead><tbody id="scanners"></tbody></table>
   </details>
 
-  <p class="note">"Users through AI assistants" counts the callers whose app is a known assistant (Claude, ChatGPT, Gemini, VS Code, Cursor…); the rest are scanners. By country covers both. Users are callers told apart by a code made from their address with a key that changes every day and is never saved, so they are counted per day and added up over a period; no address, no list of people and nothing anyone typed is kept; what assistants ask is kept only as totals of the choices made. Apps that run in the cloud (ChatGPT, claude.ai) call from their own servers, so their many readers show as a few users, in the country of those servers; apps on a reader's own computer (Claude Code, Cursor, VS Code) show the reader's country. A connection is an assistant opening the server, about once a conversation.</p>
+  <p class="note"><b>How callers are told apart.</b> Claude.ai and ChatGPT are verified by the address ranges Anthropic and OpenAI publish for their servers' calls; their many readers arrive from a few addresses, so they show as a few users. Apps on a reader's own machine (Claude Code, Cursor, VS Code, Gemini CLI, Codex) are known by the name they give; scanners by theirs; anything else is unverified. Users are told apart by a code made from their address with a key that changes every day and is never saved, so they are counted per day and added up over a period. No address, no list of people and nothing anyone typed is kept; the recent calls hold only the choices, in memory, and go when the server restarts.</p>
   <p class="note" id="note"></p>
 </main>
 <script src="mcp.js"></script>
