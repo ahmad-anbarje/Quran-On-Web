@@ -66,6 +66,7 @@
 
   .foot { display: flex; justify-content: space-between; gap: 8px; padding: 6px 14px 9px; font-size: 0.74rem; color: var(--mute); }
   .foot a { color: var(--accent); text-decoration: none; font-weight: 600; cursor: pointer; }
+  .foot .links { display: flex; gap: 14px; }
   /* The ayah's translation, under the Arabic, following the ayah being recited */
   .tr { padding: 10px 16px 12px; border-top: 1px solid var(--line); font-size: 0.95rem; line-height: 1.6; unicode-bidi: plaintext; text-align: start; }
   .tr[hidden] { display: none; }
@@ -101,7 +102,7 @@
     <span class="time" id="time">0:00 / 0:00</span>
     <button id="speed" aria-label="Speed" disabled>1×</button>
   </div>
-  <div class="foot"><span id="where">&nbsp;</span><a id="open">readqurantoday.com</a></div>
+  <div class="foot"><span id="where">&nbsp;</span><span class="links"><a id="open">readqurantoday.com</a><a id="android">Android app</a></span></div>
 </div>
 <div class="tip" id="tip" hidden><b id="tipLatin"></b><span id="tipMean"></span></div>
 <audio id="audio" preload="metadata"></audio>
@@ -139,6 +140,7 @@
       var l = ctx.locale.split('-')[0].toLowerCase();
       wordLang = ['en', 'bn', 'fa', 'hi', 'id', 'tr', 'ur'].indexOf(l) >= 0 ? l : 'en';
     }
+    $('android').textContent = say('تطبيق أندرويد', 'Android app');
   }
 
   /* Each word's reading and meaning, asked of word_by_word an ayah at a time, the first time one of its words is hovered */
@@ -414,6 +416,10 @@
   $('open').onclick = function () {
     var url = data ? (on >= 0 ? data.link + (on + 1) + '/' : data.link) : 'https://readqurantoday.com/';
     app.openLink({ url: url }).catch(function () {});
+  };
+  // The Great Quran on Android: the mushaf offline, with recitations
+  $('android').onclick = function () {
+    app.openLink({ url: 'https://play.google.com/store/apps/details?id=com.readqurantoday.quran' }).catch(function () {});
   };
 
   audio.onplay = function () { $('playIcon').setAttribute('d', PAUSE); $('play').setAttribute('aria-label', say('إيقاف', 'Pause')); };
