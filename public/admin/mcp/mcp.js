@@ -150,6 +150,9 @@
     var gpt = persons.chatgpt || 0, onApps = people.app || 0;
     $('cPeople').textContent = fmt(gpt + onApps);
     $('cPeopleSplit').textContent = 'ChatGPT ' + fmt(gpt) + ' · apps ' + fmt(onApps) + ' · Claude.ai not countable';
+    // People have been counted only for a while: a long period says from when, rather than looking empty
+    var since = Object.keys(data.days).filter(function (k) { return data.days[k].userKinds || data.days[k].people; }).sort()[0];
+    if (since && since > days[0]) $('cPeopleSplit').textContent += ' · counted since ' + since;
     var now = data.live || {};
     $('cLive').textContent = fmt(sum(now, READERS));
     var mine = (asks.owner || 0) + (cards.owner || 0);
