@@ -1,7 +1,7 @@
 /**
- * The MCP Apps: the recitation player, which get_recitation opens, and the
- * ayah card, which get_ayah opens, in hosts that render them (Claude on the
- * web and desktop, ChatGPT); text-only clients never see them. Each is one
+ * The MCP App: one card, the recitation player, which get_recitation opens and get_ayah opens at its
+ * ayahs, with their translation, in hosts that render apps (Claude on the web and desktop, ChatGPT);
+ * text-only clients never see it. Each is one
  * self-contained page in mcp/app/, with the MCP Apps client
  * (mcp/app/client.min.js) and the mushaf's Arabic face put in it at start:
  * the host's sandbox may load nothing but the recordings and the page fonts.
@@ -12,7 +12,6 @@ const fs = require('fs');
 const path = require('path');
 
 const PLAYER_URI = 'ui://readqurantoday/player';
-const AYAH_URI = 'ui://readqurantoday/ayah';
 const MIME = 'text/html;profile=mcp-app';
 const APP_DIR = path.join(__dirname, '..', 'app');
 const FONT = path.join(__dirname, '..', '..', 'public', 'fonts', 'UthmanicHafs1Ver18.woff2');
@@ -45,13 +44,11 @@ function registerApp(server, q) {
       _meta: { ui: { csp: { resourceDomains: mediaOrigins(q) }, prefersBorder: false } },
     }],
   }));
-  app('player', PLAYER_URI, 'player.html', 'Recitation player', 'Plays a surah, following each ayah in the Arabic as it is recited');
-  app('ayah', AYAH_URI, 'ayah.html', 'Ayah card', 'Ayahs as the mushaf prints them, with their translation, to read and hear');
+  app('player', PLAYER_URI, 'player.html', 'Recitation player', 'Ayahs or a surah in the mushaf\'s Arabic, with their translation, played and followed as they are recited');
 }
 
 /* What a tool sets to be shown in an app; the flat key is the one older hosts read */
 const uiMeta = (uri) => ({ ui: { resourceUri: uri }, 'ui/resourceUri': uri });
 const playerMeta = uiMeta(PLAYER_URI);
-const ayahMeta = uiMeta(AYAH_URI);
 
-module.exports = { registerApp, playerMeta, ayahMeta, PLAYER_URI, AYAH_URI };
+module.exports = { registerApp, playerMeta, PLAYER_URI };

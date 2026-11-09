@@ -16,7 +16,7 @@
 
 const { z } = require('zod');
 const { MAX_RESULTS, DEFAULT_TRANSLATION, fold, reply, fail, checkAyahs, translationName, saveLink } = require('./shared');
-const { playerMeta, ayahMeta } = require('./app');
+const { playerMeta } = require('./app');
 const { fileUrl, fileName, datasets } = require('./files');
 
 const surahArg = z.number().int().min(1).max(114).describe('Surah number, 1-114');
@@ -53,7 +53,7 @@ function registerTools(server, q) {
       translation: z.string().optional().describe('Translation id, e.g. "hilali", "sahih", "urdu_junagarhi"; "none" for the Arabic alone'),
     },
     annotations: { readOnlyHint: true, openWorldHint: false },
-    _meta: ayahMeta,
+    _meta: playerMeta,
   }, ({ surah: s, ayah, to, translation }) => {
     const last = to || ayah;
     const bad = checkAyahs(q, s, ayah, last);
@@ -79,12 +79,8 @@ function registerTools(server, q) {
       ayahs,
       link: q.link(s),
     };
-    // The card draws from structuredContent, in the mushaf's own glyphs, which are for it and not the model
-    return {
-      ...reply(value),
-      structuredContent: value,
-      _meta: { 'com.readqurantoday/mushaf': { fonts: `${q.SITE}/fonts/v4/`, lines: q.mushafLines(s, ayah, last) } },
-    };
+    // The player opens at these ayahs, from structuredContent, and fetches their recitation itself
+    return { ...reply(value), structuredContent: value };
   });
 
   tool('search', {

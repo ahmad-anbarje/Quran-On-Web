@@ -66,6 +66,15 @@
 
   .foot { display: flex; justify-content: space-between; gap: 8px; padding: 6px 14px 9px; font-size: 0.74rem; color: var(--mute); }
   .foot a { color: var(--accent); text-decoration: none; font-weight: 600; cursor: pointer; }
+  /* The ayah's translation, under the Arabic, following the ayah being recited */
+  .tr { padding: 10px 16px 12px; border-top: 1px solid var(--line); font-size: 0.95rem; line-height: 1.6; unicode-bidi: plaintext; text-align: start; }
+  .tr[hidden] { display: none; }
+  .tr .src { display: block; margin-bottom: 4px; font-size: 0.74rem; color: var(--mute); }
+  /* A word's reading and meaning, over it on hover, as the website shows them */
+  .w:hover { color: var(--accent); }
+  .tip { position: fixed; z-index: 10; pointer-events: none; max-width: 240px; padding: 6px 10px; border-radius: 8px; background: #16283a; color: #fff; font-family: var(--ui); font-size: 0.8rem; line-height: 1.35; text-align: center; direction: ltr; unicode-bidi: plaintext; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
+  .tip b { display: block; font-size: 0.88rem; }
+  .tip[hidden] { display: none; }
   .note { padding: 10px 14px; font-size: 0.82rem; color: var(--color-text-danger, #b3261e); border-top: 1px solid var(--line); }
   .note[hidden], .wait[hidden] { display: none; }
   .wait { padding: 24px 16px; text-align: center; color: var(--mute); font-size: 0.85rem; }
@@ -82,6 +91,7 @@
   </div>
   <div class="wait" id="wait">…</div>
   <div class="text" id="text" hidden></div>
+  <div class="tr" id="tr" hidden><span class="src" id="trSrc"></span><span id="trText"></span></div>
   <div class="note" id="note" role="alert" hidden></div>
   <div class="bar">
     <button id="prev" aria-label="Previous ayah" disabled><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
@@ -93,6 +103,7 @@
   </div>
   <div class="foot"><span id="where">&nbsp;</span><a id="open">readqurantoday.com</a></div>
 </div>
+<div class="tip" id="tip" hidden><b id="tipLatin"></b><span id="tipMean"></span></div>
 <audio id="audio" preload="metadata"></audio>
 <script>/*@@CLIENT@@*/</script>
 <script>
@@ -104,6 +115,8 @@
   var app = new A.App({ name: 'Read Quran Today player', version: '1.0.0' });
 
   var data = null;          // get_recitation's answer
+  var trans = null;         // ayah index -> its translation, when the card was opened for ayahs (get_ayah)
+  var transName = '';
   var texts = [];           // the surah's ayahs, in Arabic
   var on = -1;              // index of the ayah being recited
   var ar = true;            // labels in Arabic unless the host speaks another language
@@ -119,8 +132,41 @@
     if (ctx.theme) { A.applyDocumentTheme(ctx.theme); document.documentElement.setAttribute('data-theme', ctx.theme); }
     if (ctx.styles && ctx.styles.variables) A.applyHostStyleVariables(ctx.styles.variables);
     if (ctx.styles && ctx.styles.css && ctx.styles.css.fonts) A.applyHostFonts(ctx.styles.css.fonts);
-    if (ctx.locale) ar = /^ar\b/i.test(ctx.locale);
+    if (ctx.locale) {
+      ar = /^ar\b/i.test(ctx.locale);
+      var l = ctx.locale.split('-')[0].toLowerCase();
+      wordLang = ['en', 'bn', 'fa', 'hi', 'id', 'tr', 'ur'].indexOf(l) >= 0 ? l : 'en';
+    }
   }
+
+  /* Each word's reading and meaning, asked of word_by_word an ayah at a time, the first time one of its words is hovered */
+  var wordLang = 'en', wordsAsked = {}, hovered = null;
+  function wordsOf(i) {
+    var key = data.surah.number + ':' + (i + 1) + ':' + wordLang;
+    if (!wordsAsked[key]) {
+      wordsAsked[key] = app.callServerTool({ name: 'word_by_word', arguments: { surah: data.surah.number, ayah: i + 1, language: wordLang } })
+        .then(function (r) { return JSON.parse(r.content[0].text).words; })
+        .catch(function () { delete wordsAsked[key]; return null; });
+    }
+    return wordsAsked[key];
+  }
+  function hoverWord(i, k, el) {
+    hovered = el;
+    wordsOf(i).then(function (list) {
+      var x = list && list[k];
+      if (hovered !== el || !x) return;
+      $('tipLatin').textContent = x.transliteration;
+      $('tipMean').textContent = x.meaning;
+      var tip = $('tip');
+      tip.hidden = false;
+      var r = el.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+      tip.style.left = Math.max(4, Math.min(window.innerWidth - w - 4, r.left + r.width / 2 - w / 2)) + 'px';
+      tip.style.top = (r.top - h - 6 < 4 ? r.bottom + 6 : r.top - h - 6) + 'px';
+    });
+  }
+  function leaveWord() { hovered = null; $('tip').hidden = true; }
+  // A tip left over a box that has scrolled under it would point at the wrong word
+  $('text').addEventListener('scroll', leaveWord);
 
   function note(msg) { $('note').textContent = msg || ''; $('note').hidden = !msg; }
 
@@ -140,11 +186,35 @@
     if (el) { el.classList.add('on'); view(); }
     // The next few ayahs' faces, ahead of the recitation
     if (mushafPieces) for (var k = i; k <= Math.min(mushafPieces.length - 1, i + 5); k++) mushafPieces[k].forEach(function (piece) { needPage(piece[0], true); });
-    $('where').textContent = range
+    $('where').textContent = range && range.from === range.to
+      ? say('الآية ' + digits(range.from + 1), 'Ayah ' + (range.from + 1))
+      : range
       ? say('الآيات ' + digits(range.from + 1) + '–' + digits(range.to + 1) + ' · الآية ' + digits(i + 1), 'Ayahs ' + (range.from + 1) + '–' + (range.to + 1) + ' · ayah ' + (i + 1))
       : say('الآية ' + digits(i + 1) + ' من ' + digits(data.ayahs.length), 'Ayah ' + (i + 1) + ' of ' + data.ayahs.length);
     $('prev').disabled = i <= 0;
     $('next').disabled = i >= data.ayahs.length - 1;
+    showTranslation(i);
+  }
+
+  function showTranslation(i) {
+    var t = trans && trans[i];
+    $('tr').hidden = !t;
+    if (!t) return;
+    $('trSrc').textContent = data.surah.number + ':' + (i + 1) + (transName ? ' · ' + transName : '');
+    $('trText').textContent = t;
+  }
+
+  /* Opened for ayahs (get_ayah): their translations kept, and the recitation of just those ayahs asked for */
+  function openAyahs(result) {
+    var d = result.structuredContent || JSON.parse(result.content[0].text);
+    var first = Number(d.ayahs[0].ref.split(':')[1]), last = Number(d.ayahs[d.ayahs.length - 1].ref.split(':')[1]);
+    trans = {};
+    d.ayahs.forEach(function (x) { if (x.translation) trans[Number(x.ref.split(':')[1]) - 1] = x.translation; });
+    transName = d.translation || '';
+    $('wait').textContent = say('جارٍ التحميل…', 'Loading…');
+    app.callServerTool({ name: 'get_recitation', arguments: { surah: d.surah.number, ayah: first, to: last } })
+      .then(function (r) { show(r, first - 1); })
+      .catch(function () { note(say('تعذّر جلب التلاوة.', 'The recitation could not be loaded.')); });
   }
 
   /* The ayah being recited, kept in view inside the box only: the conversation around it must not scroll */
@@ -201,6 +271,7 @@
       var s = document.createElement('span');
       s.className = 'ayah';
       s.dataset.i = i;
+      var k = 0;   // the word's place in its ayah; the last glyph is the ayah's number, which has none
       pieces.forEach(function (piece) {
         var p = piece[0];
         piece[1].forEach(function (g) {
@@ -209,6 +280,10 @@
           w.className = 'w qp' + p + (loaded[p] === true ? ' ready' : '');
           w.style.fontFamily = 'qcf' + p;
           w.textContent = g;
+          (function (at) {
+            w.onmouseenter = function () { hoverWord(i, at, w); };
+            w.onmouseleave = leaveWord;
+          })(k++);
           s.appendChild(w);
           s.appendChild(document.createTextNode(' '));
         });
@@ -354,6 +429,12 @@
 
   app.ontoolinput = function () { $('wait').textContent = say('جارٍ التحميل…', 'Loading…'); };
   app.ontoolresult = function (result) {
+    if (result && !result.isError) {
+      var given = result.structuredContent || null;
+      // get_ayah's answer has ayahs with their refs and no recording: the same card, opened at them
+      if (given && given.ayahs && given.ayahs[0] && given.ayahs[0].ref && !given.audio) { openAyahs(result); return; }
+      trans = null; transName = '';
+    }
     var start = 0;
     var d = result && (result.structuredContent || null);
     if (d && d.startAyah) start = d.startAyah - 1;

@@ -135,39 +135,6 @@ function open(root) {
     return mushafAyahs[s] || null;
   }
 
-  /* The mushaf's own lines that hold ayahs from..to of a surah, as the page breaks them, for the
-     ayah card: each word's glyph with the ayah it belongs to (0 for another surah's) */
-  let pageLines = null;
-  function mushafLines(s, from, to) {
-    if (!pageLines) {
-      const m = json(DATA, 'mushaf-v4.json');
-      pageLines = {};
-      let su = 0, v = 1;
-      for (let p = 1; p <= 604; p++) {
-        const marks = m.marks[p] || '';
-        pageLines[p] = [];
-        for (const line of m.pages[p] || []) {
-          if (line.t === 'surah') { su = line.s; v = 1; continue; }
-          if (line.t !== 'ayah') continue;
-          const words = [];
-          for (const g of line.v4.split('|')) {
-            words.push([g, su, v]);
-            if (marks.indexOf(g) >= 0) v++;
-          }
-          pageLines[p].push(words);
-        }
-      }
-    }
-    const out = [];
-    for (let p = page(s, from); p <= page(s, to); p++) {
-      for (const words of pageLines[p]) {
-        if (!words.some(([, su, v]) => su === s && v >= from && v <= to)) continue;
-        out.push({ page: p, words: words.map(([g, su, v]) => [g, su === s ? v : 0]) });
-      }
-    }
-    return out;
-  }
-
   /* A timing file also times every word, which is most of its weight and
      nothing asked for here: only where each ayah falls is kept. */
   const ayahTimes = (t) => ({ audioPath: t.audioPath, duration: t.duration, ayah: t.ayah });
@@ -192,7 +159,7 @@ function open(root) {
 
   return {
     SITE, AUDIO, surahs, translations, recitations, arabic, plain,
-    surah, page, link, ayahLink, readerLink, ayahText, translation, tafsir, words, wordLanguages, timing, mushaf, mushafLines, timingLink, uthmaniText, hafs: surahText.hafs,
+    surah, page, link, ayahLink, readerLink, ayahText, translation, tafsir, words, wordLanguages, timing, mushaf, timingLink, uthmaniText, hafs: surahText.hafs,
     hasTranslation: (id) => byTranslation.has(id),
     translationInfo: (id) => byTranslation.get(id) || null,
     recitation: (id) => byRecitation.get(id) || null,

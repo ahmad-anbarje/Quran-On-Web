@@ -144,21 +144,19 @@ test('get_recitation opens the player: one self-contained page, fed the timings 
   }
 });
 
-test('get_ayah opens the ayah card, fed the mushaf lines that hold the ayahs asked for', async () => {
+test('get_ayah opens the one card, the player, at the ayahs asked for, with their translation', async () => {
   const client = await connect();
   try {
     const tool = (await client.listTools()).tools.find((t) => t.name === 'get_ayah');
-    assert.strictEqual(tool._meta.ui.resourceUri, 'ui://readqurantoday/ayah');
-    const page = (await client.readResource({ uri: 'ui://readqurantoday/ayah' })).contents[0];
-    assert.strictEqual(page.mimeType, 'text/html;profile=mcp-app');
-    assert.doesNotMatch(page.text, /@@(CLIENT|FONT)@@/);
+    assert.strictEqual(tool._meta.ui.resourceUri, 'ui://readqurantoday/player');
+    // No second card to confuse readers
+    const uris = (await client.listResources()).resources.map((r) => r.uri).filter((u) => u.startsWith('ui://'));
+    assert.deepStrictEqual(uris, ['ui://readqurantoday/player']);
     const r = await client.callTool({ name: 'get_ayah', arguments: { surah: 2, ayah: 255, to: 256, translation: 'sahih' } });
     assert.strictEqual(r.structuredContent.ayahs.length, 2);
-    const mushaf = r._meta['com.readqurantoday/mushaf'];
-    // Page 42's own lines: from the one where 2:255 begins, after the end of 2:254, to the last of 2:256
-    assert.ok(mushaf.lines.every((line) => line.page === 42));
-    assert.strictEqual(mushaf.lines[0].words[0][1], 254);
-    assert.ok(mushaf.lines.some((line) => line.words.some(([, a]) => a === 256)));
+    assert.ok(r.structuredContent.ayahs.every((x) => x.translation));
+    const page = (await client.readResource({ uri: 'ui://readqurantoday/player' })).contents[0];
+    assert.match(page.text, /openAyahs/);   // the player knows get_ayah's answer
   } finally {
     await client.close();
   }
