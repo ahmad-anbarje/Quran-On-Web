@@ -420,10 +420,7 @@
     audio.playbackRate = SPEEDS[i];
   };
   $('seek').oninput = function () { if (audio.duration) audio.currentTime = audio.duration * this.value / 1000; };
-  $('open').onclick = function () {
-    var url = data ? (on >= 0 ? data.link + (on + 1) + '/' : data.link) : 'https://readqurantoday.com/';
-    app.openLink({ url: url }).catch(function () {});
-  };
+  $('open').onclick = function () { app.openLink({ url: 'https://readqurantoday.com/' }).catch(function () {}); };
   // The Great Quran on Android: the mushaf offline, with recitations
   $('android').onclick = function () {
     app.openLink({ url: 'https://play.google.com/store/apps/details?id=com.readqurantoday.quran' }).catch(function () {});

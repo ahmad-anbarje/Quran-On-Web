@@ -1,4 +1,10 @@
 $(function () {
+  // ChatGPT adds where to return to on every link a card opens; the reader's address keeps none of it
+  if (/[?&]redirectUrl=/.test(location.search)) {
+    var clean = new URLSearchParams(location.search);
+    clean.delete('redirectUrl');
+    history.replaceState(history.state, '', location.pathname + (clean.toString() ? '?' + clean : '') + location.hash);
+  }
   var quran = null, mushaf = null;
   var surah = null, page = null;
   var io = null, hydrateIO = null, keepIO = null, surahPages = [];
