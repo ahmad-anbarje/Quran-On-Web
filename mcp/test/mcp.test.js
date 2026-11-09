@@ -453,6 +453,26 @@ test('calls from the card are counted apart, and the admin page owner testing is
   assert.strictEqual(s.snapshot().recent[0].kind, 'owner');
 });
 
+test('ChatGPT readers and conversations are counted from its anonymous ids, which are never kept', () => {
+  const { createStats } = require('../src/stats');
+  const { createOrigin } = require('../src/origin');
+  const origin = createOrigin({ fetch: false });
+  origin.ranges(['23.98.142.176/28']);
+  const s = createStats(null, { origin });
+  const ask = (ip, subject, session) => s.message({ jsonrpc: '2.0', id: 2, method: 'tools/call',
+    params: { name: 'get_ayah', arguments: {}, _meta: { 'openai/subject': subject, 'openai/session': session } } }, { ip });
+  ask('23.98.142.180', 'v1/reader-one', 'chat-a');
+  ask('23.98.142.181', 'v1/reader-one', 'chat-a');   // another server, the same reader and chat
+  ask('23.98.142.182', 'v1/reader-one', 'chat-b');
+  ask('23.98.142.183', 'v1/reader-two', 'chat-c');
+  const snap = s.snapshot();
+  const day = snap.days[new Date().toISOString().slice(0, 10)];
+  assert.deepStrictEqual(day.people, { chatgpt: 2 });
+  assert.deepStrictEqual(day.chats, { chatgpt: 3 });
+  assert.deepStrictEqual(snap.live, { chatgpt: 2 });
+  assert.doesNotMatch(JSON.stringify(snap), /reader-one|chat-a/);
+});
+
 test('health, wrong paths and methods', async () => {
   assert.strictEqual((await fetch(base + '/health')).status, 200);
   assert.strictEqual((await fetch(base + '/elsewhere')).status, 404);

@@ -82,7 +82,7 @@ function createStats(file, { origin = () => null } = {}) {
 
   function today() {
     const key_ = new Date().toISOString().slice(0, 10);
-    if (seenDay !== key_) { seenDay = key_; key = crypto.randomBytes(32); seen = new Map(); owner = null; }
+    if (seenDay !== key_) { seenDay = key_; key = crypto.randomBytes(32); seen = new Map(); owner = null; people = new Set(); chats = new Set(); }
     if (!days[key_]) {
       days[key_] = { calls: 0, tools: {}, clients: {}, files: 0, errors: 0, limited: 0, users: 0, userClients: {}, countries: {} };
       const keep = Object.keys(days).sort().slice(-DAYS);
@@ -129,6 +129,37 @@ function createStats(file, { origin = () => null } = {}) {
   }
 
   /* The card marks its own calls, so a reader's one question is not counted as the card's every step */
+  /* ChatGPT's anonymous ids for the reader and the conversation (openai/subject, openai/session), turned into
+     today's codes like addresses are: people and conversations counted, the ids themselves never kept */
+  let people = new Set(), chats = new Set();
+  const live = new Map();   // today's code of whoever asked something -> when, and what kind of caller
+  const LIVE = 15 * 60 * 1000;
+  const code = (s) => crypto.createHmac('sha256', key).update(String(s)).digest('base64').slice(0, 16);
+  function reader(d, m, who, kind) {
+    if (kind === 'scanner' || kind === 'owner') return;
+    const meta = (m.params && m.params._meta) || {};
+    const subject = typeof meta['openai/subject'] === 'string' ? meta['openai/subject'] : null;
+    const session = typeof meta['openai/session'] === 'string' ? meta['openai/session'] : null;
+    if (subject && people.size < MAX_SEEN) {
+      const h = code('subject:' + subject);
+      if (!people.has(h)) { people.add(h); bump(d.people = d.people || {}, kind); }
+      live.set(h, { t: Date.now(), kind });
+    } else if (kind === 'app' && who && who.ip) {
+      live.set(hash(who), { t: Date.now(), kind });
+    }
+    if (session && chats.size < MAX_SEEN) {
+      const h = code('session:' + session);
+      if (!chats.has(h)) { chats.add(h); bump(d.chats = d.chats || {}, kind); }
+    }
+    if (live.size > 5000) for (const [k, v] of live) if (Date.now() - v.t > LIVE) live.delete(k);
+  }
+  /* Who asked something in the last quarter of an hour, by kind */
+  function liveNow() {
+    const out = {};
+    for (const [k, v] of live) { if (Date.now() - v.t > LIVE) live.delete(k); else bump(out, v.kind); }
+    return out;
+  }
+
   const fromCard = (m) => !!(m && m.params && m.params._meta && m.params._meta['com.readqurantoday/from'] === 'card');
 
   /* The admin page was opened from here: today's calls from this address are the site's own testing */
@@ -152,6 +183,7 @@ function createStats(file, { origin = () => null } = {}) {
         user(d, who);
         const kind = kindOf(who).kind;
         bump(fromCard(m) ? (d.cardKinds = d.cardKinds || {}) : (d.callKinds = d.callKinds || {}), kind);
+        reader(d, m, who, kind);
       }
     }
   }
@@ -222,7 +254,7 @@ function createStats(file, { origin = () => null } = {}) {
 
   return {
     message, file: file_, failed, error, limited, save, within, outcome, setOwner, fromCard,
-    snapshot: () => ({ days, kept: DAYS, saved: !!file, recent, kinds: KINDS, speed: SPEED }),
+    snapshot: () => ({ days, kept: DAYS, saved: !!file, recent, kinds: KINDS, speed: SPEED, live: liveNow() }),
   };
 }
 

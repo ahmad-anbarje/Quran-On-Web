@@ -101,13 +101,13 @@
   function draw() {
     if (!data) return;
     var days = lastDays(Number($('range').value));
-    var asks = {}, cards = {}, people = {}, clients = {}, userClients = {}, countries = {}, health = {}, failures = {};
+    var asks = {}, cards = {}, people = {}, persons = {}, chats = {}, clients = {}, userClients = {}, countries = {}, health = {}, failures = {};
     var asked = { surah: {}, translation: {}, reciter: {}, other: {} };
     var perDay = days.map(function (k) {
       var d = data.days[k];
       if (!d) return { real: 0, bot: 0 };
       var q = questionsOf(d);
-      add(asks, q); add(cards, d.cardKinds); add(people, d.userKinds);
+      add(asks, q); add(cards, d.cardKinds); add(people, d.userKinds); add(persons, d.people); add(chats, d.chats);
       add(clients, d.clients); add(userClients, d.userClients); add(countries, d.countries);
       Object.keys(d.health || {}).forEach(function (t) {
         var h = health[t] = health[t] || { calls: 0, card: 0, errors: 0, speed: [0, 0, 0, 0, 0] };
@@ -146,7 +146,12 @@
     $('cFast').textContent = all ? pct(fast, all) : '–';
     $('cSlow').textContent = all ? fmt(slow) + ' took over 1 s' : 'none yet';
     $('cardFast').className = 'card ' + (!all ? '' : fast / all < 0.7 ? 'warn' : 'good');
-    $('cPeople').textContent = fmt(people.app);
+    // People: ChatGPT's anonymous readers, and each address of an app on a person's own machine; a day each, added up
+    var gpt = persons.chatgpt || 0, onApps = people.app || 0;
+    $('cPeople').textContent = fmt(gpt + onApps);
+    $('cPeopleSplit').textContent = 'ChatGPT ' + fmt(gpt) + ' · apps ' + fmt(onApps) + ' · Claude.ai not countable';
+    var now = data.live || {};
+    $('cLive').textContent = fmt(sum(now, READERS));
     var mine = (asks.owner || 0) + (cards.owner || 0);
     $('mine').textContent = mine ? 'Your own testing in this period: ' + fmt(mine) + ' calls, kept out of every count above.' : '';
 
@@ -174,10 +179,11 @@
       td.appendChild(badge(k));
       td.appendChild(el('small', '', k === 'app' && Object.keys(apps).length ? Object.keys(apps).join(', ') : KIND_LONG[k]));
       tr.appendChild(td);
+      // People: ChatGPT says who its readers are (anonymously); an app on a person's own machine is its address; the rest cannot be told
+      tr.appendChild(el('td', 'n', k === 'chatgpt' ? fmt(persons.chatgpt) : k === 'app' ? fmt(people.app) : '—'));
+      tr.appendChild(el('td', 'n', k === 'chatgpt' ? fmt(chats.chatgpt) : '—'));
       tr.appendChild(el('td', 'n', fmt(asks[k])));
-      tr.appendChild(el('td', 'n', fmt(cards[k])));
-      // People can be told apart only on their own machines; the cloud assistants' readers share their servers
-      tr.appendChild(el('td', 'n dim', k === 'app' ? fmt(people.app) : '—'));
+      tr.appendChild(el('td', 'n dim', fmt(cards[k])));
       sb.appendChild(tr);
     });
 

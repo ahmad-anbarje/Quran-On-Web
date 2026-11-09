@@ -12,7 +12,7 @@
   .jump { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; position: sticky; top: 0; z-index: 2; padding: 8px 0; background: var(--bg); }
   .jump a { font-size: 0.8rem; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: var(--text); text-decoration: none; }
   .jump a:hover { border-color: var(--primary); color: var(--primary); }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 10px; margin: 14px 0; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.4rem, 1fr)); gap: 10px; margin: 14px 0; }
   .card { padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
   .card b { display: block; font-size: 1.6rem; color: var(--primary); line-height: 1.2; font-variant-numeric: tabular-nums; }
   .card span { font-size: 0.8rem; opacity: 0.75; }
@@ -100,7 +100,8 @@
     <div class="card"><b id="cCard">–</b><span>actions in the card</span><small>playing, changing reciter, word meanings</small></div>
     <div class="card" id="cardErr"><b id="cErr">–</b><span>of readers' calls failed</span><small id="cErrN"></small></div>
     <div class="card" id="cardFast"><b id="cFast">–</b><span>answered within 0.3 s</span><small id="cSlow"></small></div>
-    <div class="card"><b id="cPeople">–</b><span>people on their own apps</span><small>Claude Code, Cursor, VS Code…</small></div>
+    <div class="card"><b id="cPeople">–</b><span>people</span><small id="cPeopleSplit"></small></div>
+    <div class="card hi"><b id="cLive">–</b><span>active now</span><small>asked something in the last 15 min</small></div>
   </div>
   <p class="lead" id="mine"></p>
 
@@ -112,7 +113,7 @@
   <h2 class="sec" id="sources">Where readers come from</h2>
   <p class="lead">A <b>question</b> is a call the AI makes for a reader (it may make one or two for one question); <b>card</b> calls are the player's own, as the reader uses it.</p>
   <div class="wide">
-    <table><thead><tr><th>Source</th><th class="n">Questions</th><th class="n">Card</th><th class="n">People</th></tr></thead><tbody id="sourceRows"></tbody></table>
+    <table><thead><tr><th>Source</th><th class="n">People</th><th class="n">Chats</th><th class="n">Questions</th><th class="n">Card</th></tr></thead><tbody id="sourceRows"></tbody></table>
   </div>
 
   <h2 class="sec" id="tools">Tools <small>readers' calls only</small></h2>
@@ -160,7 +161,7 @@
     </div>
   </details>
 
-  <p class="note"><b>How this is counted.</b> Claude.ai and ChatGPT are recognised by the address ranges Anthropic and OpenAI publish; all their readers arrive through those servers, so how many people use them cannot be counted, only their questions. Apps on a person's own machine (Claude Code, Cursor, VS Code, Gemini CLI, Codex) are known by the name they give, and each address is one person a day. Scanners are known by their names. Calls from wherever this page was last opened today are your own testing and are kept out of every reader count. No address, no list of people and nothing anyone typed is kept; the recent calls hold only the choices, in memory, and go when the server restarts.</p>
+  <p class="note"><b>How this is counted.</b> Claude.ai and ChatGPT are recognised by the address ranges Anthropic and OpenAI publish; all their readers arrive through those servers, so they are counted by what each sends: ChatGPT gives an anonymous id for the reader and for the conversation, which are counted as people and chats under the same daily code; Claude.ai gives none, so only its questions are counted. Apps on a person's own machine (Claude Code, Cursor, VS Code, Gemini CLI, Codex) are known by the name they give, and each address is one person a day. Scanners are known by their names. Calls from wherever this page was last opened today are your own testing and are kept out of every reader count. No address, no list of people and nothing anyone typed is kept; the recent calls hold only the choices, in memory, and go when the server restarts.</p>
   <p class="note" id="note"></p>
 </main>
 <script src="mcp.js"></script>
