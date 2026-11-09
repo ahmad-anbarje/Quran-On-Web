@@ -66,7 +66,11 @@
 
   .foot { display: flex; justify-content: space-between; gap: 8px; padding: 6px 14px 9px; font-size: 0.74rem; color: var(--mute); }
   .foot a { color: var(--accent); text-decoration: none; font-weight: 600; cursor: pointer; }
-  .foot .links { display: flex; gap: 14px; }
+  .foot .links { display: flex; gap: 8px; }
+  .foot .links a { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); }
+  .foot .links a:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .foot .links svg { width: 14px; height: 14px; fill: currentColor; flex: none; }
+  .foot { align-items: center; }
   /* The ayah's translation, under the Arabic, following the ayah being recited */
   .tr { padding: 10px 16px 12px; border-top: 1px solid var(--line); font-size: 0.95rem; line-height: 1.6; unicode-bidi: plaintext; text-align: start; }
   .tr[hidden] { display: none; }
@@ -102,7 +106,7 @@
     <span class="time" id="time">0:00 / 0:00</span>
     <button id="speed" aria-label="Speed" disabled>1×</button>
   </div>
-  <div class="foot"><span id="where">&nbsp;</span><span class="links"><a id="open">readqurantoday.com</a><a id="android">Android app</a></span></div>
+  <div class="foot"><span id="where">&nbsp;</span><span class="links"><a id="open" title="readqurantoday.com"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 6h-2.95a15.6 15.6 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.9 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14a8.2 8.2 0 0 1 0-4h3.38a16.5 16.5 0 0 0 0 4H4.26zm.84 2h2.95c.32 1.25.78 2.45 1.38 3.56A8 8 0 0 1 5.1 16zm2.95-8H5.1a8 8 0 0 1 4.33-3.56A15.6 15.6 0 0 0 8.05 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66a14.7 14.7 0 0 1 0-4h4.68a14.7 14.7 0 0 1 0 4zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56zM16.36 14a16.5 16.5 0 0 0 0-4h3.38a8.2 8.2 0 0 1 0 4h-3.38z"/></svg><span id="openText">Website</span></a><a id="android" title="The Great Quran on Google Play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.6 9.48l1.84-3.18a.38.38 0 0 0-.66-.38l-1.86 3.22a11.4 11.4 0 0 0-9.84 0L5.22 5.92a.38.38 0 0 0-.66.38L6.4 9.48A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52zM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5z"/></svg><span id="androidText">Android</span></a></span></div>
 </div>
 <div class="tip" id="tip" hidden><b id="tipLatin"></b><span id="tipMean"></span></div>
 <audio id="audio" preload="metadata"></audio>
@@ -140,7 +144,10 @@
       var l = ctx.locale.split('-')[0].toLowerCase();
       wordLang = ['en', 'bn', 'fa', 'hi', 'id', 'tr', 'ur'].indexOf(l) >= 0 ? l : 'en';
     }
-    $('android').textContent = say('تطبيق أندرويد', 'Android app');
+    // The buttons read the reader's way: icon first, the website first
+    document.querySelector('.foot .links').dir = ar ? 'rtl' : 'ltr';
+    $('openText').textContent = say('الموقع', 'Website');
+    $('androidText').textContent = say('أندرويد', 'Android');
   }
 
   /* Each word's reading and meaning, asked of word_by_word an ayah at a time, the first time one of its words is hovered */
