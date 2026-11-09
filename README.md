@@ -131,7 +131,6 @@ No key; 60 requests a minute an address, 50 ayahs a call.
 | Tool | Answers |
 |---|---|
 | `get_ayah` | The Arabic of an ayah or a run of them, in any of the translations, with its mushaf page and link. In Claude and ChatGPT it opens a card: the ayahs in the mushaf's own script (QCF v4), each translation beneath, a button to hear them, and a link to the mushaf |
-| `get_ayah_image` | A PNG of an ayah or a run as the mushaf prints them (the page's lines in QCF v4), for apps that show pictures but not cards; drawn once and kept on disk |
 | `search` | Ayahs containing words, in the Arabic (diacritics optional) or in a translation |
 | `get_tafsir` | The Tafsir al-Muyassar of an ayah or a run |
 | `word_by_word` | Each word's transliteration and meaning, in English and six more languages |

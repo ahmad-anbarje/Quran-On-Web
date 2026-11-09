@@ -27,7 +27,7 @@
     scanner: ['Scanners & directories', 'by the name they give']
   };
   var REAL = ['claude', 'chatgpt', 'app'];
-  var TOOLS = ['get_ayah', 'get_ayah_image', 'search', 'get_tafsir', 'word_by_word', 'get_recitation', 'get_file', 'list_surahs', 'list_translations', 'list_reciters', 'send_feedback'];
+  var TOOLS = ['get_ayah', 'search', 'get_tafsir', 'word_by_word', 'get_recitation', 'get_file', 'list_surahs', 'list_translations', 'list_reciters', 'send_feedback'];
 
   var add = function (into, from) { Object.keys(from || {}).forEach(function (k) { into[k] = (into[k] || 0) + from[k]; }); };
   var sum = function (m, keys) { return (keys || Object.keys(m || {})).reduce(function (n, k) { return n + ((m && m[k]) || 0); }, 0); };
