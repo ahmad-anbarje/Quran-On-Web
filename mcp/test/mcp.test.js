@@ -433,6 +433,26 @@ test('what readers ask is counted as totals of fixed choices; scanners, free tex
   assert.deepStrictEqual(day.health.get_ayah, { calls: 1, errors: 0, speed: [1, 0, 0, 0, 0] });
 });
 
+test('calls from the card are counted apart, and the admin page owner testing is kept out of the readers counts', () => {
+  const { createStats } = require('../src/stats');
+  const s = createStats(null);
+  const call = (name, card) => ({ jsonrpc: '2.0', id: 2, method: 'tools/call',
+    params: { name, arguments: { surah: 2, ayah: 255 }, ...(card ? { _meta: { 'com.readqurantoday/from': 'card' } } : {}) } });
+  const reader = { ip: '203.0.113.7' }, me = { ip: '198.51.100.9' };
+  s.message({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { clientInfo: { name: 'claude-code' } } }, reader);
+  s.message(call('get_ayah'), reader);
+  s.message(call('get_recitation', true), reader);
+  s.setOwner(me.ip);
+  s.message(call('get_ayah'), me);
+  s.within(me, () => s.outcome('get_ayah', { surah: 2, ayah: 255 }, { content: [{ type: 'text', text: 'ok' }] }, 5));
+  const day = s.snapshot().days[new Date().toISOString().slice(0, 10)];
+  assert.deepStrictEqual(day.callKinds, { app: 1, owner: 1 });
+  assert.deepStrictEqual(day.cardKinds, { app: 1 });
+  assert.strictEqual(day.users, 1);              // the owner is not a user
+  assert.strictEqual(day.health, undefined);     // nor counted as a reader's call
+  assert.strictEqual(s.snapshot().recent[0].kind, 'owner');
+});
+
 test('health, wrong paths and methods', async () => {
   assert.strictEqual((await fetch(base + '/health')).status, 200);
   assert.strictEqual((await fetch(base + '/elsewhere')).status, 404);

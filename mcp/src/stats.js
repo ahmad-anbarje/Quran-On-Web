@@ -57,7 +57,7 @@ function keepArgs(args) {
   }
   return out;
 }
-const KINDS = ['claude', 'chatgpt', 'app', 'unknown', 'scanner'];
+const KINDS = ['claude', 'chatgpt', 'app', 'unknown', 'owner', 'scanner'];
 
 /* A refusal's words without the protocol's preamble, and without anything quoted from the caller */
 const plain = (reason) => String(reason || '')
@@ -74,13 +74,15 @@ function createStats(file, { origin = () => null } = {}) {
 
   // Today's callers, as hashes under today's key: both live in memory only and go at midnight
   let seenDay = '', key = null, seen = new Map();
+  // Today's code for the address the admin page was opened from: its calls are the site's own testing, not readers'
+  let owner = null;
   // The last calls, newest first, and the caller each request is answered for: memory only
   const recent = [];
   const caller = new AsyncLocalStorage();
 
   function today() {
     const key_ = new Date().toISOString().slice(0, 10);
-    if (seenDay !== key_) { seenDay = key_; key = crypto.randomBytes(32); seen = new Map(); }
+    if (seenDay !== key_) { seenDay = key_; key = crypto.randomBytes(32); seen = new Map(); owner = null; }
     if (!days[key_]) {
       days[key_] = { calls: 0, tools: {}, clients: {}, files: 0, errors: 0, limited: 0, users: 0, userClients: {}, countries: {} };
       const keep = Object.keys(days).sort().slice(-DAYS);
@@ -97,6 +99,7 @@ function createStats(file, { origin = () => null } = {}) {
   /* What kind of caller: an assistant's cloud by its address, else by the apps it named itself today */
   function kindOf(who) {
     if (!who || !who.ip) return { kind: 'unknown' };
+    if (owner && key && hash(who) === owner) return { kind: 'owner' };
     const o = origin(who.ip);
     if (o) return { kind: o };
     const apps = key ? seen.get(hash(who)) : null;
@@ -111,6 +114,7 @@ function createStats(file, { origin = () => null } = {}) {
   function user(d, who, app) {
     if (!who || !who.ip) return;
     const h = hash(who);
+    if (h === owner) return;
     let apps = seen.get(h);
     if (!apps) {
       apps = new Set();
@@ -123,6 +127,12 @@ function createStats(file, { origin = () => null } = {}) {
     }
     if (app && !apps.has(app)) { apps.add(app); d.userClients = d.userClients || {}; bump(d.userClients, app); }
   }
+
+  /* The card marks its own calls, so a reader's one question is not counted as the card's every step */
+  const fromCard = (m) => !!(m && m.params && m.params._meta && m.params._meta['com.readqurantoday/from'] === 'card');
+
+  /* The admin page was opened from here: today's calls from this address are the site's own testing */
+  function setOwner(ip) { if (ip) { today(); owner = hash({ ip }); } }
 
   /* One JSON-RPC message, or a batch of them, as it arrives, from a caller ({ ip, country }) */
   function message(body, who) {
@@ -140,7 +150,8 @@ function createStats(file, { origin = () => null } = {}) {
         const tool = m.params && m.params.name;
         bump(d.tools, typeof tool === 'string' && NAME.test(tool) ? tool : 'other');
         user(d, who);
-        bump(d.callKinds = d.callKinds || {}, kindOf(who).kind);
+        const kind = kindOf(who).kind;
+        bump(fromCard(m) ? (d.cardKinds = d.cardKinds || {}) : (d.callKinds = d.callKinds || {}), kind);
       }
     }
   }
@@ -159,14 +170,14 @@ function createStats(file, { origin = () => null } = {}) {
 
   /* A tool call's answer, as it was sent: what was asked (the choices), whether it failed (a refusal, or arguments
      the tool would not take), how long it took. A replay from the admin page is not a reader and is not counted */
-  function outcome(tool, args, r, ms, who = caller.getStore()) {
+  function outcome(tool, args, r, ms, who = caller.getStore(), card = false) {
     if (typeof tool !== 'string' || !NAME.test(tool)) return;
     if (who && who.replay) return;
     const { kind, app } = kindOf(who);
     const failedNow = !!(r && r.isError);
     const text = (r && r.content && r.content[0] && r.content[0].text) || '';
     const d = today();
-    if (kind !== 'scanner') {
+    if (kind !== 'scanner' && kind !== 'owner') {
       if (failedNow) failed(tool, text);
       // Only tools that exist get here, so a probe's made-up names are never counted as asked
       d.asked = d.asked || {};
@@ -178,12 +189,13 @@ function createStats(file, { origin = () => null } = {}) {
       d.health = d.health || {};
       const h = d.health[tool] = d.health[tool] || { calls: 0, errors: 0, speed: [0, 0, 0, 0, 0] };
       h.calls++;
+      if (card) h.card = (h.card || 0) + 1;
       if (failedNow) h.errors++;
       const band = SPEED.findIndex((x) => ms < x);
       h.speed[band < 0 ? SPEED.length : band]++;
     }
     recent.unshift({
-      t: Date.now(), kind, app: app || undefined, tool, args: keepArgs(args), ok: !failedNow,
+      t: Date.now(), kind, app: app || undefined, card: card || undefined, tool, args: keepArgs(args), ok: !failedNow,
       why: failedNow ? plain(text).slice(0, 160) : undefined,
       ms: Math.round(ms), bytes: JSON.stringify(r || '').length,
     });
@@ -209,7 +221,7 @@ function createStats(file, { origin = () => null } = {}) {
   }
 
   return {
-    message, file: file_, failed, error, limited, save, within, outcome,
+    message, file: file_, failed, error, limited, save, within, outcome, setOwner, fromCard,
     snapshot: () => ({ days, kept: DAYS, saved: !!file, recent, kinds: KINDS, speed: SPEED }),
   };
 }

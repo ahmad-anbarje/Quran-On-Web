@@ -113,6 +113,8 @@
   var $ = function (id) { return document.getElementById(id); };
   var audio = $('audio');
   var app = new A.App({ name: 'Read Quran Today player', version: '1.0.0' });
+  // Every call the card makes says so, so the counts tell a reader's question from the card's own steps
+  var CARD = { 'com.readqurantoday/from': 'card' };
 
   var data = null;          // get_recitation's answer
   var trans = null;         // ayah index -> its translation, when the card was opened for ayahs (get_ayah)
@@ -144,7 +146,7 @@
   function wordsOf(i) {
     var key = data.surah.number + ':' + (i + 1) + ':' + wordLang;
     if (!wordsAsked[key]) {
-      wordsAsked[key] = app.callServerTool({ name: 'word_by_word', arguments: { surah: data.surah.number, ayah: i + 1, language: wordLang } })
+      wordsAsked[key] = app.callServerTool({ _meta: CARD, name: 'word_by_word', arguments: { surah: data.surah.number, ayah: i + 1, language: wordLang } })
         .then(function (r) { return JSON.parse(r.content[0].text).words; })
         .catch(function () { delete wordsAsked[key]; return null; });
     }
@@ -212,7 +214,7 @@
     d.ayahs.forEach(function (x) { if (x.translation) trans[Number(x.ref.split(':')[1]) - 1] = x.translation; });
     transName = d.translation || '';
     $('wait').textContent = say('جارٍ التحميل…', 'Loading…');
-    app.callServerTool({ name: 'get_recitation', arguments: { surah: d.surah.number, ayah: first, to: last } })
+    app.callServerTool({ _meta: CARD, name: 'get_recitation', arguments: { surah: d.surah.number, ayah: first, to: last } })
       .then(function (r) { show(r, first - 1); })
       .catch(function () { note(say('تعذّر جلب التلاوة.', 'The recitation could not be loaded.')); });
   }
@@ -338,7 +340,7 @@
     if (m && Array.isArray(m.ayahs) && m.ayahs.length === data.ayahs.length) { drawMushaf(m, start || 0); return Promise.resolve(); }
     var runs = [], n = data.ayahs.length;
     for (var a = 1; a <= n; a += 50) runs.push({ surah: data.surah.number, ayah: a, to: Math.min(n, a + 49), translation: 'none' });
-    return Promise.all(runs.map(function (args) { return app.callServerTool({ name: 'get_ayah', arguments: args }); }))
+    return Promise.all(runs.map(function (args) { return app.callServerTool({ _meta: CARD, name: 'get_ayah', arguments: args }); }))
       .then(function (parts) {
         texts = [];
         // The face wants these four marks as KFGQPC writes them (scripts/surah-text.js, hafs)
@@ -371,7 +373,7 @@
   function loadReciters() {
     if (reciters) { $('reciter').value = data.reciter.id; return; }
     reciters = [];
-    app.callServerTool({ name: 'list_reciters', arguments: {} }).then(function (r) {
+    app.callServerTool({ _meta: CARD, name: 'list_reciters', arguments: {} }).then(function (r) {
       reciters = JSON.parse(r.content[0].text).reciters;
       var sel = $('reciter');
       reciters.forEach(function (x) {
@@ -389,7 +391,7 @@
     var keep = Math.max(0, on);
     var args = { surah: data.surah.number, reciter: this.value };
     if (range) { args.ayah = range.from + 1; args.to = range.to + 1; }   // the run stays the run
-    app.callServerTool({ name: 'get_recitation', arguments: args })
+    app.callServerTool({ _meta: CARD, name: 'get_recitation', arguments: args })
       .then(function (r) { show(r, keep); })
       .catch(function () { note(say('تعذّر تغيير القارئ.', 'The reciter could not be changed.')); });
   };

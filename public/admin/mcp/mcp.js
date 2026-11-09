@@ -2,8 +2,7 @@
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
-  var data = null, surahs = null;
-  var chart = 'users', onlyReal = true;
+  var data = null, surahs = null, onlyReal = true;
   var fmt = function (n) { return Number(n || 0).toLocaleString(); };
   var pct = function (a, b) { return b ? Math.round(a / b * 1000) / 10 + '%' : '–'; };
   var names = window.Intl && Intl.DisplayNames ? new Intl.DisplayNames(['en'], { type: 'region' }) : null;
@@ -18,27 +17,20 @@
   ];
   var SCANNER = /probe|scan|crawl|check|audit|verif|monitor|health|bot\b|census|research|harvest|registry|catalog|index/i;
   var family = function (app) { if (SCANNER.test(app)) return null; for (var i = 0; i < ASSISTANTS.length; i++) if (ASSISTANTS[i][1].test(app)) return ASSISTANTS[i][0]; return null; };
-  var KIND = { claude: 'Claude.ai ✓', chatgpt: 'ChatGPT ✓', app: 'App', unknown: 'Unverified', scanner: 'Scanner' };
+  var KIND = { claude: 'Claude.ai ✓', chatgpt: 'ChatGPT ✓', app: 'App', unknown: 'Unverified', owner: 'Your testing', scanner: 'Scanner' };
   var KIND_LONG = {
-    claude: ['Claude.ai', 'verified by Anthropic\'s published addresses'],
-    chatgpt: ['ChatGPT', 'verified by OpenAI\'s published addresses'],
-    app: ['Apps on readers\' machines', 'Claude Code, Cursor, VS Code, Gemini CLI… by the name they give'],
-    unknown: ['Unverified', 'called without saying who it is'],
-    scanner: ['Scanners & directories', 'by the name they give']
+    claude: 'verified by Anthropic\'s published addresses',
+    chatgpt: 'verified by OpenAI\'s published addresses',
+    app: 'on a person\'s own machine, by the name it gives',
+    unknown: 'called without saying who it is'
   };
-  var REAL = ['claude', 'chatgpt', 'app'];
-  var TOOLS = ['get_ayah', 'search', 'get_tafsir', 'word_by_word', 'get_recitation', 'get_file', 'list_surahs', 'list_translations', 'list_reciters', 'send_feedback'];
+  var READERS = ['claude', 'chatgpt', 'app', 'unknown'];
 
   var add = function (into, from) { Object.keys(from || {}).forEach(function (k) { into[k] = (into[k] || 0) + from[k]; }); };
   var sum = function (m, keys) { return (keys || Object.keys(m || {})).reduce(function (n, k) { return n + ((m && m[k]) || 0); }, 0); };
 
-  /* A day's users and calls by kind; days counted before kinds were kept fall back on the app names */
-  function kindsOf(d) {
-    if (d.userKinds || d.callKinds) return { users: d.userKinds || {}, calls: d.callKinds || {} };
-    var real = 0;
-    Object.keys(d.userClients || {}).forEach(function (k) { if (family(k)) real += d.userClients[k]; });
-    return { users: { app: real, scanner: Math.max(0, (d.users || 0) - real) }, calls: { unknown: d.calls || 0 } };
-  }
+  /* A day's questions by kind; days counted before kinds were kept give their calls as unverified */
+  var questionsOf = function (d) { return d.callKinds || { unknown: d.calls || 0 }; };
 
   function lastDays(n) {
     var out = [], d = new Date();
@@ -85,14 +77,10 @@
 
   function badge(kind, app) {
     var b = el('span', 'badge ' + kind, kind === 'app' || kind === 'scanner' ? (app || KIND[kind]) : KIND[kind]);
-    b.title = KIND_LONG[kind] ? KIND_LONG[kind].join(' — ') : '';
+    b.title = KIND_LONG[kind] || '';
     return b;
   }
-
-  function choices(args) {
-    return Object.keys(args || {}).map(function (k) { return k + ' ' + args[k]; }).join(' · ');
-  }
-
+  function choices(args) { return Object.keys(args || {}).map(function (k) { return k + ' ' + args[k]; }).join(' · '); }
   function ago(t) {
     var s = Math.round((Date.now() - t) / 1000);
     if (s < 60) return 'just now';
@@ -102,21 +90,30 @@
   }
   var size = function (b) { return b < 1024 ? b + ' B' : (b / 1024).toFixed(1) + ' kB'; };
 
+  function speedBar(speed, total) {
+    var bar = el('div', 'speed');
+    var labels = ['under 0.1 s', '0.1–0.3 s', '0.3–1 s', '1–3 s', 'over 3 s'];
+    bar.title = speed.map(function (n, i) { return labels[i] + ': ' + n; }).join(' · ');
+    speed.forEach(function (n) { var i = el('i'); i.style.width = (total ? n / total * 100 : 0) + '%'; bar.appendChild(i); });
+    return bar;
+  }
+
   function draw() {
     if (!data) return;
     var days = lastDays(Number($('range').value));
-    var users = {}, calls = {}, tools = {}, clients = {}, userClients = {}, countries = {}, health = {}, failures = {};
+    var asks = {}, cards = {}, people = {}, clients = {}, userClients = {}, countries = {}, health = {}, failures = {};
     var asked = { surah: {}, translation: {}, reciter: {}, other: {} };
     var perDay = days.map(function (k) {
       var d = data.days[k];
       if (!d) return { real: 0, bot: 0 };
-      var kd = kindsOf(d);
-      add(users, kd.users); add(calls, kd.calls);
-      add(tools, d.tools); add(clients, d.clients); add(userClients, d.userClients); add(countries, d.countries);
+      var q = questionsOf(d);
+      add(asks, q); add(cards, d.cardKinds); add(people, d.userKinds);
+      add(clients, d.clients); add(userClients, d.userClients); add(countries, d.countries);
       Object.keys(d.health || {}).forEach(function (t) {
-        var h = health[t] = health[t] || { calls: 0, errors: 0, speed: [0, 0, 0, 0, 0] };
-        h.calls += d.health[t].calls; h.errors += d.health[t].errors;
-        d.health[t].speed.forEach(function (n, i) { h.speed[i] += n; });
+        var h = health[t] = health[t] || { calls: 0, card: 0, errors: 0, speed: [0, 0, 0, 0, 0] };
+        var g = d.health[t];
+        h.calls += g.calls; h.card += g.card || 0; h.errors += g.errors;
+        g.speed.forEach(function (n, i) { h.speed[i] += n; });
       });
       Object.keys(d.failed || {}).forEach(function (t) {
         Object.keys(d.failed[t]).forEach(function (why) { var key = t + ' · ' + why; failures[key] = (failures[key] || 0) + d.failed[t][why]; });
@@ -130,33 +127,30 @@
           });
         });
       });
-      return chart === 'users'
-        ? { real: sum(kd.users, REAL), bot: (kd.users.scanner || 0) + (kd.users.unknown || 0) }
-        : { real: sum(kd.calls, REAL), bot: (kd.calls.scanner || 0) + (kd.calls.unknown || 0) };
+      return { real: sum(q, READERS), bot: q.scanner || 0 };
     });
-    // The asked tools themselves, by how many real calls each had
-    Object.keys(health).forEach(function (t) { asked.other['tool: ' + t] = health[t].calls; });
 
     // Cards
     var today = data.days[days[days.length - 1]];
-    var realUsers = sum(users, REAL), realCalls = sum(calls, REAL);
-    $('cReal').textContent = fmt(realUsers);
-    $('cRealToday').textContent = today ? fmt(sum(kindsOf(today).users, REAL)) + ' today' : '';
-    $('cCalls').textContent = fmt(realCalls);
-    $('cUnverified').textContent = calls.unknown ? '+ ' + fmt(calls.unknown) + ' unverified' : '';
-    var hCalls = sum(Object.keys(health).map(function (t) { return health[t].calls; })), hErr = sum(Object.keys(health).map(function (t) { return health[t].errors; }));
-    var fast = sum(Object.keys(health).map(function (t) { return health[t].speed[0] + health[t].speed[1]; }));
-    var slow = sum(Object.keys(health).map(function (t) { return health[t].speed[3] + health[t].speed[4]; }));
-    $('cErr').textContent = hCalls ? pct(hErr, hCalls) : '–';
-    $('cErrN').textContent = hCalls ? fmt(hErr) + ' of ' + fmt(hCalls) + ' calls' : 'counted from now on';
-    $('cardErr').className = 'card ' + (!hCalls ? '' : hErr / hCalls > 0.1 ? 'bad' : hErr / hCalls > 0.02 ? 'warn' : 'good');
-    $('cFast').textContent = hCalls ? pct(fast, hCalls) : '–';
-    $('cSlow').textContent = hCalls ? fmt(slow) + ' took over 1 s' : 'counted from now on';
-    $('cardFast').className = 'card ' + (!hCalls ? '' : fast / hCalls < 0.7 ? 'warn' : 'good');
-    $('cBots').textContent = fmt(users.scanner || 0);
+    $('cAsk').textContent = fmt(sum(asks, READERS));
+    $('cAskToday').textContent = today ? fmt(sum(questionsOf(today), READERS)) + ' today' : '';
+    $('cCard').textContent = fmt(sum(cards, READERS));
+    var all = 0, bad = 0, fast = 0, slow = 0;
+    Object.keys(health).forEach(function (t) {
+      var h = health[t];
+      all += h.calls; bad += h.errors; fast += h.speed[0] + h.speed[1]; slow += h.speed[3] + h.speed[4];
+    });
+    $('cErr').textContent = all ? pct(bad, all) : '–';
+    $('cErrN').textContent = all ? fmt(bad) + ' of ' + fmt(all) + ' calls' : 'none yet';
+    $('cardErr').className = 'card ' + (!all ? '' : bad / all > 0.1 ? 'bad' : bad / all > 0.02 ? 'warn' : 'good');
+    $('cFast').textContent = all ? pct(fast, all) : '–';
+    $('cSlow').textContent = all ? fmt(slow) + ' took over 1 s' : 'none yet';
+    $('cardFast').className = 'card ' + (!all ? '' : fast / all < 0.7 ? 'warn' : 'good');
+    $('cPeople').textContent = fmt(people.app);
+    var mine = (asks.owner || 0) + (cards.owner || 0);
+    $('mine').textContent = mine ? 'Your own testing in this period: ' + fmt(mine) + ' calls, kept out of every count above.' : '';
 
-    // Chart
-    $('chartTitle').textContent = chart === 'users' ? 'Users a day' : 'Tool calls a day';
+    // Chart: readers' questions and scanners' calls, a day
     var max = Math.max.apply(null, perDay.map(function (p) { return p.real + p.bot; }).concat([1]));
     $('bars').textContent = '';
     perDay.forEach(function (p, i) {
@@ -164,30 +158,42 @@
       var r = el('i'); r.style.height = (p.real / max * 100) + 'px';
       var o = el('i', 'bot'); o.style.height = (p.bot / max * 100) + 'px';
       b.appendChild(r); b.appendChild(o);
-      b.title = days[i] + ': ' + fmt(p.real) + ' real, ' + fmt(p.bot) + ' scanners and unverified';
+      b.title = days[i] + ': ' + fmt(p.real) + ' questions from readers, ' + fmt(p.bot) + ' scanner calls';
       $('bars').appendChild(b);
     });
     $('from').textContent = days[0];
     $('to').textContent = days[days.length - 1];
 
-    // Health
-    var hb = $('healthRows');
-    hb.textContent = '';
-    var ht = Object.keys(health).sort(function (a, b) { return health[b].calls - health[a].calls; });
-    if (!ht.length) none(hb, 4, 'No real calls in this period yet');
-    ht.forEach(function (t) {
+    // Where readers come from
+    var apps = {};
+    Object.keys(userClients).forEach(function (a) { var f = family(a); if (f) apps[f] = 1; });
+    var sb = $('sourceRows');
+    sb.textContent = '';
+    READERS.forEach(function (k) {
+      var tr = el('tr'), td = el('td');
+      td.appendChild(badge(k));
+      td.appendChild(el('small', '', k === 'app' && Object.keys(apps).length ? Object.keys(apps).join(', ') : KIND_LONG[k]));
+      tr.appendChild(td);
+      tr.appendChild(el('td', 'n', fmt(asks[k])));
+      tr.appendChild(el('td', 'n', fmt(cards[k])));
+      // People can be told apart only on their own machines; the cloud assistants' readers share their servers
+      tr.appendChild(el('td', 'n dim', k === 'app' ? fmt(people.app) : '—'));
+      sb.appendChild(tr);
+    });
+
+    // Tools
+    var tb = $('toolRows');
+    tb.textContent = '';
+    var tl = Object.keys(health).sort(function (a, b) { return health[b].calls - health[a].calls; });
+    if (!tl.length) none(tb, 5, 'No readers\' calls in this period yet');
+    tl.forEach(function (t) {
       var h = health[t], tr = el('tr');
       tr.appendChild(el('td', '', t));
-      tr.appendChild(el('td', 'n', fmt(h.calls)));
-      var f = el('td', 'n ' + (h.errors ? 'no' : ''), h.errors ? fmt(h.errors) + ' · ' + pct(h.errors, h.calls) : '0');
-      tr.appendChild(f);
-      var sp = el('td'), bar = el('div', 'speed');
-      var labels = ['under 0.1 s', '0.1–0.3 s', '0.3–1 s', '1–3 s', 'over 3 s'];
-      bar.title = h.speed.map(function (n, i) { return labels[i] + ': ' + n; }).join(' · ');
-      h.speed.forEach(function (n) { var i = el('i'); i.style.width = (n / h.calls * 100) + '%'; bar.appendChild(i); });
-      sp.appendChild(bar);
-      tr.appendChild(sp);
-      hb.appendChild(tr);
+      tr.appendChild(el('td', 'n', fmt(h.calls - h.card)));
+      tr.appendChild(el('td', 'n dim', fmt(h.card)));
+      tr.appendChild(el('td', 'n ' + (h.errors ? 'no' : ''), h.errors ? fmt(h.errors) + ' · ' + pct(h.errors, h.calls) : '0'));
+      var sp = el('td'); sp.appendChild(speedBar(h.speed, h.calls)); tr.appendChild(sp);
+      tb.appendChild(tr);
     });
     rows($('failures'), Object.keys(failures), [failures]);
 
@@ -201,43 +207,18 @@
     rows($('askReciter'), top(asked.reciter), [asked.reciter]);
     rows($('askOther'), top(asked.other), [asked.other]);
 
-    // Who
-    var kb = $('kinds');
-    kb.textContent = '';
-    ['claude', 'chatgpt', 'app', 'unknown', 'scanner'].forEach(function (k) {
-      var tr = el('tr'), td = el('td');
-      td.appendChild(badge(k));
-      td.appendChild(el('small', '', KIND_LONG[k][1]));
-      tr.appendChild(td);
-      tr.appendChild(el('td', 'n', fmt(users[k])));
-      tr.appendChild(el('td', 'n', fmt(calls[k])));
-      kb.appendChild(tr);
-    });
-    var fam = { users: {}, conns: {}, names: {} }, bot = { users: {}, conns: {} };
-    Object.keys(clients).concat(Object.keys(userClients)).filter(function (k, i, all) { return all.indexOf(k) === i; }).forEach(function (app) {
-      var f = family(app);
-      if (f) {
-        fam.users[f] = (fam.users[f] || 0) + (userClients[app] || 0);
-        fam.conns[f] = (fam.conns[f] || 0) + (clients[app] || 0);
-        (fam.names[f] = fam.names[f] || []).push(app);
-      } else {
-        bot.users[app] = userClients[app] || 0;
-        bot.conns[app] = clients[app] || 0;
-      }
-    });
-    rows($('assistants'), Object.keys(fam.conns), [fam.users, fam.conns], function (f, td) {
-      td.textContent = f;
-      td.appendChild(el('small', '', fam.names[f].join(', ')));
-    });
+    // Countries and scanners
     rows($('countries'), Object.keys(countries), [countries], function (code, td) {
       var c = country(code);
       td.appendChild(el('span', 'flag', c.flag + ' '));
       td.appendChild(document.createTextNode(c.name));
     });
-    var mine = {}, other = 0;
-    Object.keys(tools).forEach(function (t) { if (TOOLS.indexOf(t) >= 0) mine[t] = tools[t]; else other += tools[t]; });
-    if (other) mine['other names (scanners’ probes)'] = other;
-    rows($('tools'), Object.keys(mine), [mine]);
+    var bot = { users: {}, conns: {} };
+    Object.keys(clients).concat(Object.keys(userClients)).filter(function (k, i, list) { return list.indexOf(k) === i; }).forEach(function (a) {
+      if (family(a)) return;
+      bot.users[a] = userClients[a] || 0;
+      bot.conns[a] = clients[a] || 0;
+    });
     rows($('scanners'), Object.keys(bot.conns), [bot.users, bot.conns]);
     $('botCount').textContent = '(' + Object.keys(bot.conns).length + ')';
 
@@ -248,7 +229,7 @@
   function drawRecent() {
     var tb = $('recentRows');
     tb.textContent = '';
-    var list = (data.recent || []).filter(function (c) { return !onlyReal || c.kind !== 'scanner'; });
+    var list = (data.recent || []).filter(function (c) { return !onlyReal || READERS.indexOf(c.kind) >= 0; });
     if (!list.length) return none(tb, 7, data.recent ? 'No calls since the server last started' : 'This server does not keep recent calls yet');
     list.forEach(function (c) {
       var tr = el('tr');
@@ -256,8 +237,7 @@
       tr.appendChild(when);
       var who = el('td'); who.appendChild(badge(c.kind, c.app)); tr.appendChild(who);
       var what = el('td'); what.appendChild(el('code', '', c.tool));
-      var ch = choices(c.args);
-      if (ch) what.appendChild(el('small', '', ch));
+      what.appendChild(el('small', '', (c.card ? 'from the card' : 'asked by the AI') + (choices(c.args) ? ' · ' + choices(c.args) : '')));
       tr.appendChild(what);
       var res = el('td', c.ok ? 'ok' : 'no', c.ok ? 'OK' : 'Failed');
       if (!c.ok && c.why) res.appendChild(el('small', '', c.why));
@@ -299,11 +279,6 @@
     var parts = (r && r.content) || [];
     if (!parts.length) body.appendChild(el('pre', '', JSON.stringify(r, null, 2)));
     parts.forEach(function (p) {
-      if (p.type === 'image' && p.data) {
-        var img = el('img'); img.src = 'data:' + (p.mimeType || 'image/png') + ';base64,' + p.data; img.alt = 'The image the tool returned';
-        body.appendChild(img);
-        return;
-      }
       var text = p.type === 'text' ? p.text : JSON.stringify(p, null, 2);
       try { text = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { /* plain text stays as it is */ }
       body.appendChild(el('pre', '', text));
@@ -314,8 +289,6 @@
 
   // --- controls ---
   function pressed(a, b, on) { a.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-pressed', String(!on)); }
-  $('showUsers').onclick = function () { chart = 'users'; pressed($('showUsers'), $('showCalls'), true); draw(); };
-  $('showCalls').onclick = function () { chart = 'calls'; pressed($('showUsers'), $('showCalls'), false); draw(); };
   $('onlyReal').onclick = function () { onlyReal = true; pressed($('onlyReal'), $('allCalls'), true); drawRecent(); };
   $('allCalls').onclick = function () { onlyReal = false; pressed($('onlyReal'), $('allCalls'), false); drawRecent(); };
   $('answerClose').onclick = function () { $('answer').hidden = true; };

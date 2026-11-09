@@ -51,7 +51,7 @@ function watch(res, body, who, tools, stats) {
       const reply = sent.find((x) => x && x.id === m.id);
       const r = !reply ? { isError: true, content: [{ type: 'text', text: 'no answer' }] }
         : reply.result || { isError: true, content: [{ type: 'text', text: (reply.error && reply.error.message) || 'error' }] };
-      stats.outcome(m.params.name, m.params.arguments, r, ms, who);
+      stats.outcome(m.params.name, m.params.arguments, r, ms, who, !!(stats.fromCard && stats.fromCard(m)));
     }
     return end(c, ...rest);
   };
@@ -106,9 +106,12 @@ function createServer(options = {}) {
 
     if (url === '/health') return send(res, 200, { ok: true, version: VERSION });
     // The counts, for the admin page: nginx passes this only behind the admin password
-    if (url === '/stats' && req.method === 'GET') return send(res, 200, stats.snapshot(), { 'Cache-Control': 'no-store' });
-
     const ip = req.headers['x-real-ip'] || req.socket.remoteAddress;
+    // Whoever opens the admin page is the site's owner today: their own calls are kept out of the readers'
+    if (url === '/stats' && req.method === 'GET') {
+      if (stats.setOwner && req.headers['x-real-ip']) stats.setOwner(ip);
+      return send(res, 200, stats.snapshot(), { 'Cache-Control': 'no-store' });
+    }
     const tooMany = () => stats.limited() || send(res, 429, rpcError(-32000, `Too many requests: ${perMinute} a minute`), { 'Retry-After': '60' });
 
     /* The files get_file links to, made as they are asked for */
