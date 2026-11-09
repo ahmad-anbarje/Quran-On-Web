@@ -44,7 +44,8 @@ function registerTools(server, q) {
   tool('get_ayah', {
     title: 'Get ayahs',
     description:
-      'The Arabic of one ayah or a run of them (up to 50), with a translation. ' +
+      'The Arabic of one ayah or a run of them (up to 50), with a translation. The Arabic is the Uthmani text with ' +
+      'every mark and its ayah number; quote it exactly as given. ' +
       'Defaults to the King Fahd Complex English (Hilali & Muhsin Khan).',
     inputSchema: {
       surah: surahArg,
@@ -66,7 +67,7 @@ function registerTools(server, q) {
     for (let a = ayah; a <= last; a++) {
       ayahs.push({
         ref: `${s}:${a}`,
-        arabic: q.arabic[s].uthmani[a - 1],
+        arabic: q.ayahText(s, a),
         ...(text ? { translation: text[a - 1] } : {}),
         page: q.page(s, a),
         link: q.ayahLink(s, a),
@@ -149,7 +150,7 @@ function registerTools(server, q) {
         if (found.length < most) {
           found.push({
             ref: `${row.s}:${row.a}`, surah: q.surah(row.s).en,
-            arabic: q.arabic[row.s].uthmani[row.a - 1], link: q.ayahLink(row.s, row.a), read: q.readerLink(row.s, row.a),
+            arabic: q.ayahText(row.s, row.a), link: q.ayahLink(row.s, row.a), read: q.readerLink(row.s, row.a),
           });
         }
       });
@@ -197,7 +198,7 @@ function registerTools(server, q) {
     const english = lang === 'en' ? means : q.words(s, 'en').meaning[ayah - 1];
     return reply({
       ref: `${s}:${ayah}`,
-      arabic: q.arabic[s].uthmani[ayah - 1],
+      arabic: q.ayahText(s, ayah),
       language: lang,
       words: said.map((l, i) => (means[i]
         ? { position: i + 1, transliteration: l, meaning: means[i] }

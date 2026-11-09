@@ -28,7 +28,7 @@ const PARALLEL = 6;
 const SOURCES = [
   {
     file: 'tanzil-uthmani.txt',
-    url : 'https://tanzil.net/pub/download/index.php?quranType=uthmani&outType=txt&agree=true',
+    url : 'https://tanzil.net/pub/download/index.php?marks=true&sajdah=true&rub=true&tatweel=true&quranType=uthmani&outType=txt&agree=true',
   },
   {
     file: 'alquran-cloud.json',

@@ -101,7 +101,7 @@ function surahFile(q, s, { translation, tafsir } = {}) {
   ];
   if (q.arabic[s].basmala) out.push(q.arabic[s].basmala, '');
   q.arabic[s].uthmani.forEach((ayah, i) => {
-    out.push(`${s}:${i + 1}  ${ayah}`);
+    out.push(`${s}:${i + 1}  ${q.ayahText(s, i + 1)}`);
     if (text) out.push(text[i]);
     if (notes) out.push(`التفسير: ${notes[i]}`);
     out.push('');

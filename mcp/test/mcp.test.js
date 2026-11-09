@@ -72,6 +72,14 @@ test('get_ayah: Ayat al-Kursi, in the Complex English by default, with its page 
   assert.strictEqual(a.read, 'https://readqurantoday.com/surah/2/ayah/255');
 });
 
+test('get_ayah: the Arabic with every mark the mushaf prints, closed by its number', async () => {
+  const pause = (await call('get_ayah', { surah: 2, ayah: 2, translation: 'none' })).value;
+  assert.strictEqual(pause.ayahs[0].arabic.split('ۛ').length - 1, 2);   // لَا رَيْبَ ۛ فِيهِ ۛ
+  assert.ok(pause.ayahs[0].arabic.endsWith(' ﴿٢﴾'));
+  const sajdah = (await call('get_ayah', { surah: 96, ayah: 19, translation: 'none' })).value;
+  assert.match(sajdah.ayahs[0].arabic, /۩ ﴿١٩﴾$/);
+});
+
 test('get_ayah: a run, another translation, and the Arabic alone', async () => {
   const run = await call('get_ayah', { surah: 1, ayah: 1, to: 7, translation: 'sahih' });
   assert.strictEqual(run.value.ayahs.length, 7);

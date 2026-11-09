@@ -179,6 +179,12 @@ function open(root) {
   }
 
   /* Tanzil's Uthmani text, verbatim with its notice, for whoever builds on it; read when asked for */
+  /* An ayah's Arabic as the mushaf sets it: every mark Tanzil keeps (vowels, pause signs, ۞, ۩), closed by its number */
+  function ayahText(s, a) {
+    const n = String(a).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
+    return `${arabic[s].uthmani[a - 1]} ﴿${n}﴾`;
+  }
+
   function uthmaniText() { return fs.readFileSync(path.join(root, 'data', 'quran-uthmani.txt'), 'utf8'); }
 
   /* The whole timing file, words and all, as the site serves it */
@@ -186,7 +192,7 @@ function open(root) {
 
   return {
     SITE, AUDIO, surahs, translations, recitations, arabic, plain,
-    surah, page, link, ayahLink, readerLink, translation, tafsir, words, wordLanguages, timing, mushaf, mushafLines, timingLink, uthmaniText, hafs: surahText.hafs,
+    surah, page, link, ayahLink, readerLink, ayahText, translation, tafsir, words, wordLanguages, timing, mushaf, mushafLines, timingLink, uthmaniText, hafs: surahText.hafs,
     hasTranslation: (id) => byTranslation.has(id),
     translationInfo: (id) => byTranslation.get(id) || null,
     recitation: (id) => byRecitation.get(id) || null,
