@@ -91,7 +91,8 @@ function registerTools(server, q) {
     title: 'Search the Quran',
     description:
       'Ayahs containing the words given: in the Arabic (diacritics optional) or, with "translation", ' +
-      'in that translation. Up to 50 results, each with its reference and link.',
+      'in that translation; words with no Arabic letter search the English (Hilali & Khan) unless a translation is named. ' +
+      'Up to 50 results, each with its reference and link.',
     inputSchema: {
       query: z.string().min(2).max(200),
       translation: z.string().optional().describe('Search this translation instead of the Arabic, e.g. "hilali"'),
@@ -99,6 +100,8 @@ function registerTools(server, q) {
     },
     annotations: { readOnlyHint: true, openWorldHint: false },
   }, ({ query, translation, limit }) => {
+    // Words in another script are not in the Arabic: an English word searches the English by default
+    if (!translation && !/[؀-ۿ]/.test(query)) translation = 'hilali';
     const want = fold(query);
     const most = limit || 10;
     const found = [];

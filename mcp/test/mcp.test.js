@@ -100,6 +100,10 @@ test('search: Arabic without diacritics, and a translation', async () => {
   const en = await call('search', { query: 'companions of the cave', translation: 'sahih', limit: 5 });
   assert.ok(en.value.results.some((r) => r.ref.startsWith('18:')));
   assert.ok(en.value.results.length <= 5);
+  // An English word with no translation named searches the English, not the Arabic
+  const word = await call('search', { query: 'mercy', limit: 3 });
+  assert.ok(word.value.total > 0, JSON.stringify(word.value));
+  assert.match(word.value.in, /Hilali/);
 });
 
 test('get_tafsir and word_by_word', async () => {
