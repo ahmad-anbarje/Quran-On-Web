@@ -1,6 +1,6 @@
 {
   "name": "read-quran-today",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The Holy Quran as printed in the Madinah Mushaf (Hafs), for ChatGPT: the Arabic, 127 translations in 88 languages, the Tafsir al-Muyassar, word-by-word meanings and recitations, from readqurantoday.com.",
   "author": {
     "name": "Read Quran Today",
@@ -15,7 +15,7 @@
   "interface": {
     "displayName": "Read Quran Today",
     "shortDescription": "The Quran: text, audio, tafsir",
-    "longDescription": "Read Quran Today gives ChatGPT the text of the Holy Quran as printed in the Madinah Mushaf (Hafs), so it can quote ayahs exactly instead of from memory.\n\nAsk for any ayah or run of ayahs and get the Arabic with its mushaf page and links to read and hear it on readqurantoday.com, in any of 127 translations in 88 languages: Saheeh International, Hilali and Khan, and the translations published by QuranEnc and Tanzil, each credited to its translator. Search the Arabic (with or without diacritics) or a translation. Read the Tafsir al-Muyassar of an ayah, and each word's transliteration and meaning in English and six more languages. Find a reciter's recording of a surah, with where each ayah starts, and download a surah as text or audio.\n\nOpen to all: no account, no key, no advertising, and nothing about you is kept.",
+    "longDescription": "Read Quran Today gives ChatGPT the text of the Holy Quran as printed in the Madinah Mushaf (Hafs), so it can quote ayahs exactly instead of from memory.\n\nAsk for any ayah or run of ayahs and get the Arabic with its mushaf page and links to read and hear it on readqurantoday.com, in any of 127 translations in 88 languages: Saheeh International, Hilali and Khan, and the translations published by QuranEnc and Tanzil, each credited to its translator. Search the Arabic (with or without diacritics) or a translation. Read the Tafsir al-Muyassar of an ayah, and each word's transliteration and meaning in English and six more languages. Find a reciter's recording of a surah, with where each ayah starts, and download a surah as text or audio.\n\nOpen to all: no account, no key, no advertising, and nothing about you is kept.\n\nRead the mushaf on the web at readqurantoday.com, or offline on Android with The Great Quran app on Google Play.",
     "developerName": "Read Quran Today",
     "category": "Education & Research",
     "capabilities": [],
