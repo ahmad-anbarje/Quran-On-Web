@@ -1005,7 +1005,11 @@ $(function () {
     document.body.classList.remove('tab-top');
     var tr = tab && tab.getBoundingClientRect();
     var place = function () {
-      var nw = next.offsetWidth, pw = prev.offsetWidth;
+      // Both turners as wide as the wider one, whatever their names
+      next.style.width = prev.style.width = '';
+      var same = Math.max(next.offsetWidth, prev.offsetWidth);
+      next.style.width = prev.style.width = same + 'px';
+      var nw = same, pw = same;
       var nx = left - GAP - nw, px = right + GAP;
       next.style.left = nx + 'px';
       prev.style.left = px + 'px';

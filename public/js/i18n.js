@@ -39,18 +39,9 @@
   function stored(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function store(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* denied */ } }
 
-  /* The browser's first language that is here; Arabic for one that is not, as the site always was. */
-  function fromBrowser() {
-    var want = navigator.languages || [navigator.language || ''];
-    for (var i = 0; i < want.length; i++) {
-      var c = String(want[i]).toLowerCase().split('-')[0];
-      if (BY[c]) return c;
-    }
-    return 'ar';
-  }
-
+  // A first visit opens in Arabic; a language the reader picks is kept from then on
   var ui = stored(KEY);
-  if (!BY[ui]) ui = fromBrowser();
+  if (!BY[ui]) ui = 'ar';
   var dict = {};
 
   /* The last list used comes from storage, so a return visit opens in its language at once. */
