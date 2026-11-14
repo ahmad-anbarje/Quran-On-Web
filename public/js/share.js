@@ -6,8 +6,8 @@
  * widened either way. The text is the pointed Uthmani text the surah's text
  * page prints, one small file a surah (data/text/<n>.json), not the stripped
  * copy the search reads: what is sent on is the Quran, and it goes with its
- * marks. Each ayah is closed by its number, and the whole is followed by
- * where it is from and the link that opens the mushaf there.
+ * marks. Each ayah is closed by its number, under the surah's name; nothing
+ * follows them, no reference and no link.
  *
  * The picture is drawn here, on a canvas, in the King Fahd Complex's face the
  * text pages use; nothing is sent to a server to make it. A phone hands it to
@@ -23,7 +23,7 @@
   var FACE_URL = '/fonts/UthmanicHafs1Ver18.woff2';
 
   /* The picture, in its own pixels: the same on every screen */
-  var WIDE = 1080, MOST_TALL = 1920, EDGE = 56, SIDE = 44, HEAD = 190, FOOT = 170;
+  var WIDE = 1080, MOST_TALL = 1920, EDGE = 56, SIDE = 44, HEAD = 190, FOOT = 60;
   var TYPE_MOST = 64, TYPE_LEAST = 32, TYPE_STEP = 2, LINE = 2.05;
 
   /* The face draws this text's sukun and round zero as a dotted circle unless
@@ -120,12 +120,13 @@
   }
 
   function reference() {
-    var name = lang() === 'ar' ? (surah.full || surah.name || '') : 'Surah ' + surah.en;
+    var name = surahName();
     if (lang() === 'ar') return name + ' · ' + (from === to ? 'الآية ' + ar(from) : 'الآيات ' + ar(from) + '–' + ar(to));
     return name + ' · ' + (from === to ? 'Ayah ' + from : 'Ayahs ' + from + '–' + to);
   }
 
-  function link() { return location.origin + '/surah/' + surah.id + '/ayah/' + from; }
+  /* The surah as it is named above what is shared */
+  function surahName() { return lang() === 'ar' ? (surah.full || surah.name || '') : 'Surah ' + surah.en; }
 
   /* The ayahs alone, each closed by its number, under the basmala where the
      surah's opening is among them */
@@ -137,8 +138,8 @@
     return (from === 1 && t.basmala ? t.basmala + '\n' : '') + said.join(' ');
   }
 
-  /* What is sent: the words, where they are from, and the way to read them here */
-  function message() { return ayahs() + '\n\n' + reference() + '\n' + link(); }
+  /* What is sent: the surah's name, then the words, and nothing after them */
+  function message() { return surahName() + '\n' + ayahs(); }
 
   function render() {
     if (!box || !surah) return;
@@ -318,15 +319,6 @@
       y += size * LINE;
     });
 
-    ctx.textAlign = 'center';
-    ctx.fillStyle = ink;
-    ctx.font = '600 36px ' + ui;
-    ctx.fillText(reference(), WIDE / 2, tall - EDGE - FOOT * 0.56);
-    ctx.globalAlpha = 0.6;
-    ctx.font = '400 28px ' + ui;
-    ctx.direction = 'ltr';
-    ctx.fillText(location.host, WIDE / 2, tall - EDGE - FOOT * 0.2);
-    ctx.globalAlpha = 1;
     return canvas;
   }
 
@@ -341,7 +333,7 @@
         var file = global.File ? new File([blob], name, { type: 'image/png' }) : null;
         if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
           say('');
-          navigator.share({ files: [file], text: reference() + '\n' + link() }).catch(function () {});
+          navigator.share({ files: [file] }).catch(function () {});
           return;
         }
         /* No share sheet here: the picture is saved as a file instead */

@@ -13,7 +13,7 @@ const SITE = {
   $: 'readonly', jQuery: 'readonly', T: 'readonly',
   I18n: 'readonly', Mushaf: 'readonly', Recite: 'readonly', Meaning: 'readonly',
   Ayahs: 'readonly', Listen: 'readonly', Pager: 'readonly', Offline: 'readonly',
-  Leaves: 'readonly', Share: 'readonly', umami: 'readonly',
+  Leaves: 'readonly', Share: 'readonly', Zoom: 'readonly', Report: 'readonly', Search: 'readonly', Reads: 'readonly', WordTip: 'readonly', PlayerMarkup: 'readonly', Timing: 'readonly', umami: 'readonly',
   QuranShell: 'readonly',   // the Android app's bridge, where the site runs inside it
 };
 

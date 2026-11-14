@@ -75,21 +75,12 @@
   var SPEED_KEY = 'quran-speed';
   var speed = SPEEDS.indexOf(+stored(SPEED_KEY)) >= 0 ? +stored(SPEED_KEY) : 1;
 
-  /* On unless the reader turned it off, as in the app. */
-  var LATIN_KEY = 'quran-latin';
-  var latinOn = stored(LATIN_KEY) !== '0';
-  var latin = {};               // surah id -> its ayahs' words, or the fetch for them
-  var meanings = { en: {} };    // language -> the same, each word's meaning, under the Latin
-  var latinSurah = null;        // the surah the labels are for
-  /* The word meanings there are besides English, and the two of them written right to left */
-  var WORD_LANGS = { ur: 1, id: 1, bn: 1, tr: 1, fa: 1, hi: 1 };
-  var RTL_LANGS = { ur: 1, fa: 1 };
-  /* The language of the translation the reader chose, where its words are here too */
-  function wordsLang() {
-    var l = stored('quran-translation-lang');
-    return WORD_LANGS[l] ? l : 'en';
-  }
-  var tip = null;               // the label over the marked word
+  /* The label over a word, its Latin reading and meaning, is wordtip.js; it is
+     told here which word to label: the one under the pointer, then the marked one */
+  WordTip.init(function () {
+    return overWord && overWord.isConnected ? overWord
+         : lit.el && lit.el.isConnected ? lit.el : null;
+  });
 
   /* The word-by-word recordings: one short file a word, named by surah, ayah
      and word, on the bucket beside the surahs. A meta tag can point a copy
@@ -157,19 +148,11 @@
     return null;
   }
 
-  /* ---------- the timing file --------------------------------------------- */
+  /* ---------- the timing file ----------------------------------------------
+     Where it is kept and how it is read is timing.js; the lookups are asked
+     here of the file this player has loaded. */
 
-  function pad(n) { return String(n).padStart(3, '0'); }
-
-  function timingUrl(id, which) {
-    return '/surah/' + id + '/' + pad(id) + '.' + which + '.timing.json';
-  }
-
-  function fetchTiming(url) {
-    return fetch(url)
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .catch(function () { return null; });
-  }
+  var pad = Timing.pad, timingUrl = Timing.url, fetchTiming = Timing.fetch;
 
   /* This surah's timings, falling back to the default recording where the
      chosen one has none: timings are added a surah at a time, and losing the
@@ -185,51 +168,9 @@
     });
   }
 
-  /** Which ayah covers this moment. The list is in order, so a walk from where
-      we were costs nothing while playing and a search only on a seek. */
-  function ayahAt(t) {
-    var a = timing.ayah;
-    if (at >= 1 && at <= a.length) {
-      var i = at - 1;
-      if (t >= a[i][0] && t < a[i][1]) return at;
-      if (i + 1 < a.length && t >= a[i + 1][0] && t < a[i + 1][1]) return at + 1;
-    }
-    var lo = 0, hi = a.length - 1;
-    while (lo <= hi) {
-      var mid = (lo + hi) >> 1;
-      if (t < a[mid][0]) hi = mid - 1;
-      else if (t >= a[mid][1]) lo = mid + 1;
-      else return mid + 1;
-    }
-    /* Between two ayahs — the pause after one is still that one's, so the
-       highlight rests where the reciter left it rather than going out. */
-    return Math.max(1, Math.min(a.length, lo));
-  }
-
-  /* Which word of an ayah is being said. The timings are pairs of time and
-     word: the word is named rather than implied by position because a reciter
-     doubles back — twenty-six ayahs of Al-Baqarah do. */
-  function wordAt(v, t) {
-    var w = timing.word[v - 1];
-    if (!w || !w.length) return 0;
-    var d = t - timing.ayah[v - 1][0];
-    for (var i = w.length - 2; i >= 0; i -= 2) if (d >= w[i]) return w[i + 1];
-    return w[1];
-  }
-
-  /* Where one word sits: its end is where the next begins, and the last word
-     of an ayah runs to the ayah's end, taking the reciter's pause with it. */
-  function wordTime(v, k) {
-    var w = timing.word[v - 1], span = timing.ayah[v - 1];
-    if (!w || !w.length) return span;
-    /* The first time this word is said, where it is said more than once — that
-       is the one the reader pointed at. */
-    for (var i = 0; i < w.length; i += 2) {
-      if (w[i + 1] !== k) continue;
-      return [span[0] + w[i], i + 2 < w.length ? span[0] + w[i + 2] : span[1]];
-    }
-    return span;
-  }
+  function ayahAt(t) { return Timing.ayahAt(timing, t, at); }
+  function wordAt(v, t) { return Timing.wordAt(timing, v, t); }
+  function wordTime(v, k) { return Timing.wordTime(timing, v, k); }
 
   /* ---------- the highlight ------------------------------------------------ */
 
@@ -262,93 +203,10 @@
     lit.el = next;
     if (next) next.classList.add('r-word');
     lit.word = id;
-    sayLatin();
+    WordTip.say();
   }
 
   function clear() { light(null, null); }
-
-  /* ---------- the Latin reading over the marked word ---------------------- */
-
-  function loadLatin(id) {
-    latinSurah = id;
-    fetchWords(latin, '/data/translit/', id);
-    /* The words' meaning, from one index with the Latin: the same ayah and
-       word numbers find both. English always, to stand in for a word the
-       chosen language has not arrived for yet. */
-    fetchWords(meanings.en, '/data/meaning/', id);
-    var l = wordsLang();
-    if (l !== 'en') fetchWords(meanings[l] = meanings[l] || {}, '/data/meaning/' + l + '/', id);
-  }
-
-  function fetchWords(into, base, id) {
-    if (into[id]) return;
-    into[id] = fetch(base + id + '.json')
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function (list) { into[id] = list; sayLatin(); })
-      .catch(function () { delete into[id]; });
-  }
-
-  function wordOf(into, key, w) {
-    var list = into[+key[0]];
-    var ayah = Array.isArray(list) ? list[+key[1] - 1] : null;
-    return ayah ? ayah[w] || null : null;
-  }
-
-  /* Placed by measuring the word, not inside it: the word's own font is the
-     page's, which has no Latin letters, and a line can be clipped by its sheet. */
-  function sayLatin() {
-    if (!tip) {
-      tip = document.createElement('div');
-      tip.id = 'r-latin';
-      tip.setAttribute('aria-hidden', 'true');
-      tip.hidden = true;
-      /* Two lines: how the word sounds, and under a rule, what it means. Set
-         as text, never markup, since both come out of data files. */
-      tip.innerHTML = '<span class="r-say"></span><span class="r-mean"></span>';
-      document.body.appendChild(tip);
-    }
-    /* The word under the pointer first, then the marked one: reading along by
-       mouse is asking what each word says. */
-    var word = overWord && overWord.isConnected ? overWord
-           : lit.el && lit.el.isConnected ? lit.el : null;
-    var said = null, means = null, l = wordsLang(), inLang = 'en';
-    if (latinOn && word && word.dataset.a && word.dataset.w !== undefined) {
-      var key = word.dataset.a.split(':');
-      said = wordOf(latin, key, +word.dataset.w);
-      means = l !== 'en' && meanings[l] ? wordOf(meanings[l], key, +word.dataset.w) : null;
-      if (means) inLang = l;
-      else means = wordOf(meanings.en, key, +word.dataset.w);
-    }
-    var r = said || means ? word.getBoundingClientRect() : null;
-    /* A word turned off the screen takes its label with it. */
-    if (!r || r.bottom < 0 || r.top > window.innerHeight || !r.width) { tip.hidden = true; return; }
-
-    tip.firstChild.textContent = said || '';
-    tip.firstChild.hidden = !said;
-    tip.lastChild.textContent = means || '';
-    tip.lastChild.hidden = !means;
-    tip.lastChild.setAttribute('lang', inLang);
-    tip.lastChild.setAttribute('dir', RTL_LANGS[inLang] ? 'rtl' : 'ltr');
-    tip.hidden = false;
-    var t = tip.getBoundingClientRect();
-    /* Clear of the marks above the letters; below the word where there is no room above. */
-    var gap = r.height * 0.18 + 4;
-    var top = r.top - t.height - gap;
-    if (top < 8) top = r.bottom + gap;
-    var left = Math.max(8, Math.min(window.innerWidth - t.width - 8, r.left + r.width / 2 - t.width / 2));
-    tip.style.left = left + 'px';
-    tip.style.top = top + 'px';
-  }
-
-  /* Scrolling and resizing move the word under a label that stays put; one
-     measure a frame is plenty. */
-  var tipFrame = null;
-  function chaseLatin() {
-    if (tipFrame || !tip || tip.hidden) return;
-    tipFrame = requestAnimationFrame(function () { tipFrame = null; sayLatin(); });
-  }
-  document.addEventListener('scroll', chaseLatin, true);
-  window.addEventListener('resize', chaseLatin);
 
   /* Put the mark back after a page is built. What is marked is remembered by
      ayah and word, not by element, since the spans are made and destroyed. */
@@ -566,179 +424,6 @@
   function num(n) { return lang() === 'ar' ? ar(n) : String(n); }
 
 
-  var MENU =
-    '<div id="r-menu" hidden>' +
-      '<div class="r-menu-bar">' +
-        '<span class="r-grip" aria-hidden="true"></span>' +
-        '<span class="r-menu-head"></span>' +
-        /* Folds the menu back to its bar. The player keeps playing and keeps
-           saying where it is — what goes away is everything that is only there
-           to be pressed, which is most of the height and all of what covers
-           the page being read. */
-        '<button class="r-menu-min" data-act="minimize" aria-label="تصغير">' +
-          '<svg class="r-min-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-               'stroke-width="2.2" stroke-linecap="round">' +
-            '<path d="M6.5 12.5h11"/>' +
-          '</svg>' +
-          '<svg class="r-max-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-               'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
-            '<path d="M7 14l5-5 5 5"/>' +
-          '</svg>' +
-        '</button>' +
-        '<button class="r-menu-close" data-act="close" aria-label="إغلاق">' +
-          '<svg class="r-x-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
-               'stroke-width="2.2" stroke-linecap="round">' +
-            '<path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/>' +
-          '</svg>' +
-        '</button>' +
-      '</div>' +
-
-      /* How far the recitation is, shown once there is a place in it to be at */
-      '<div class="r-now" hidden>' +
-        '<div class="r-seek"><i class="r-played"></i></div>' +
-      '</div>' +
-
-      '<div class="r-acts">' +
-        /* Three kinds of row, in the order they are wanted: what to play, how to
-           hear it (who, how fast, how often), and what it means. */
-        /* The ayah first, in the accent: play, and pause while it plays */
-        '<button data-act="play" class="r-ayah" aria-label="تشغيل">' +
-          '<svg class="ic r-ic-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
-          '<svg class="ic r-ic-pause" viewBox="0 0 24 24"><path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z"/></svg>' +
-          '<span class="r-when-paused"><span class="lang-ar">تشغيل الآية</span><span class="lang-en">Play this ayah</span></span>' +
-          '<span class="r-when-playing"><span class="lang-ar">إيقاف مؤقت</span><span class="lang-en">Pause</span></span>' +
-        '</button>' +
-        '<button data-act="word">' +
-          '<svg class="ic" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>' +
-          '<span class="lang-ar">تشغيل الكلمة</span><span class="lang-en">Play this word</span>' +
-        '</button>' +
-        '<div class="r-sep" role="separator"></div>' +
-        /* Only where there is in fact a choice to make. One recitation and
-           this is a row that opens a list of one and changes nothing. */
-        '<button data-act="voice" class="r-voice" hidden>' +
-          '<svg class="ic" viewBox="0 0 24 24"><path d="M12 12.2a4.1 4.1 0 1 0 0-8.2 4.1 4.1 0 0 0 0 8.2zm0 1.8c-4.2 0-7.2 2.2-7.2 4.6V21h14.4v-2.4c0-2.4-3-4.6-7.2-4.6z"/></svg>' +
-          '<span class="lang-ar">القارئ</span><span class="lang-en">Reciter</span>' +
-          '<span class="r-voice-value"></span>' +
-        '</button>' +
-        '<button data-act="speed" class="r-speed">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M5.07 18A8 8 0 1 1 18.93 18"/><path d="M12 14l3.6-4.4M12 14m-1.3 0a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0-2.6 0"/></svg>' +
-          '<span class="lang-ar">سرعة التلاوة</span><span class="lang-en">Speed</span>' +
-          '<span class="r-speed-value"></span>' +
-        '</button>' +
-        '<button data-act="repeat" class="r-repeat">' +
-          '<svg class="ic" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg>' +
-          '<span class="lang-ar">التكرار</span><span class="lang-en">Repeat</span>' +
-          '<span class="r-repeat-value"></span>' +
-        '</button>' +
-        '<div class="r-sep" role="separator"></div>' +
-        /* What the ayah means: the translation and the tafsir, in a window of
-           their own that keeps up with the recitation. */
-        '<button data-act="meaning" class="r-meaning">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M12 6.5C10.3 5.2 7.9 4.6 4 4.6v13.2c3.9 0 6.3.6 8 1.9 1.7-1.3 4.1-1.9 8-1.9V4.6c-3.9 0-6.3.6-8 1.9zM12 6.5v13.2"/></svg>' +
-          '<span class="lang-ar">الترجمة والتفسير</span><span class="lang-en">Translation &amp; tafsir</span>' +
-        '</button>' +
-        '<button data-act="latin" class="r-latin">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M2.8 18.5 7.5 5.5l4.7 13M4.5 14h6"/><path d="M17 15.2m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0M20.2 11.6v6.9"/></svg>' +
-          '<span class="lang-ar">النطق بالحروف اللاتينية</span><span class="lang-en">Transliteration</span>' +
-        '</button>' +
-      '</div>' +
-
-      /* Its own panel rather than a third group inside the repeat one: what is
-         being repeated and who is reciting are not settings of one another,
-         and folding them together would mean opening the repeat panel to
-         change reciter. */
-      '<div class="r-panel r-voices" hidden></div>' +
-
-      /* Folded into the same menu rather than opening a second panel of its
-         own: one surface to learn, and nothing that grows the page. */
-      '<div class="r-panel" hidden>' +
-        '<div class="r-group">' +
-          '<span class="r-legend"><span class="lang-ar">ما يُعاد</span>' +
-                                 '<span class="lang-en">Repeat</span></span>' +
-          '<button class="r-chip" data-scope="ayah"><span class="lang-ar">الآية</span><span class="lang-en">Ayah</span></button>' +
-          '<button class="r-chip" data-scope="page"><span class="lang-ar">الصفحة</span><span class="lang-en">Page</span></button>' +
-          '<button class="r-chip" data-scope="range"><span class="lang-ar">مقطع</span><span class="lang-en">Range</span></button>' +
-          '<button class="r-chip" data-scope="surah"><span class="lang-ar">السورة</span><span class="lang-en">Surah</span></button>' +
-        '</div>' +
-        '<div class="r-group">' +
-          '<span class="r-legend"><span class="lang-ar">كم مرة</span>' +
-                                 '<span class="lang-en">How many</span></span>' +
-          '<button class="r-chip" data-times="1">١<span class="r-x">×</span></button>' +
-          '<button class="r-chip" data-times="3">٣<span class="r-x">×</span></button>' +
-          '<button class="r-chip" data-times="5">٥<span class="r-x">×</span></button>' +
-          '<button class="r-chip" data-times="7">٧<span class="r-x">×</span></button>' +
-          '<button class="r-chip r-inf" data-times="inf" aria-label="بلا نهاية">∞</button>' +
-        '</div>' +
-        '<div class="r-group r-range">' +
-          '<span class="r-legend"><span class="lang-ar">من الآية</span>' +
-                                 '<span class="lang-en">From ayah</span></span>' +
-          '<input class="r-from" type="number" min="1" step="1" />' +
-          '<span class="r-legend"><span class="lang-ar">إلى</span>' +
-                                 '<span class="lang-en">to</span></span>' +
-          '<input class="r-to" type="number" min="1" step="1" />' +
-        '</div>' +
-      '</div>' +
-
-      '<div class="r-note" hidden></div>' +
-
-      /* Minimised, the whole player is a circle in the corner with a ring for
-         how far through the surah it is. Inside the menu rather than beside
-         it, so one element carries the player in both of its shapes. */
-      '<button class="r-bubble" data-act="minimize">' +
-        '<svg class="r-bubble-ring" viewBox="0 0 54 54" aria-hidden="true">' +
-          '<circle class="r-ring-track" cx="27" cy="27" r="24.5"/>' +
-          '<circle class="r-ring-line" cx="27" cy="27" r="24.5"/>' +
-        '</svg>' +
-        /* Bars, not a face and not a play triangle. A play triangle would
-           promise that pressing this starts something, when what it does is
-           bring the window back; bars say "there is sound here" and nothing
-           more, and they can rise and fall while it is actually running. */
-        '<svg class="r-bubble-ic" viewBox="0 0 24 24" aria-hidden="true">' +
-          '<rect class="r-bar" x="5.2" y="8" width="2.8" height="8" rx="1.4"/>' +
-          '<rect class="r-bar" x="10.6" y="4.5" width="2.8" height="15" rx="1.4"/>' +
-          '<rect class="r-bar" x="16" y="9" width="2.8" height="6" rx="1.4"/>' +
-        '</svg>' +
-      '</button>' +
-      /* The phone's player: one row in the Android app's order, shown only on a phone. */
-      '<div class="r-dock">' +
-        /* The app's player, slot for slot (part_player_reader.xml): three either side of play,
-           each the app's own outline over its name */
-        '<button data-act="tajweed" class="r-dock-tajweed">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><use href="#i-tajweed"/></svg>' +
-          '<span class="lang-ar">تجويد</span><span class="lang-en">Tajweed</span>' +
-        '</button>' +
-        '<button data-act="voice" class="r-dock-voice">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M12 8m-3.6 0a3.6 3.6 0 1 0 7.2 0a3.6 3.6 0 1 0-7.2 0M4.8 20.5v-1a5 5 0 0 1 5-5h4.4a5 5 0 0 1 5 5v1"/></svg>' +
-          '<span class="lang-ar">القارئ</span><span class="lang-en">Reciter</span>' +
-        '</button>' +
-        '<button data-act="latin" class="r-dock-latin">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M2.8 18.5 7.5 5.5l4.7 13M4.5 14h6"/><path d="M17 15.2m-3.2 0a3.2 3.2 0 1 0 6.4 0a3.2 3.2 0 1 0-6.4 0M20.2 11.6v6.9"/></svg>' +
-          '<span class="lang-ar">النطق</span><span class="lang-en">Phonetic</span>' +
-        '</button>' +
-        '<button data-act="play" class="r-dock-play">' +
-          '<span class="r-dock-disc">' +
-            '<svg class="ic r-ic-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>' +
-            '<svg class="ic r-ic-pause" viewBox="0 0 24 24"><path d="M7 5h3.2v14H7zM13.8 5H17v14h-3.2z"/></svg>' +
-          '</span>' +
-          '<span class="r-when-paused"><span class="lang-ar">تشغيل</span><span class="lang-en">Play</span></span>' +
-          '<span class="r-when-playing"><span class="lang-ar">إيقاف</span><span class="lang-en">Pause</span></span>' +
-        '</button>' +
-        '<button data-act="word" class="r-dock-word">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M4 9.5h3.5l5-4v13l-5-4H4z"/><path d="M16 8.8a4.2 4.2 0 0 1 0 6.4M18.6 6.2a7.6 7.6 0 0 1 0 11.6"/></svg>' +
-          '<span class="r-word-idle"><span class="lang-ar">كلمة</span><span class="lang-en">Word</span></span>' +
-          '<span class="r-word-wait"><span class="lang-ar">تحميل…</span><span class="lang-en">Loading…</span></span>' +
-        '</button>' +
-        '<button data-act="repeat" class="r-dock-repeat">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M16.5 3 20 6.5 16.5 10M4 11.5v-2a3 3 0 0 1 3-3h13M7.5 21 4 17.5 7.5 14M20 12.5v2a3 3 0 0 1-3 3H4"/></svg>' +
-          '<span class="lang-ar">تكرار</span><span class="lang-en">Repeat</span>' +
-        '</button>' +
-        '<button data-act="speed" class="r-dock-speed">' +
-          '<svg class="ic ic-line" viewBox="0 0 24 24"><path d="M5.07 18A8 8 0 1 1 18.93 18"/><path d="M12 14l3.6-4.4M12 14m-1.3 0a1.3 1.3 0 1 0 2.6 0a1.3 1.3 0 1 0-2.6 0"/></svg>' +
-          '<span class="r-speed-value"></span>' +
-        '</button>' +
-      '</div>' +
-    '</div>';
-
   /* The ring's circumference, which is the length of dash a full surah draws.
      r=24.5 in a 54-wide box, so 2πr. */
   var RING = 2 * Math.PI * 24.5;
@@ -786,7 +471,7 @@
   }
 
   function build() {
-    document.body.insertAdjacentHTML('beforeend', MENU);
+    document.body.insertAdjacentHTML('beforeend', PlayerMarkup);
     menu = document.getElementById('r-menu');
     el = {
       head: menu.querySelector('.r-menu-head'),
@@ -1026,7 +711,7 @@
     menu.classList.toggle('r-word-loading', wordLoading);
     menu.classList.toggle('r-word-saying', !!wordAudio);
     menu.querySelectorAll('[data-act="latin"]').forEach(function (b) {
-      b.classList.toggle('on', latinOn);
+      b.classList.toggle('on', WordTip.on());
     });
     var meaningUp = !!(global.Meaning && Meaning.open());
     menu.querySelectorAll('[data-act="meaning"]').forEach(function (b) {
@@ -1396,9 +1081,7 @@
       return;
     }
     if (what === 'latin') {
-      latinOn = !latinOn;
-      store(LATIN_KEY, latinOn ? '1' : '0');
-      sayLatin();
+      WordTip.toggle();
       sync();
       return;
     }
@@ -1534,7 +1217,7 @@
 
   /** Let go of whatever the pointer was on. */
   function clearHover() {
-    if (overWord) { overWord.classList.remove('r-hover-word'); overWord = null; sayLatin(); }
+    if (overWord) { overWord.classList.remove('r-hover-word'); overWord = null; WordTip.say(); }
   }
 
   function hover() {
@@ -1570,8 +1253,8 @@
         overWord = w;
         overWord.classList.add('r-hover-word');
         /* A word from a surah not yet opened has no list loaded; fetch it. */
-        loadLatin(+String(w.dataset.a).split(':')[0]);
-        sayLatin();
+        WordTip.load(+String(w.dataset.a).split(':')[0]);
+        WordTip.say();
       }
     });
 
@@ -1754,7 +1437,7 @@
     var was = surah && surah.id;
     surah = s;
     host = hooks;
-    loadLatin(s.id);
+    WordTip.load(s.id);
     if (was === s.id) return Promise.resolve(!!timing);
 
     stop();
@@ -1802,7 +1485,6 @@
   /* The meaning window's own close button changes what the player's says. */
   document.addEventListener('meaning:state', function () { if (menu && !menu.hidden) sync(); });
   /* A translation in another language: the words under the Latin follow it. */
-  document.addEventListener('meaning:lang', function () { if (latinSurah) loadLatin(latinSurah); sayLatin(); });
   document.addEventListener('meaning:step', function (e) {
     var d = e.detail || {};
     if (!surah || d.surah !== surah.id || !host || !host.ayahPage) return;

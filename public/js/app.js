@@ -513,99 +513,15 @@ $(function () {
 
   /* The way back to where the reading stopped: opening on the index made
      carrying on the one hard thing, so it is offered at the head of it. */
-  /* ---------- reading history ----------
-     Every page opened, with when, newest first: two only when they were open together as a spread.
-     Kept in this browser for 30 days. */
-  function dayKey(back) {
-    var d = new Date();
-    d.setDate(d.getDate() - (back || 0));
-    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
-  }
-  function readHistory() {
-    try { return JSON.parse(localStorage.getItem('quran-reads')) || {}; } catch (e) { return {}; }
-  }
-  try { localStorage.removeItem('quran-history'); } catch (e) { /* the first list's key, not used since */ }
-  function logPages(pages) {
-    if (!surah) return;
-    var h = readHistory(), key = dayKey(), day = h[key] = h[key] || [];
-    pages = pages.filter(function (p) { return p >= 1 && p <= PAGES; });
-    // The same view again (a refit, a reload) only moves its time
-    if (day[0] && day[0].s === surah.id && day[0].p.join() === pages.join()) day.shift();
-    day.unshift({ s: surah.id, p: pages, t: Date.now() });
-    if (day.length > 300) day.length = 300;
-    Object.keys(h).sort().reverse().slice(30).forEach(function (k) { delete h[k]; });
-    try { localStorage.setItem('quran-reads', JSON.stringify(h)); } catch (e) { /* full or blocked: the reading goes on */ }
-    if (!$('.drawer-pane[data-pane="history"]').prop('hidden')) showHistory();
-  }
-  /* "4 minutes ago" today, the clock time on earlier days */
-  function when(t, today) {
-    if (!today) return new Date(t).toLocaleTimeString(I18n.lang(), { hour: 'numeric', minute: '2-digit' });
-    var mins = Math.round((Date.now() - t) / 60000);
-    if (!window.Intl || !Intl.RelativeTimeFormat) return new Date(t).toLocaleTimeString();
-    var rel = new Intl.RelativeTimeFormat(I18n.lang(), { numeric: 'auto' });
-    return mins < 1 ? rel.format(0, 'second') : mins < 60 ? rel.format(-mins, 'minute') : rel.format(-Math.floor(mins / 60), 'hour');
-  }
-  function showHistory() {
-    var list = document.getElementById('history-list');
-    if (!list || !quran) return;
-    list.textContent = '';
-    var h = readHistory(), days = Object.keys(h).sort().reverse();
-    $('#btn-clear-history').prop('hidden', !days.length);
-    if (!days.length) {
-      var none = document.createElement('p');
-      none.className = 'hist-none';
-      none.textContent = T('لا قراءة بعد', 'Nothing read yet');
-      list.appendChild(none);
-      return;
-    }
-    days.forEach(function (k) {
-      var seen = {};
-      h[k].forEach(function (e) { e.p.forEach(function (p) { seen[p] = 1; }); });
-      var head = document.createElement('div');
-      head.className = 'hist-day';
-      var today = k === dayKey();
-      var name = today ? T('اليوم', 'Today') : k === dayKey(1) ? T('أمس', 'Yesterday')
-        : new Date(k + 'T12:00:00').toLocaleDateString(I18n.lang(), { weekday: 'long', day: 'numeric', month: 'long' });
-      var n = document.createElement('span');
-      n.textContent = name;
-      var c = document.createElement('span');
-      c.className = 'hist-count';
-      c.textContent = T('{n} صفحة', '{n} pages', { n: num(Object.keys(seen).length) });
-      head.appendChild(n);
-      head.appendChild(c);
-      list.appendChild(head);
-      h[k].forEach(function (e) {
-        var s = quran.find(function (x) { return x.id === e.s; });
-        if (!s) return;
-        var row = document.createElement('button');
-        row.className = 'hist-row';
-        row.dataset.s = e.s;
-        row.dataset.p = e.p[0];
-        var t = document.createElement('span');
-        t.className = 'hist-name';
-        var pages = e.p.map(num).join(lang === 'ar' ? '، ' : ', ');
-        t.textContent = (e.p.length > 1 ? T('صفحة {n}', 'Pages {n}', { n: pages }) : T('صفحة {n}', 'Page {n}', { n: pages }))
-          + ' · ' + (lang === 'ar' ? s.full : s.en);
-        var at = document.createElement('span');
-        at.className = 'hist-where';
-        at.textContent = when(e.t, today);
-        row.appendChild(t);
-        row.appendChild(at);
-        list.appendChild(row);
-      });
-    });
-  }
-  $('#btn-clear-history').on('click', function () {
-    if (!window.confirm(T('مسح سجل القراءة كله؟', 'Clear all of your reading history?'))) return;
-    try { localStorage.removeItem('quran-reads'); } catch (e) { /* nothing to clear */ }
-    showHistory();
-  });
-  $(document).on('click', '.hist-row', function () {
-    var id = +this.dataset.s, s = quran.find(function (x) { return x.id === id; });
-    if (!s) return;
-    open(s, +this.dataset.p || null);
-    history.pushState({ surah: s.id }, '', '/surah/' + s.id + '/');
-    setSidebar(false);
+  /* The reading history: reads.js */
+  var reads = Reads.init({
+    pages     : PAGES,
+    surah     : function () { return surah; },
+    quran     : function () { return quran; },
+    lang      : function () { return lang; },
+    num       : num,
+    open      : open,
+    setSidebar: setSidebar,
   });
 
   /* ---------- surah index ---------- */
@@ -623,11 +539,6 @@ $(function () {
     '</a>';
   }
 
-  /** A heading over a run of results. */
-  function section(ar, en) {
-    return '<div class="juz-label"><span class="lang-ar">' + ar + '</span>' +
-      '<span class="lang-en">' + en + '</span></div>';
-  }
 
   function buildIndex() {
     var groups = {};
@@ -1107,7 +1018,7 @@ $(function () {
     page = p;
     if (mode === 'pages') singlePage = p;
     localStorage.setItem('quran-last-page', p);
-    logPages(mode === 'spread' ? [p, p + 1] : [p]);
+    reads.log(mode === 'spread' ? [p, p + 1] : [p]);
     /* Nothing before page 1 or after 604, so the turner that would go nowhere
        is taken away rather than left to do nothing. */
     var step = mode === 'spread' ? 2 : 1;
@@ -1237,7 +1148,7 @@ $(function () {
     /* 114 rows and the list of reciters, built the first time they are asked
        for rather than on every load. */
     if (pane === 'listen') Listen.render();
-    if (pane === 'history') showHistory();
+    if (pane === 'history') reads.show();
   });
   $('#btn-bookmarks').on('click', function () {
     showPanel($('#bookmarks-panel').prop('hidden') ? 'saved' : null);
@@ -1268,124 +1179,12 @@ $(function () {
     } else if (document.execCommand && document.execCommand('copy')) done();
   });
 
-  /* ---------- reporting an issue or suggesting something --------------------
-
-     The same form as the Android app's, posted to the same endpoint. What is
-     sent beside the message is listed on the form itself. */
-  var feedback = { kind: 'bug', severity: null, sending: false };
-
-  var FEEDBACK_SAYS = {
-    sending:  { ar: 'جارٍ الإرسال…', en: 'Sending…' },
-    sent:     { ar: 'شكرًا لك، وصلت رسالتك.', en: 'Thank you, your message was sent.' },
-    short:    { ar: 'اكتب رسالة أطول قليلًا.', en: 'Please write a little more.' },
-    email:    { ar: 'البريد الإلكتروني غير صحيح.', en: 'That email address is not valid.' },
-    tooMany:  { ar: 'أرسلت رسائل كثيرة، حاول لاحقًا.', en: 'Too many messages sent, please try later.' },
-    failed:   { ar: 'تعذّر الإرسال الآن. حاول مرة أخرى بعد قليل.', en: 'Could not send right now. Please try again shortly.' }
-  };
-
-  function sayFeedbackStatus(key, bad) {
-    $('#fb-status').text(key ? T(FEEDBACK_SAYS[key].ar, FEEDBACK_SAYS[key].en) : '')
-                   .toggleClass('bad', !!bad);
-  }
-
-  function sayFeedback() {
-    $('#feedback-panel .fb-chip[data-kind]').each(function () {
-      $(this).attr('aria-pressed', String($(this).data('kind') === feedback.kind));
-    });
-    $('#feedback-panel .fb-chip[data-severity]').each(function () {
-      $(this).attr('aria-pressed', String(($(this).attr('data-severity') || null) === feedback.severity));
-    });
-    $('#fb-severity').prop('hidden', feedback.kind !== 'bug');
-    var box = $('#fb-message');
-    box.attr('placeholder', box.attr(lang === 'ar' ? 'data-ph-ar' : 'data-ph-en'));
-    $('#fb-send').prop('disabled', feedback.sending);
-  }
-
-  /* "Chrome 138 on Windows": enough to tell browsers apart, nothing more. */
-  function browserName() {
-    var ua = navigator.userAgent;
-    var name = /Edg\/(\d+)/.test(ua) ? 'Edge ' + RegExp.$1
-      : /OPR\/(\d+)/.test(ua) ? 'Opera ' + RegExp.$1
-      : /Firefox\/(\d+)/.test(ua) ? 'Firefox ' + RegExp.$1
-      : /(?:Chrome|CriOS)\/(\d+)/.test(ua) ? 'Chrome ' + RegExp.$1
-      : /Version\/(\d+).*Safari/.test(ua) ? 'Safari ' + RegExp.$1
-      : 'Other browser';
-    var os = /Android/.test(ua) ? 'Android'
-      : /iPhone|iPad|iPod/.test(ua) ? 'iOS'
-      : /Windows/.test(ua) ? 'Windows'
-      : /Mac OS X/.test(ua) ? 'macOS'
-      : /Linux/.test(ua) ? 'Linux'
-      : 'unknown OS';
-    return name + ' on ' + os;
-  }
-
-  /* The window as the reader sees it; a hidden or unmeasured window falls back to the screen. */
-  function screenSize() {
-    var w = window.innerWidth || screen.width, h = window.innerHeight || screen.height;
-    return (w > h ? 'landscape ' : 'portrait ') + w + 'x' + h;
-  }
-
-  function feedbackContext() {
-    var context = {
-      language: lang,
-      theme: themeChoice || 'system',
-      themeShown: theme === 'dark' ? 'dark' : 'light',
-      screen: screenSize(),
-      browser: browserName()
-    };
-    var last = +localStorage.getItem('quran-last-page');
-    if (last >= 1 && last <= 604) context.page = last;
-    var voice = null;
-    try { voice = localStorage.getItem('quran-recitation'); } catch (e) { /* denied */ }
-    if (voice) context.reciter = voice.slice(0, 80);
-    return context;
-  }
-
-  $('#feedback-panel').on('click', '.fb-chip[data-kind]', function () {
-    feedback.kind = $(this).data('kind');
-    if (feedback.kind !== 'bug') feedback.severity = null;
-    sayFeedback();
+  /* The feedback form: report.js */
+  var sayFeedback = Report.init({
+    lang       : function () { return lang; },
+    theme      : function () { return theme; },
+    themeChoice: function () { return themeChoice; },
   });
-
-  $('#feedback-panel').on('click', '.fb-chip[data-severity]', function () {
-    feedback.severity = $(this).attr('data-severity') || null;
-    sayFeedback();
-  });
-
-  $('#feedback-form').on('submit', function (e) {
-    e.preventDefault();
-    if (feedback.sending) return;
-
-    var message = $.trim($('#fb-message').val());
-    var email = $.trim($('#fb-email').val());
-    if (message.length < 5) return sayFeedbackStatus('short', true);
-    if (email && !$('#fb-email')[0].checkValidity()) return sayFeedbackStatus('email', true);
-
-    var body = { source: 'web', kind: feedback.kind, message: message, app: feedbackContext() };
-    if (feedback.kind === 'bug' && feedback.severity) body.severity = feedback.severity;
-    if (email) body.email = email;
-
-    feedback.sending = true;
-    sayFeedback();
-    sayFeedbackStatus('sending');
-
-    $.ajax({
-      url: '/api/feedback',
-      method: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify(body),
-      timeout: 15000
-    }).done(function () {
-      $('#fb-message').val('');
-      sayFeedbackStatus('sent');
-    }).fail(function (xhr) {
-      sayFeedbackStatus(xhr.status === 429 ? 'tooMany' : 'failed', true);
-    }).always(function () {
-      feedback.sending = false;
-      sayFeedback();
-    });
-  });
-
 
   /* A tap on the page shows the bar or takes it away. Only where there is no
      chrome already, and not on a word: a word belongs to the recitation. */
@@ -1692,139 +1491,17 @@ $(function () {
     history.pushState({ surah: s.id }, '', '/surah/' + s.id + '/');
   }
 
-  /* A name with nothing on it: no vowel marks, one shape for the alef. The
-     list names surahs as the mushaf does, and nobody types that, so both
-     sides of the comparison are stripped to their letters. */
-  var MARKS = /[ً-ٰٕۖ-ۭـ]/g;
-  var ALEFS = /[آأإٱ]/g;
-
-  function bare(t) {
-    return t.replace(MARKS, '').replace(ALEFS, 'ا')
-            .replace(/ؤ/g, 'و')
-            .replace(/[ئى]/g, 'ي')
-            .replace(/ة/g, 'ه');
-  }
-
-  /* Both sets of Arabic digits, so ٤٨ and ۴۸ read as 48. */
-  function figures(t) {
-    return t.replace(/[٠-٩۰-۹]/g, function (d) {
-      var c = d.charCodeAt(0);
-      return String(c >= 0x06f0 ? c - 0x06f0 : c - 0x0660);
-    });
-  }
-
-  /* Folding drops marks, so a place in the folded text is not the same place in
-     the printed one. Walked per row rather than mapped for all 6236, because
-     only the sixty on screen are ever marked. */
-  function spanIn(text, at, len) {
-    var seen = 0, from = -1;
-    for (var i = 0; i <= text.length; i++) {
-      if (seen === at && from < 0) from = i;
-      if (from >= 0 && seen === at + len) return [from, i];
-      if (i < text.length && bare(text.charAt(i))) seen++;
-    }
-    return from < 0 ? null : [from, text.length];
-  }
-
-  /** Show the index again, or the answer to what was typed. */
-  function searching(on) {
-    $('.list-switch').prop('hidden', on);
-    $('#search-results').prop('hidden', !on);
-    $('#surah-list').prop('hidden', on || !$('.list-tab[data-list="surahs"]').hasClass('on'));
-    $('#juz-list').prop('hidden', on || !$('.list-tab[data-list="juz"]').hasClass('on'));
-  }
-
-  /* Enough of the ayah to see the match in its own words, rather than the whole
-     of a verse that can run to a screenful. */
-  function around(text, at, len) {
-    var ROOM = 34;
-    var from = Math.max(0, at - ROOM);
-    var to = Math.min(text.length, at + len + ROOM);
-    return (from ? '\u2026' : '') + text.slice(from, at) +
-      '<mark>' + text.slice(at, at + len) + '</mark>' +
-      text.slice(at + len, to) + (to < text.length ? '\u2026' : '');
-  }
-
-  /** The ayahs carrying the words typed, as their own run of rows. */
-  function ayahRows(q) {
-    var hits = Ayahs.find(q);
-    if (!hits.length) return '';
-
-    return section('الآيات', 'Ayahs') +
-      hits.map(function (h) {
-        var a = h.ayah;
-        var page = ayahs && ayahs.began[a.s + ':' + a.v];
-        var span = spanIn(a.text, h.at, q.length);
-        var body = span ? around(a.text, span[0], span[1] - span[0])
-                        : esc(a.text.slice(0, 90));
-        var name = quran[a.s - 1];
-        return '<button class="surah-item ayah-hit" data-page="' + (page || 1) +
-          '" data-a="' + a.s + ':' + a.v + '">' +
-          '<span class="surah-names">' +
-            '<span class="ayah-text">' + body + '</span>' +
-            '<span class="ayah-ref">' +
-              '<span class="lang-ar">\u0633\u0648\u0631\u0629 ' + esc(name ? name.name : '') +
-                ' \u00b7 \u0622\u064a\u0629 ' + ar(a.v) + '</span>' +
-              '<span class="lang-en">' + esc(name ? name.en : '') + ' \u00b7 ayah ' + a.v + '</span>' +
-            '</span>' +
-          '</span></button>';
-      }).join('');
-  }
-
-  /* A number is the finer place and the one a copied reference uses, so the
-     page it names comes before any surah that happens to carry the figure. */
-  function jumpRows(n) {
-    if (!(n >= 1 && n <= PAGES)) return '';
-    return section('الانتقال', 'Go to') +
-      '<button class="surah-item jump-row" data-page="' + n + '">' +
-        '<span class="surah-num">' + n + '</span>' +
-        '<span class="surah-names"><span class="juz-title">' +
-          '<span class="lang-ar">صفحة ' + ar(n) + '</span>' +
-          '<span class="lang-en">Page ' + n + '</span></span></span></button>';
-  }
-
-  /* Matched against the data, not the rows: a name on a row is calligraphy,
-     and those glyphs spell nothing. */
-  function nameRows(q) {
-    var found = quran.filter(function (s) {
-      return bare(s.name).indexOf(q) >= 0
-          || s.en.toLowerCase().indexOf(q) >= 0
-          || String(s.id) === q;
-    });
-    if (!found.length) return '';
-    return section('السور', 'Surahs') + found.map(surahRow).join('');
-  }
-
-  function answer() {
-    var raw = figures($('#surah-search').val().trim());
-    var q = bare(raw.toLowerCase());
-
-    if (!q) { searching(false); $('#search-results').empty(); return; }
-    searching(true);
-
-    var html = jumpRows(parseInt(raw, 10)) + nameRows(q);
-
-    /* The words are only fetched for a query that could be among them, so a
-       reader looking a surah up by name never pays for them. */
-    if (q.length >= 2 && !/^\d+$/.test(raw)) {
-      $('#search-results').html(html || section('لا نتائج', 'Searching'));
-      Ayahs.load().then(function () {
-        if (bare(figures($('#surah-search').val().trim()).toLowerCase()) !== q) return;
-        var rows = html + ayahRows(q);
-        $('#search-results').html(rows || section('لا نتائج', 'No results'));
-      });
-      return;
-    }
-
-    $('#search-results').html(html || section('لا نتائج', 'No results'));
-  }
-
-  $('#surah-search').on('input', answer);
-
-  $('#search-results').on('click', '.ayah-hit', function () {
-    goToPage(+$(this).data('page'));
-    flashAyah($(this).data('a'));
-    setSidebar(false);
+  /* Search over the index: search.js. Folding a name to its bare letters is its, and the ayah search's too */
+  var bare = Search.init({
+    pages     : PAGES,
+    quran     : function () { return quran; },
+    ayahs     : function () { return ayahs; },
+    esc       : esc,
+    ar        : ar,
+    surahRow  : surahRow,
+    goToPage  : goToPage,
+    flashAyah : flashAyah,
+    setSidebar: setSidebar,
   });
 
   /* The ayah asked for, marked on the page it was found on, briefly, as the app
@@ -1925,333 +1602,12 @@ $(function () {
     else if (e.key === '0') { applyScale(1); magnify.reset(); }   // back to a whole page
   });
 
-  /* ---------- drag the page ----------
-     Grab the sheet and pull, and let it glide on. Mouse only: a touch screen
-     scrolls this way already, and fighting it breaks the momentum. */
-
-  (function dragScroll() {
-    var area = document.getElementById('content-area');
-    var down = false, moved = false, onSheet = false, glide = null;
-    var startY = 0, startTop = 0, lastY = 0, lastT = 0, speed = 0;
-
-    function stopGlide() {
-      if (glide) cancelAnimationFrame(glide);
-      glide = null;
-      area.classList.remove('free');
-    }
-
-    area.addEventListener('pointerdown', function (e) {
-      /* Cleared first: a drag that ended without a click would otherwise
-         leave this set and swallow the next press. */
-      moved = false;
-      if (e.pointerType === 'touch' || e.button !== 0) return;
-      if (e.target.closest('button, input, a')) return;
-      /* Dragging is for the margin beside the sheet. On the sheet itself the
-         pointer belongs to the text — but the press is still tracked, so a
-         plain click there still shuts the index. */
-      onSheet = !!e.target.closest('.page-section');
-      stopGlide();
-      down = true; speed = 0;
-      startY = lastY = e.clientY;
-      startTop = area.scrollTop;
-      lastT = e.timeStamp;
-    });
-
-    area.addEventListener('pointermove', function (e) {
-      if (!down) return;
-      /* A spread has nothing to scroll, and hiding the scrollbar does not stop
-         scrollTop being written, so the drag stands down itself. */
-      if (mode === 'spread' || onSheet) return;
-      var dy = e.clientY - startY;
-      /* A few pixels of slack, so a click on a bookmark ribbon is still a
-         click and not a one-pixel drag. */
-      if (!moved) {
-        if (Math.abs(dy) < 6) return;
-        moved = true;
-        area.classList.add('dragging', 'free');
-        /* Keeps the drag alive if the cursor leaves the pane. Throws if the
-           pointer is already gone, which is harmless here. */
-        try { area.setPointerCapture(e.pointerId); } catch (err) { /* gone */ }
-      }
-      area.scrollTop = startTop - dy;
-      var dt = e.timeStamp - lastT;
-      if (dt > 0) speed = (e.clientY - lastY) / dt;   // px per ms
-      lastY = e.clientY;
-      lastT = e.timeStamp;
-    });
-
-    function release() {
-      if (!down) return;
-      down = false;
-      area.classList.remove('dragging');
-
-      /* A click on the page, not a drag: the index has served its purpose. */
-      if (!moved) {
-        if (sideOpen && $('#bookmarks-panel').prop('hidden') &&
-            $('#help-panel').prop('hidden')) setSidebar(false);
-        return;
-      }
-
-      var v = speed * 16;               // px per frame at the moment of release
-      (function step() {
-        v *= 0.94;
-        if (Math.abs(v) < 0.4) { stopGlide(); return; }
-        area.scrollTop -= v;
-        glide = requestAnimationFrame(step);
-      }());
-    }
-
-    area.addEventListener('pointerup', release);
-    area.addEventListener('pointercancel', release);
-    /* A drag that ends over a ribbon must not also press it. */
-    area.addEventListener('click', function (e) {
-      if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
-    }, true);
-    area.addEventListener('wheel', stopGlide, { passive: true });
-  }());
-
-  /* ---------- magnify ----------
-     A spread has nothing to scroll, so there the wheel moves closer to the page:
-     the sheet is scaled as it stands, round the pointer, and dragged to look
-     about. Nothing is laid out again, so it stays smooth. */
-
-  var magnify = (function () {
-    var area = document.getElementById('content-area');
-    var box = document.getElementById('ayahs-container');
-    var MAX = 4;
-    var s = 1, tx = 0, ty = 0;
-    var ox = 0, oy = 0;   // the box's unscaled corner on screen
-    var drag = null, dragged = false;
-
-    /* The turners are part of the scene, as they are under a touchpad pinch: they
-       move out and grow with the pages rather than float over the magnified words. */
-    var arrows = [], arrowAt = [];
-
-    function apply() {
-      box.style.transform = s === 1 ? '' : 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')';
-      arrows.forEach(function (b, i) {
-        var c = arrowAt[i];
-        if (s === 1 || !c) { b.style.transform = ''; return; }
-        var nx = ox + tx + (c[0] - ox) * s, ny = oy + ty + (c[1] - oy) * s;
-        b.style.transform = 'translate(' + (nx - c[0]) + 'px,' + (ny - c[1]) + 'px) scale(' + s + ')';
-      });
-      document.body.classList.toggle('magnified', s > 1);
-      if (heard) heard(s);
-    }
-
-    var heard = null;   // the zoom rail, told of every change whatever made it
-
-    var bw = 0, bh = 0;   // the box's unscaled size, read with its corner
-
-    // The magnified sheet keeps covering its own box, so it cannot be pushed off screen
-    function clamp() {
-      tx = Math.min(0, Math.max(bw - bw * s, tx));
-      ty = Math.min(0, Math.max(bh - bh * s, ty));
-    }
-
-    /* While the size is moving the sheet is one layer the graphics card stretches,
-       smooth at any speed; once it rests, the words are drawn sharp again at the size they settled on. */
-    var settle = null;
-    function moving() {
-      clearTimeout(settle);
-      document.body.classList.add('zooming');
-    }
-    function rested() {
-      clearTimeout(settle);
-      settle = setTimeout(function () { document.body.classList.remove('zooming'); }, 120);
-    }
-
-    /* The point under the pointer stays under it: its place in the unscaled box
-       is worked out, then the box is moved so it lands there again. */
-    function zoomAt(next, x, y) {
-      next = Math.min(MAX, Math.max(1, next));
-      if (next === s) return;
-      /* Read only while unscaled: mid-glide the box measures where the easing
-         has it, not where it is going, and each notch would drift further. */
-      if (s === 1) {
-        var r = box.getBoundingClientRect();
-        ox = r.left; oy = r.top;
-        // Read here, not per frame: a size read after a write lays the page out mid-glide
-        bw = box.offsetWidth; bh = box.offsetHeight;
-        // Where each turner's centre sits unscaled; a hidden one has no box and stays out of it
-        arrows = [].slice.call(document.querySelectorAll('#page-nav button'));
-        arrowAt = arrows.map(function (b) {
-          var br = b.getBoundingClientRect();
-          return br.width ? [br.left + br.width / 2, br.top + br.height / 2] : null;
-        });
-      }
-      var ux = (x - ox - tx) / s, uy = (y - oy - ty) / s;
-      s = next;
-      tx = x - ox - ux * s;
-      ty = y - oy - uy * s;
-      if (s < 1.01 && target === 1) { s = 1; tx = ty = 0; }
-      clamp();
-      apply();
-    }
-
-    /* The wheel sets where the size is heading; each 60th of a second closes 30% of
-       the way, round the pointer. Notches rolled quickly blend into one glide, as a pinch does. */
-    var target = 1, ax = 0, ay = 0, frame = null, last = 0;
-
-    // Timed, not counted in frames, so a 144Hz screen glides no faster than a 60Hz one
-    function glide(now) {
-      var dt = last ? Math.min(64, now - last) : 16.7;
-      last = now;
-      var next = s + (target - s) * (1 - Math.pow(0.82, dt / 16.7));   // eased over a few more frames, for a smooth glide
-      if (Math.abs(target - next) < 0.002) next = target;
-      zoomAt(next, ax, ay);
-      frame = next === target ? null : requestAnimationFrame(glide);
-      if (!frame) { last = 0; rested(); }
-    }
-
-    function stop() {
-      if (frame) cancelAnimationFrame(frame);
-      frame = null;
-      last = 0;
-      target = s;
-      rested();
-    }
-
-    function reset() {
-      stop();
-      if (s === 1) return;
-      s = target = 1; tx = ty = 0;
-      apply();
-    }
-
-    /** Head for a size, round a point on screen; the glide gets it there. */
-    function toward(next, x, y) {
-      target = Math.min(MAX, Math.max(1, next));
-      ax = x; ay = y;
-      moving();
-      if (!frame) frame = requestAnimationFrame(glide);
-    }
-
-    function wheelBy(e) {
-      var dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
-      return target * Math.exp(-dy * 0.0008);   // about 8% a notch
-    }
-
-    area.addEventListener('wheel', function (e) {
-      // A touchpad pinch arrives with ctrlKey and is the browser's own zoom
-      if (mode !== 'spread' || e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-      e.preventDefault();
-      toward(wheelBy(e), e.clientX, e.clientY);
-    }, { passive: false });
-
-    area.addEventListener('pointerdown', function (e) {
-      dragged = false;
-      if (s === 1 || e.pointerType === 'touch' || e.button !== 0) return;
-      if (e.target.closest('button, input, a')) return;
-      stop();   // a grab holds the size where it is
-      drag = { x: e.clientX, y: e.clientY, tx: tx, ty: ty };
-    });
-
-    area.addEventListener('pointermove', function (e) {
-      if (!drag) return;
-      var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-      if (!dragged) {
-        if (Math.abs(dx) + Math.abs(dy) < 6) return;   // still a click
-        dragged = true;
-        document.body.classList.add('panning');
-        try { area.setPointerCapture(e.pointerId); } catch (err) { /* gone */ }
-      }
-      tx = drag.tx + dx;
-      ty = drag.ty + dy;
-      clamp();
-      apply();
-    });
-
-    function end() {
-      drag = null;
-      document.body.classList.remove('panning');
-    }
-    area.addEventListener('pointerup', end);
-    area.addEventListener('pointercancel', end);
-
-    // A drag that ends on a word must not also open the player
-    area.addEventListener('click', function (e) {
-      if (dragged) { e.stopPropagation(); e.preventDefault(); dragged = false; }
-    }, true);
-
-    return {
-      reset: reset,
-      toward: toward,
-      wheelBy: wheelBy,
-      target: function () { return target; },
-      MAX: MAX,
-      listen: function (fn) { heard = fn; fn(s); },
-    };
-  }());
-
-  /* ---------- zoom rail ----------
-     The magnifier made visible: a slim track in the bottom-left corner whose
-     handle follows the zoom from wherever it comes, and drags it too. Up is closer. */
-
-  (function zoomRail() {
-    var rail = document.getElementById('zoom-rail');
-    if (!rail) return;
-    var track = rail.querySelector('.zr-track');
-    var fill = rail.querySelector('.zr-fill');
-    var thumb = rail.querySelector('.zr-thumb');
-    var level = rail.querySelector('.zr-level');
-    // Logarithmic, so each doubling is the same distance along the track
-    var SPAN = Math.log(magnify.MAX);
-
-    magnify.listen(function (s) {
-      var t = Math.log(s) / SPAN * 100;
-      fill.style.height = t + '%';
-      thumb.style.bottom = t + '%';
-      level.textContent = Math.round(s * 100) + '%';
-      rail.classList.toggle('zoomed', s > 1);
-      rail.setAttribute('aria-valuenow', Math.round(s * 100));
-    });
-
-    // The rail sits beside the pages, not on them, so it zooms round the middle of the reading area
-    function middle() {
-      var r = document.getElementById('content-area').getBoundingClientRect();
-      return [r.left + r.width / 2, r.top + r.height / 2];
-    }
-    function go(next) { var m = middle(); magnify.toward(next, m[0], m[1]); }
-
-    function fromY(y) {
-      var r = track.getBoundingClientRect();
-      return Math.exp(Math.min(1, Math.max(0, (r.bottom - y) / r.height)) * SPAN);
-    }
-
-    var sliding = false;
-    track.addEventListener('pointerdown', function (e) {
-      sliding = true;
-      try { track.setPointerCapture(e.pointerId); } catch (err) { /* gone */ }
-      rail.classList.add('sliding');
-      go(fromY(e.clientY));
-      e.preventDefault();
-    });
-    track.addEventListener('pointermove', function (e) { if (sliding) go(fromY(e.clientY)); });
-    function end() { sliding = false; rail.classList.remove('sliding'); }
-    track.addEventListener('pointerup', end);
-    track.addEventListener('pointercancel', end);
-
-    rail.addEventListener('wheel', function (e) {
-      e.preventDefault();
-      go(magnify.wheelBy(e));
-    }, { passive: false });
-
-    rail.querySelectorAll('.zr-step').forEach(function (b) {
-      b.addEventListener('click', function () { go(magnify.target() * (+b.dataset.step > 0 ? 1.25 : 0.8)); });
-    });
-    level.addEventListener('click', function () { magnify.reset(); });
-
-    // A slider for the keyboard too: up and down, as the track runs
-    rail.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowUp' || e.key === 'ArrowRight') go(magnify.target() * 1.15);
-      else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') go(magnify.target() / 1.15);
-      else if (e.key === 'Home') magnify.reset();
-      else return;
-      e.preventDefault();
-      e.stopPropagation();   // not a page turn as well
-    });
-  }());
+  /* Dragging the sheet, magnifying a spread and the zoom rail: zoom.js */
+  var magnify = Zoom.init({
+    mode      : function () { return mode; },
+    sideOpen  : function () { return sideOpen; },
+    setSidebar: setSidebar,
+  });
 
   /* Scrolling is the reader getting on with it, so the index steps aside.
      Watches the gesture, not the scroll: opening a surah scrolls too. */
