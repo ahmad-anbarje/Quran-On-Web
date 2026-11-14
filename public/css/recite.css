@@ -1142,3 +1142,104 @@ body.dark-mode #meaning .mn-tab.on { background: #1f6a9a; border-color: #1f6a9a;
   #meaning .mn-size, #meaning .mn-edge { display: none; }
 }
 
+/* --- Copying and sharing ayahs: a card over the page, from the meaning window --- */
+#share {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: rgba(10, 20, 30, 0.42);
+  font-family: var(--ui-font);
+}
+#share[hidden] { display: none; }
+#share .sh-card {
+  display: flex;
+  flex-direction: column;
+  width: min(440px, 100%);
+  max-height: min(86vh, 640px);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--sh-3);
+  overflow: hidden;
+}
+#share .sh-bar {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 14px 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+}
+#share .sh-title { flex: 1 1 auto; margin: 0; font-size: 0.95rem; font-weight: 700; }
+#share .sh-close {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  width: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+#share .sh-close:hover { background: color-mix(in srgb, var(--r-point) 14%, transparent); color: var(--r-point); }
+#share .sh-close .ic { width: 18px; height: 18px; }
+#share .sh-range { display: flex; gap: 10px; padding: 12px 14px 0; }
+#share .sh-field { display: flex; flex: 1 1 0; flex-direction: column; gap: 4px; font-size: 0.78rem; }
+#share .sh-field input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm, 8px);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+}
+#share .sh-field input:focus-visible, #share .sh-act:focus-visible, #share .sh-close:focus-visible, #share .sh-text:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+#share .sh-text {
+  flex: 1 1 auto;
+  min-height: 72px;
+  margin: 12px 14px 0;
+  padding: 10px 12px;
+  overflow-y: auto;
+  border-radius: var(--r-sm, 8px);
+  background: var(--paper);
+  font-size: 1.15rem;
+  line-height: 2.1;
+  text-align: right;
+  white-space: pre-line;
+  user-select: text;
+}
+#share .sh-ref { margin: 8px 14px 0; font-size: 0.8rem; opacity: 0.85; }
+#share .sh-acts { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 14px 0; }
+#share .sh-act {
+  flex: 1 1 120px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm, 8px);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+#share .sh-act:hover:not(:disabled) { border-color: var(--primary); background: var(--primary-soft); }
+#share .sh-act:disabled { opacity: 0.45; cursor: default; }
+#share .sh-said { min-height: 1.4em; margin: 8px 14px 12px; font-size: 0.8rem; }
+#share .sh-offscreen { position: fixed; top: 0; left: -9999px; opacity: 0; }
+/* On a phone the card sits along the foot, where the thumb is */
+@media (max-width: 480px) {
+  #share { place-items: end center; padding: 0; }
+  #share .sh-card { width: 100%; border-width: 1px 0 0; border-radius: var(--r-lg) var(--r-lg) 0 0; }
+}

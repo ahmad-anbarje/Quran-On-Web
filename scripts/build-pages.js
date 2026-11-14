@@ -511,6 +511,10 @@ function main() {
   const textUrls = surahText.build(surahs, SITE);
   console.log('surah/*/text/ %d pages written', textUrls.length);
 
+  /* The same words as data, for the reader to copy and share from */
+  const textFiles = surahText.buildData(surahs);
+  console.log('data/text/    %d surahs written', textFiles.length);
+
   /* A page an ayah, for a search that names one */
   const ayahUrls = ayahPages.build(surahs, SITE);
   console.log('surah/*/*/    %d ayah pages written', ayahUrls.length);

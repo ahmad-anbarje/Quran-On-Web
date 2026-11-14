@@ -43,6 +43,7 @@ const SHELL_FILES = [
   '/js/mushaf.min.js',
   '/js/recite.min.js',
   '/js/tafsir.min.js',
+  '/js/share.min.js',
   '/data/surahs.json',
   '/data/recitations.json',
 ];

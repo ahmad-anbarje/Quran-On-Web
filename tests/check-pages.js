@@ -42,6 +42,10 @@ function generated() {
   if (fs.existsSync(words)) {
     for (const f of fs.readdirSync(words)) out.push(path.join(words, f));
   }
+  const text = path.join(PUBLIC, 'data', 'text');
+  if (fs.existsSync(text)) {
+    for (const f of fs.readdirSync(text)) out.push(path.join(text, f));
+  }
   return out.filter((f) => fs.existsSync(f));
 }
 

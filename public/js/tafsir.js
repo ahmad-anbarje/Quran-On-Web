@@ -120,6 +120,7 @@
       '<div class="mn-bar">' +
         '<span class="r-grip" aria-hidden="true"></span>' +
         '<h2 id="mn-title" class="mn-title"></h2>' +
+        '<button class="mn-share"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg></button>' +
         '<button class="mn-step" data-step="-1"><svg class="ic" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
         '<button class="mn-step" data-step="1"><svg class="ic" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
         '<button class="mn-close"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7.5 7.5l9 9M16.5 7.5l-9 9"/></svg></button>' +
@@ -165,6 +166,7 @@
       prev: box.querySelector('[data-step="-1"]'),
       next: box.querySelector('[data-step="1"]'),
       close: box.querySelector('.mn-close'),
+      share: box.querySelector('.mn-share'),
       body: box.querySelector('.mn-body'),
       choices: box.querySelector('.mn-choices'),
       pick: box.querySelector('.mn-pick'),
@@ -187,6 +189,7 @@
         else if (b.dataset.tab) { tab = b.dataset.tab; store(TAB_KEY, tab); togglePicker(false); render(); }
         else if (b.dataset.step) step(+b.dataset.step);
         else if (b === el.close) close();
+        else if (b === el.share) share();
       }
       /* The page reads a click anywhere else as "put the player away". */
       e.stopPropagation();
@@ -659,6 +662,26 @@
     document.dispatchEvent(new CustomEvent('meaning:lang', { detail: t.lang }));
   }
 
+  /* Copying and sharing has its own code, fetched the first time it is asked
+     for, as this window's is: the page names the file on #share-script. */
+  var shareLoad = null;
+  function share() {
+    var s = surah, a = ayah;
+    if (global.Share) { global.Share.open(s, a); return; }
+    if (!shareLoad) {
+      var tag = document.getElementById('share-script');
+      if (!tag) return;
+      shareLoad = new Promise(function (resolve) {
+        var script = document.createElement('script');
+        script.src = tag.getAttribute('data-src');
+        script.onload = resolve;
+        script.onerror = function () { shareLoad = null; resolve(); };
+        document.head.appendChild(script);
+      });
+    }
+    shareLoad.then(function () { if (global.Share) global.Share.open(s, a); });
+  }
+
   function render() {
     if (!box || !surah) return;
     var l = lang(), which = textOf(tab), src = TEXTS[which];
@@ -671,6 +694,8 @@
     el.prev.setAttribute('aria-label', T('الآية السابقة', 'Previous ayah'));
     el.next.setAttribute('aria-label', T('الآية التالية', 'Next ayah'));
     el.close.setAttribute('aria-label', T('إغلاق', 'Close'));
+    el.share.setAttribute('aria-label', T('نسخ الآيات ومشاركتها', 'Copy and share ayahs'));
+    el.share.title = el.share.getAttribute('aria-label');
     el.prev.disabled = ayah <= 1;
     el.next.disabled = ayah >= surah.v;
 

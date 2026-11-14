@@ -55,7 +55,7 @@
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v4/ -->
   <link rel="stylesheet" href="/css/fonts.min.css?v=dc96e96b71" />
   <link rel="stylesheet" href="/css/style.min.css?v=dacd8a4742" />
-  <link rel="stylesheet" href="/css/recite.min.css?v=3038dadcd9" />
+  <link rel="stylesheet" href="/css/recite.min.css?v=381ac117a0" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
   <link rel="preload" href="/data/surahs.json" as="fetch" crossorigin />
@@ -742,7 +742,9 @@
   <script defer src="/js/mushaf.min.js?v=fa59e11291"></script>
   <script defer src="/js/recite.min.js?v=1a096e5ce9"></script>
   <!-- The meaning window, fetched by recite.js the first time it is opened -->
-  <template id="meaning-script" data-src="/js/tafsir.min.js?v=16c9e934e4"></template>
+  <!-- Copying and sharing ayahs, fetched by the meaning window the first time it is asked for -->
+  <template id="share-script" data-src="/js/share.min.js?v=8091cdcdb5"></template>
+  <template id="meaning-script" data-src="/js/tafsir.min.js?v=6b80082c56"></template>
   <script defer src="/js/ayahs.min.js?v=3b7e12dcaa"></script>
   <script defer src="/js/listen.min.js?v=8d3a062e5a"></script>
   <script defer src="/js/pager.min.js?v=73fed4459e"></script>

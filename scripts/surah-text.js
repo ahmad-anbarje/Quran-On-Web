@@ -186,4 +186,26 @@ function build(surahs, site) {
   return urls;
 }
 
-module.exports = { build, spellings, hafs };
+/**
+ * The pointed text as data, one file a surah: data/text/<n>.json, its ayahs in
+ * order and the basmala apart where the surah opens with one. What the reader
+ * copies and shares from; the text is as the file gives it, not respelled for
+ * any face. Returns the files written.
+ */
+function buildData(surahs) {
+  const all = verses(surahs);
+  const basmala = all[1][0];
+  const dir = path.join(PUBLIC, 'data', 'text');
+  fs.mkdirSync(dir, { recursive: true });
+  return surahs.map((s) => {
+    const lines = all[s.id];
+    const file = path.join(dir, `${s.id}.json`);
+    fs.writeFileSync(file, JSON.stringify({
+      basmala: opensWithBasmala(s, lines, basmala) ? basmala : null,
+      ayahs: said(s, lines, basmala),
+    }));
+    return file;
+  });
+}
+
+module.exports = { build, buildData, spellings, hafs };
