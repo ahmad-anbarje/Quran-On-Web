@@ -242,8 +242,9 @@ body[data-lang="en"] .lang-ar { display: none !important; }
   justify-content: center;
   flex-direction: column;
   gap: 4px;
-  width: 66px;
-  padding: 14px 4px 12px;
+  /* As wide as its name on one line, never narrower than the tiles beside the page */
+  min-width: 66px;
+  padding: 14px 10px 12px;
   border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--line));
   border-right: none;
   border-radius: 16px 0 0 16px;
@@ -265,8 +266,8 @@ body.tab-top #sidebar-handle { top: 10px; translate: none; }
 }
 
 #sidebar-handle .ic { width: 16px; height: 16px; }
-#sidebar-handle .sh-book { width: 26px; height: 26px; }
-#sidebar-handle .cb-label { font-size: 0.7rem; font-weight: 700; text-align: center; white-space: normal; line-height: 1.15; }
+#sidebar-handle .sh-book { width: 28px; height: 28px; }
+#sidebar-handle .cb-label { font-size: 0.74rem; font-weight: 700; text-align: center; white-space: nowrap; line-height: 1.15; }
 /* Open, the list has its own way out; the tab comes back when it closes */
 #sidebar:not(.hidden) ~ #sidebar-handle { opacity: 0; visibility: hidden; pointer-events: none; transition: none; }
 /* Back only once the list has slid away (--t-drawer-out), not over it */
@@ -278,7 +279,7 @@ body.tab-top #sidebar-handle { top: 10px; translate: none; }
 #sidebar.hidden ~ #sidebar-handle:hover { color: var(--primary); }
 /* A finger needs more than a pointer: on a touch screen the tab is a target, not a hint */
 @media (pointer: coarse) {
-  #sidebar-handle { width: 70px; }
+  #sidebar-handle { min-width: 70px; }
 }
 
 /* --- full screen ---
