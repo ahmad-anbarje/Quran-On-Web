@@ -366,13 +366,8 @@ body.dark-mode .cb-dark { display: inline; }
 body.no-spread #btn-saved-corner { top: calc(var(--corner-top) + 4 * var(--corner-step)); }
 #btn-video-corner { top: calc(var(--corner-top) + 6 * var(--corner-step)); }
 body.no-spread #btn-video-corner { top: calc(var(--corner-top) + 5 * var(--corner-step)); }
-#btn-saved-corner:hover, #btn-video-corner:hover { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 35%, var(--line)); }
 #btn-saved-corner .ic, #btn-video-corner .ic { width: 20px; height: 20px; }
 
-#btn-weight-corner:hover, #btn-mode-corner:hover, #btn-weight-corner.on {
-  color: var(--primary);
-  border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
-}
 #btn-weight-corner .ic, #btn-mode-corner .ic { width: 20px; height: 20px; }
 /* The mode in force: its icon and its name */
 #btn-mode-corner .ic, #btn-mode-corner .cb-label { display: none; }
@@ -405,8 +400,10 @@ body.no-spread #size-corner { top: calc(var(--corner-top) + 6 * var(--corner-ste
 #size-corner .sz-level { font-size: 0.66rem; font-weight: 600; line-height: 1; padding: 2px 0; }
 /* Where two pages cannot open, there is no mode to switch */
 body.no-spread #btn-mode-corner { display: none; }
-#btn-legend:hover, #btn-legend[aria-pressed="true"], #btn-theme-corner:hover,
-#btn-lang-corner:hover, #btn-lang-corner[aria-expanded="true"] {
+/* One hover for every tile by the page, and the same look for one that is on */
+#btn-legend:hover, #btn-theme-corner:hover, #btn-lang-corner:hover, #btn-weight-corner:hover,
+#btn-mode-corner:hover, #btn-saved-corner:hover, #btn-video-corner:hover,
+#btn-legend[aria-pressed="true"], #btn-lang-corner[aria-expanded="true"], #btn-weight-corner.on {
   background: color-mix(in srgb, var(--primary) 14%, var(--surface));
   color: var(--primary);
   border-color: color-mix(in srgb, var(--primary) 35%, var(--line));
