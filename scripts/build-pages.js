@@ -430,9 +430,11 @@ function headers() {
   /* Only another origin is named. A path like /audio is already covered by
      'self', and is not a source expression a browser would accept anyway. */
   const other = /^https?:\/\//.test(AUDIO) ? AUDIO : '';
+  // blob: plays back a video the video maker has just made; connect-src lets it read the recordings
   const now = was
-    .replace(/media-src 'self'[^;]*;/, `media-src 'self'${other ? ' ' + other : ''};`)
-    .replace(/frame-src [^;]*;/, `frame-src ${other || "'self'"};`);
+    .replace(/media-src 'self'[^;]*;/, `media-src 'self' blob:${other ? ' ' + other : ''};`)
+    .replace(/frame-src [^;]*;/, `frame-src ${other || "'self'"};`)
+    .replace(/connect-src 'self'[^;]*;/, `connect-src 'self'${other ? ' ' + other : ''};`);
   if (now !== was) fs.writeFileSync(f, now);
   console.log('security-headers.conf  media-src names %s', other || "'self' only");
 }

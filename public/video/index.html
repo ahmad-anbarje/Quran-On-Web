@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<meta name="quran-audio-base" content="https://audio.readqurantoday.com" />
+<title>صانع فيديو التلاوة · The Great Quran</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="/css/fonts.min.css" />
+<link rel="stylesheet" href="video.css" />
+</head>
+<body>
+<!-- The reader's own recolouring of the medallions on dark pages -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="medal-dark" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-5.2060 14.5816 -10.2292 0.0000 1.0000 -5.0900 12.1604 -7.9539 0.0000 1.0000 -5.0612 10.9592 -6.7755 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 0.0000"/></filter>
+</svg>
+<main class="vm">
+  <header class="vm-top">
+    <a class="vm-home" href="/" data-t="home"></a>
+    <h1 data-t="title"></h1>
+    <button type="button" class="vm-lang" id="lang"></button>
+  </header>
+
+  <p class="vm-note" id="unsupported" hidden data-t="unsupported"></p>
+
+  <div class="vm-grid">
+    <form class="vm-form" id="form" autocomplete="off">
+      <fieldset class="vm-field">
+        <legend data-t="what"></legend>
+        <div class="vm-tabs" role="tablist" id="kind">
+          <button type="button" role="tab" data-kind="surah" data-t="bySurah"></button>
+          <button type="button" role="tab" data-kind="juz" data-t="byJuz"></button>
+          <button type="button" role="tab" data-kind="pages" data-t="byPages"></button>
+        </div>
+        <div class="vm-row" data-for="surah">
+          <label class="vm-wide"><span data-t="surah"></span><select id="surah"></select></label>
+          <label><span data-t="fromAyah"></span><input id="ayah-from" type="number" min="1" inputmode="numeric" /></label>
+          <label><span data-t="toAyah"></span><input id="ayah-to" type="number" min="1" inputmode="numeric" /></label>
+        </div>
+        <div class="vm-row" data-for="juz" hidden>
+          <label class="vm-wide"><span data-t="juz"></span><select id="juz"></select></label>
+        </div>
+        <div class="vm-row" data-for="pages" hidden>
+          <label><span data-t="fromPage"></span><input id="page-from" type="number" min="1" max="604" inputmode="numeric" /></label>
+          <label><span data-t="toPage"></span><input id="page-to" type="number" min="1" max="604" inputmode="numeric" /></label>
+        </div>
+      </fieldset>
+
+      <label class="vm-field"><span data-t="reciter"></span><select id="reciter"></select></label>
+
+      <fieldset class="vm-field">
+        <legend data-t="shape"></legend>
+        <div class="vm-chips vm-shapes" id="shape">
+          <button type="button" data-v="wide"><span data-t="wide"></span><small data-t="wideFor"></small></button>
+          <button type="button" data-v="tall"><span data-t="tall"></span><small data-t="tallFor"></small></button>
+          <button type="button" data-v="square"><span data-t="square"></span><small data-t="squareFor"></small></button>
+        </div>
+      </fieldset>
+
+      <fieldset class="vm-field">
+        <legend data-t="look"></legend>
+        <div class="vm-chips" id="look">
+          <button type="button" data-v="light" data-t="light"></button>
+          <button type="button" data-v="dark" data-t="dark"></button>
+          <button type="button" data-v="green" data-t="green"></button>
+        </div>
+      </fieldset>
+
+      <fieldset class="vm-field">
+        <legend data-t="quality"></legend>
+        <div class="vm-chips" id="quality">
+          <button type="button" data-v="standard" data-t="qStandard"></button>
+          <button type="button" data-v="high" data-t="qHigh"></button>
+          <button type="button" data-v="max" data-t="qMax"></button>
+        </div>
+      </fieldset>
+
+      <!-- What is drawn beside the page: shown only for the shapes that have room beside it -->
+      <div class="vm-group" id="side-opts">
+        <label class="vm-check"><input type="checkbox" id="show-title" /> <span data-t="showTitle"></span></label>
+        <div class="vm-group vm-sub" id="title-opts">
+          <div class="vm-chips vm-pos" id="titlePos">
+            <button type="button" data-v="top" data-t="posTop"></button>
+            <button type="button" data-v="middle" data-t="posMiddle"></button>
+            <button type="button" data-v="bottom" data-t="posBottom"></button>
+          </div>
+          <label class="vm-field"><span data-t="titleSize"></span><input type="range" id="title-size" min="60" max="160" step="10" /></label>
+        </div>
+
+        <label class="vm-check"><input type="checkbox" id="show-reciter" /> <span data-t="showReciter"></span></label>
+        <div class="vm-group vm-sub" id="reciter-opts">
+          <div class="vm-chips vm-pos" id="reciterPos">
+            <button type="button" data-v="top" data-t="posTop"></button>
+            <button type="button" data-v="middle" data-t="posMiddle"></button>
+            <button type="button" data-v="bottom" data-t="posBottom"></button>
+          </div>
+        </div>
+
+        <label class="vm-check"><input type="checkbox" id="show-translation" /> <span data-t="showTranslation"></span></label>
+        <label class="vm-check"><input type="checkbox" id="app" /> <span data-t="showApp"></span></label>
+      </div>
+      <label class="vm-check"><input type="checkbox" id="show-ayah" /> <span data-t="showAyah"></span></label>
+
+      <p class="vm-length" id="length" aria-live="polite"></p>
+
+      <div class="vm-acts">
+        <button type="submit" class="vm-go" id="go" data-t="make"></button>
+        <button type="button" class="vm-stop" id="stop" hidden data-t="stop"></button>
+      </div>
+    </form>
+
+    <!-- The preview, the progress over it while the video is made, then the video in its place -->
+    <section class="vm-view">
+      <div class="vm-stage">
+        <canvas id="preview" width="1920" height="1080" aria-hidden="true"></canvas>
+        <video id="video" controls playsinline hidden></video>
+        <div class="vm-progress" id="progress" hidden>
+          <div class="vm-progress-box">
+            <p id="status" role="status"></p>
+            <div class="vm-bar"><span id="bar"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="vm-result" id="result" hidden>
+        <p id="result-note" role="status"></p>
+        <div class="vm-result-acts">
+          <a class="vm-save" id="save" download data-t="download"></a>
+          <button type="button" class="vm-stop" id="back" data-t="back"></button>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="/js/timing.min.js"></script>
+<script src="mp4-muxer.min.js"></script>
+<script src="pages.js"></script>
+<script src="audio.js"></script>
+<script src="make.js"></script>
+<script src="video.js"></script>
+</body>
+</html>

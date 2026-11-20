@@ -13,7 +13,7 @@ const SITE = {
   $: 'readonly', jQuery: 'readonly', T: 'readonly',
   I18n: 'readonly', Mushaf: 'readonly', Recite: 'readonly', Meaning: 'readonly',
   Ayahs: 'readonly', Listen: 'readonly', Pager: 'readonly', Offline: 'readonly',
-  Leaves: 'readonly', Share: 'readonly', Zoom: 'readonly', Report: 'readonly', Search: 'readonly', Reads: 'readonly', WordTip: 'readonly', PlayerMarkup: 'readonly', Timing: 'readonly', umami: 'readonly',
+  Leaves: 'readonly', Zoom: 'readonly', Report: 'readonly', Search: 'readonly', Reads: 'readonly', WordTip: 'readonly', PlayerMarkup: 'readonly', Timing: 'readonly', umami: 'readonly',
   QuranShell: 'readonly',   // the Android app's bridge, where the site runs inside it
 };
 
@@ -23,6 +23,15 @@ module.exports = [
   {
     files: ['public/js/**/*.js', 'public/admin/**/*.js', 'feedback/admin/**/*.js', 'tests/audit.js'],
     languageOptions: { ecmaVersion: 2020, sourceType: 'script', globals: { ...globals.browser, ...SITE } },
+  },
+  {
+    // The video maker: WebCodecs needs async code, so a newer syntax than the reader's
+    files: ['public/video/**/*.js', 'public/picture/**/*.js'],
+    ignores: ['public/video/mp4-muxer.min.js'],
+    languageOptions: {
+      ecmaVersion: 2022, sourceType: 'script',
+      globals: { ...globals.browser, Timing: 'readonly', Mp4Muxer: 'readonly', VideoPages: 'readonly', VideoAudio: 'readonly', VideoMaker: 'readonly' },
+    },
   },
   {
     files: ['public/sw.js'],

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>صورة الآيات · The Great Quran</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="/css/fonts.min.css" />
+<link rel="stylesheet" href="/video/video.css" />
+</head>
+<body>
+<!-- The reader's own recolouring of the medallions on dark pages -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="medal-dark" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="-5.2060 14.5816 -10.2292 0.0000 1.0000 -5.0900 12.1604 -7.9539 0.0000 1.0000 -5.0612 10.9592 -6.7755 0.0000 1.0000 0.0000 0.0000 0.0000 1.0000 0.0000"/></filter>
+</svg>
+<main class="vm">
+  <header class="vm-top">
+    <a class="vm-home" href="/" data-t="home"></a>
+    <h1 data-t="title"></h1>
+    <button type="button" class="vm-lang" id="lang"></button>
+  </header>
+
+  <div class="vm-grid">
+    <div class="vm-form">
+      <div class="vm-field">
+        <div class="vm-row">
+          <label class="vm-wide"><span data-t="surah"></span><select id="surah"></select></label>
+          <label><span data-t="fromAyah"></span><input id="from" type="number" min="1" inputmode="numeric" /></label>
+          <label><span data-t="toAyah"></span><input id="to" type="number" min="1" inputmode="numeric" /></label>
+        </div>
+      </div>
+
+      <fieldset class="vm-field">
+        <legend data-t="shape"></legend>
+        <div class="vm-chips vm-shapes" id="shape">
+          <button type="button" data-v="tall"><span data-t="tall"></span><small data-t="tallFor"></small></button>
+          <button type="button" data-v="square"><span data-t="square"></span><small data-t="squareFor"></small></button>
+          <button type="button" data-v="wide"><span data-t="wide"></span><small data-t="wideFor"></small></button>
+        </div>
+      </fieldset>
+
+      <fieldset class="vm-field">
+        <legend data-t="look"></legend>
+        <div class="vm-chips" id="look">
+          <button type="button" data-v="light" data-t="light"></button>
+          <button type="button" data-v="dark" data-t="dark"></button>
+          <button type="button" data-v="green" data-t="green"></button>
+        </div>
+      </fieldset>
+
+      <!-- What is drawn beside the page: shown only for the shapes that have room beside it -->
+      <div class="vm-group" id="side-opts">
+        <label class="vm-check"><input type="checkbox" id="show-title" /> <span data-t="showTitle"></span></label>
+        <div class="vm-group vm-sub" id="title-opts">
+          <div class="vm-chips vm-pos" id="titlePos">
+            <button type="button" data-v="top" data-t="posTop"></button>
+            <button type="button" data-v="middle" data-t="posMiddle"></button>
+            <button type="button" data-v="bottom" data-t="posBottom"></button>
+          </div>
+        </div>
+        <label class="vm-check"><input type="checkbox" id="app" /> <span data-t="showApp"></span></label>
+      </div>
+
+      <p class="vm-length" id="status" role="status"></p>
+    </div>
+
+    <section class="vm-view" id="pictures"></section>
+  </div>
+</main>
+
+<script src="/video/pages.js"></script>
+<script src="picture.js"></script>
+</body>
+</html>

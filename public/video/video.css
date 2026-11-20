@@ -1,0 +1,157 @@
+@font-face {
+  font-family: 'QCF Surah Names';
+  src: url(/fonts/sura-names.woff2) format('woff2');
+  font-display: block;
+}
+
+:root {
+  --paper: #fffdf7;
+  --surface: #ffffff;
+  --surface-2: #f4f7fa;
+  --line: #d8e0e8;
+  --text: #16283a;
+  --text-mute: #5b6b7a;
+  --primary: #1a6fa3;
+  --primary-soft: #e3eff7;
+  --r: 10px;
+  --ui-font: "Arabic Zero", "Cairo", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #12161b;
+    --surface: #1a1f25;
+    --surface-2: #222830;
+    --line: #2f3741;
+    --text: #e3e7eb;
+    --text-mute: #9aa6b2;
+    --primary: #3f9bd1;
+    --primary-soft: #1d3446;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--text);
+  font-family: var(--ui-font);
+  line-height: 1.5;
+}
+
+.vm { max-width: 1600px; margin: 0 auto; padding: 16px; }
+
+.vm-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.vm-top h1 { flex: 1 1 auto; margin: 0; font-size: 1.3rem; }
+.vm-home { color: var(--primary); font-weight: 600; text-decoration: none; }
+.vm-lang {
+  padding: 6px 14px; border: 1px solid var(--line); border-radius: 99px;
+  background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer;
+}
+
+.vm-note { padding: 12px 14px; border-radius: var(--r); background: #fdecea; color: #8a1c13; }
+
+/* On a computer the page fits the window: the settings in a column at the side, scrolling on their own, and the
+   preview filling the rest; on a phone the preview comes first and the page scrolls as usual */
+.vm-grid { display: grid; grid-template-columns: minmax(300px, 360px) 1fr; gap: 20px; align-items: start; }
+@media (min-width: 821px) {
+  .vm { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+  .vm-top { flex: 0 0 auto; }
+  .vm-grid { flex: 1 1 auto; min-height: 0; align-items: stretch; }
+  .vm-form { overflow-y: auto; min-height: 0; padding-inline-end: 6px; }
+  .vm-view { overflow-y: auto; min-height: 0; }
+  .vm-view canvas, .vm-view video { max-height: calc(100dvh - 190px); }
+  /* The button that makes the video stays in reach while the settings scroll */
+  .vm-form .vm-acts { position: sticky; bottom: 0; padding-top: 8px; background: var(--paper); }
+}
+@media (max-width: 820px) { .vm-grid { grid-template-columns: 1fr; } .vm-view { order: -1; } }
+
+.vm-form { display: flex; flex-direction: column; gap: 12px; }
+
+.vm-field { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; border: 0; font-size: 0.85rem; }
+.vm-field legend, .vm-field > span { padding: 0; margin-bottom: 6px; font-weight: 700; color: var(--text-mute); }
+
+.vm-row { display: flex; gap: 8px; margin-top: 8px; }
+.vm-row[hidden] { display: none; }
+.vm-row label { display: flex; flex: 1 1 0; flex-direction: column; gap: 4px; min-width: 0; }
+.vm-row .vm-wide { flex: 2 1 0; }
+
+select, input {
+  width: 100%; min-height: 40px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--surface); color: var(--text); font: inherit; font-size: 0.95rem;
+}
+
+.vm-tabs, .vm-chips { display: flex; gap: 6px; }
+.vm-tabs button, .vm-chips button {
+  flex: 1 1 0; min-height: 36px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: 99px;
+  background: var(--surface); color: var(--text-mute); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+}
+.vm-tabs button.on, .vm-chips button.on { border-color: var(--primary); background: var(--primary); color: #fff; }
+
+.vm-check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; }
+.vm-check input { width: 18px; height: 18px; min-height: 0; margin: 0; accent-color: var(--primary); }
+
+.vm-length { margin: 0; min-height: 1.5em; font-size: 0.85rem; color: var(--text-mute); }
+
+.vm-acts { display: flex; gap: 8px; }
+.vm-go, .vm-stop {
+  flex: 1 1 auto; min-height: 46px; border-radius: var(--r);
+  font: inherit; font-size: 1rem; font-weight: 700; cursor: pointer;
+}
+.vm-go { border: 0; background: var(--primary); color: #fff; }
+.vm-go:disabled { opacity: 0.5; cursor: default; }
+.vm-stop { border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+.vm-stop[hidden] { display: none; }
+
+/* Groups of options shown or put away together */
+.vm-group { display: flex; flex-direction: column; gap: 12px; }
+.vm-sub { padding-inline-start: 26px; }
+.vm-group[hidden], .vm-view [hidden] { display: none; }
+
+/* The preview's own frame: the progress lies over it while the video is made */
+.vm-stage { position: relative; }
+.vm-progress {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  border-radius: var(--r); background: color-mix(in srgb, var(--paper) 72%, transparent);
+}
+.vm-progress-box {
+  width: min(420px, 82%); padding: 18px 20px; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--surface); box-shadow: 0 8px 28px rgba(15, 40, 60, 0.14);
+}
+.vm-progress-box p { margin: 0 0 10px; font-weight: 600; text-align: center; }
+.vm-bar { height: 10px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.vm-bar span { display: block; height: 100%; width: 0; background: var(--primary); transition: width 0.2s linear; }
+
+.vm-view { display: flex; flex-direction: column; gap: 12px; }
+.vm-view canvas, .vm-view video {
+  display: block; width: 100%; max-height: 72vh; object-fit: contain;
+  border: 1px solid var(--line); border-radius: var(--r); background: var(--surface-2);
+}
+.vm-result { display: flex; flex-direction: column; gap: 8px; }
+.vm-result p { margin: 0; font-size: 0.9rem; color: var(--text-mute); }
+.vm-result-acts { display: flex; gap: 8px; }
+.vm-result-acts > * { flex: 1 1 0; }
+.vm-save {
+  display: block; padding: 12px; border-radius: var(--r);
+  background: var(--primary); color: #fff; font-weight: 700; text-align: center; text-decoration: none;
+}
+
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+input[type="range"] { min-height: 0; padding: 0; border: 0; background: none; accent-color: var(--primary); }
+
+.pc-card { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+.vm-pos button { min-height: 30px; font-size: 0.8rem; }
+
+/* Each shape says where it is used, under its name */
+.vm-shapes button { display: flex; flex-direction: column; justify-content: center; gap: 1px; min-height: 52px; padding: 6px 8px; border-radius: 12px; line-height: 1.25; }
+.vm-shapes small { font-size: 0.68rem; font-weight: 500; opacity: 0.8; }
+
+/* The layout stays right to left in either language; English only changes the words, each read in its own order */
+[data-t], #length, #status, #result-note, select { unicode-bidi: plaintext; }
+.vm-field > span, .vm-field legend, .vm-check span, .vm-length, .vm-result p { text-align: right; }

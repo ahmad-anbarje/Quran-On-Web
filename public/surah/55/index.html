@@ -54,8 +54,8 @@
        must-revalidate does the job and this never needs bumping again. -->
   <!-- UI fonts, self-hosted; the QCF mushaf faces live in public/fonts/v4/ -->
   <link rel="stylesheet" href="/css/fonts.min.css?v=dc96e96b71" />
-  <link rel="stylesheet" href="/css/style.min.css?v=dacd8a4742" />
-  <link rel="stylesheet" href="/css/recite.min.css?v=381ac117a0" />
+  <link rel="stylesheet" href="/css/style.min.css?v=800ef02b12" />
+  <link rel="stylesheet" href="/css/recite.min.css?v=3038dadcd9" />
   <!-- Boot waits on these; fetched alongside the scripts instead of after them -->
   <link rel="preload" href="/data/mushaf.json" as="fetch" crossorigin />
   <link rel="preload" href="/data/surahs.json" as="fetch" crossorigin />
@@ -140,6 +140,7 @@
       <g id="i-sliders"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></g>
       <g id="i-trash"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></g>
       <g id="i-history"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></g>
+      <g id="i-video"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10.5l5-3v9l-5-3"/></g>
       <g id="i-bookmark"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.6L5 21V4a1 1 0 0 1 1-1z"/></g>
       <g id="i-moon"><path d="M11.7 4A8 8 0 1 0 20 12.3 6 6 0 0 1 11.7 4z"/></g>
       <g id="i-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.75 5.75l2.13 2.13M16.12 16.12l2.13 2.13M5.75 18.25l2.13-2.13M16.12 7.88l2.13-2.13"/></g>
@@ -409,6 +410,10 @@
     <button id="btn-saved-corner" aria-label="الصفحات المحفوظة | Saved pages">
       <svg class="ic" viewBox="0 0 24 24"><use href="#i-bookmark"/></svg><span class="cb-label"><span class="lang-ar">المحفوظة</span><span class="lang-en">Saved</span></span>
     </button>
+    <!-- The page's ayahs made into a recitation video, on its own page -->
+    <button id="btn-video-corner" aria-label="فيديو التلاوة | Recitation video">
+      <svg class="ic" viewBox="0 0 24 24"><use href="#i-video"/></svg><span class="cb-label"><span class="lang-ar">فيديو</span><span class="lang-en">Video</span></span>
+    </button>
     <!-- One page at a time has its own zoom, the text size, under the mode -->
     <div id="size-corner" role="group" aria-label="حجم الخط | Text size">
       <button class="sz-inc" aria-label="أكبر | Larger"><svg class="ic" viewBox="0 0 24 24"><use href="#i-plus"/></svg></button>
@@ -469,6 +474,9 @@
         <button id="btn-bar-meaning" class="ghost-btn" aria-label="الترجمة والتفسير | Translation &amp; tafsir">
           <svg class="ic" viewBox="0 0 24 24"><path d="M12 6.5C10.3 5.2 7.9 4.6 4 4.6v13.2c3.9 0 6.3.6 8 1.9 1.7-1.3 4.1-1.9 8-1.9V4.6c-3.9 0-6.3.6-8 1.9zM12 6.5v13.2"/></svg>
           <span class="cb-label"><span class="lang-ar">التفسير</span><span class="lang-en">Meaning</span></span>
+        </button>
+        <button id="btn-bar-video" class="ghost-btn" aria-label="فيديو التلاوة | Recitation video">
+          <svg class="ic" viewBox="0 0 24 24"><use href="#i-video"/></svg><span class="cb-label"><span class="lang-ar">فيديو</span><span class="lang-en">Video</span></span>
         </button>
         <button id="btn-bar-lang" class="ghost-btn" aria-label="اللغة | Language" aria-haspopup="dialog">
           <svg class="ic" viewBox="0 0 24 24"><use href="#i-globe"/></svg><span class="cb-label"><span class="lang-ar">اللغة</span><span class="lang-en">Language</span></span>
@@ -780,8 +788,7 @@
   <script defer src="/js/recite.min.js?v=fd4c190f9e"></script>
   <!-- The meaning window, fetched by recite.js the first time it is opened -->
   <!-- Copying and sharing ayahs, fetched by the meaning window the first time it is asked for -->
-  <template id="share-script" data-src="/js/share.min.js?v=017d030f71"></template>
-  <template id="meaning-script" data-src="/js/tafsir.min.js?v=6b80082c56"></template>
+  <template id="meaning-script" data-src="/js/tafsir.min.js?v=16c9e934e4"></template>
   <script defer src="/js/ayahs.min.js?v=3b7e12dcaa"></script>
   <script defer src="/js/listen.min.js?v=8d3a062e5a"></script>
   <script defer src="/js/pager.min.js?v=73fed4459e"></script>
@@ -791,7 +798,7 @@
   <script defer src="/js/report.min.js?v=7ebe6108f6"></script>
   <script defer src="/js/search.min.js?v=3b23d0b112"></script>
   <script defer src="/js/reads.min.js?v=42e29dca65"></script>
-  <script defer src="/js/app.min.js?v=6a6536393f"></script>
+  <script defer src="/js/app.min.js?v=d5651654f7"></script>
   <script defer src="/js/appcard.min.js?v=0795da197f"></script>
   <article class="sr-only" lang="ar" dir="rtl" aria-label="نص سورة الرحمن">
     <h1>سورة الرحمن · Surah Ar-Rahman</h1>

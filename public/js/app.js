@@ -935,7 +935,7 @@ $(function () {
     nav.style.top = '';
     place();
     var nr = next.getBoundingClientRect(), low = 0;
-    ['btn-fullscreen', 'btn-legend', 'btn-theme-corner', 'btn-lang-corner', 'btn-weight-corner', 'btn-mode-corner', 'btn-saved-corner'].forEach(function (id) {
+    ['btn-fullscreen', 'btn-legend', 'btn-theme-corner', 'btn-lang-corner', 'btn-weight-corner', 'btn-mode-corner', 'btn-saved-corner', 'btn-video-corner'].forEach(function (id) {
       var r = document.getElementById(id).getBoundingClientRect();
       if (r.width && r.right > nr.left && r.left < nr.right && r.bottom > nr.top && r.top < nr.bottom) low = Math.max(low, r.bottom);
     });
@@ -1317,6 +1317,35 @@ $(function () {
   })();
   $('#btn-mode-corner').on('click', function () { $('#btn-mode').trigger('click'); });
   $('#btn-bar-meaning').on('click', function () { if (window.Recite && Recite.meaning) Recite.meaning(); });
+  $('#btn-video-corner, #btn-bar-video').on('click', function () { makeFromPage('/video/'); });
+
+  /* The ayahs of the open surah that begin on this page; a page inside one long ayah gives that ayah */
+  function pageAyahs() {
+    if (!surah || !ayahs || !page) return null;
+    var from = 0, to = 0;
+    for (var v = 1; v <= surah.v; v++) {
+      var p = ayahs.began[surah.id + ':' + v];
+      if (p === page) { if (!from) from = v; to = v; } else if (p > page) break;
+    }
+    if (!from) {
+      var at = ayahs.enter[page];
+      from = to = at && at.s === surah.id ? Math.max(1, at.v) : 1;
+    }
+    return { from: from, to: to };
+  }
+
+  // The video maker opens on this page's ayahs in a new tab, in the reciter last chosen
+  function makeFromPage(path) {
+    var range = pageAyahs();
+    if (!range) return;
+    var q = 'surah=' + surah.id + '&from=' + range.from + '&to=' + range.to;
+    if (path === '/video/') {
+      try { var r = localStorage.getItem('quran-recitation'); if (r) q += '&reciter=' + encodeURIComponent(r); } catch (e) { /* storage denied */ }
+    }
+    // A new tab keeps the reader where it is; where none can open, the same tab
+    var tab = window.open(path + '?' + q, '_blank');
+    if (!tab) location.href = path + '?' + q;
+  }
 
   /* The other edition is other data and other fonts: the page is read again in it, where the reader was */
   $('#btn-tajweed').on('click', function () { setTajweed(VERSION !== 'tj'); });
